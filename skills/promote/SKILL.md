@@ -1,11 +1,11 @@
 ---
 name: promote
-description: Promote the agent-created skills and rules from NAS staging to tessl tiles. Runs the full pipeline — pull, optimize, lint, commit, push, deploy, publish, install. Use when the user says there are new items on staging, or after check-staging shows pending items.
+description: Promote agent-created skills and rules from NAS staging to tile GitHub repos. Pulls from staging, commits to nanoclaw repo, syncs to tile repo where GHA handles review (85% threshold), lint, and tessl publish. Use when there are new items on staging, after check-staging shows pending items, or when asked to deploy skills, publish rules, or push to production.
 ---
 
 # Promote from Staging
 
-Promotes skills and rules from the agent's NAS staging area to tessl tiles via `scripts/promote-skill.sh`.
+Promotes skills and rules from the agent's NAS staging area to tile GitHub repos via `scripts/promote-skill.sh`.
 
 ## Before promoting
 
@@ -15,40 +15,39 @@ Run `./scripts/check-staging.sh` to see what's pending. Review each item before 
 
 Each item belongs to exactly one tile:
 
-| Content | Target tile |
-|---------|------------|
-| Admin/operational skills (scheduled tasks, management, monitoring) | `nanoclaw-admin` |
-| Security rules for untrusted groups | `nanoclaw-untrusted` |
-| Shared behavior (all containers) | `nanoclaw-core` |
+| Content | Target tile | GitHub repo |
+|---------|------------|-------------|
+| Admin/operational skills | `nanoclaw-admin` | jbaruch/nanoclaw-admin (private) |
+| Trusted shared operational | `nanoclaw-trusted` | jbaruch/nanoclaw-trusted |
+| Security rules for untrusted | `nanoclaw-untrusted` | jbaruch/nanoclaw-untrusted |
+| Shared behavior (all containers) | `nanoclaw-core` | jbaruch/nanoclaw-core |
+| Host agent conventions | `nanoclaw-host` | jbaruch/nanoclaw-host |
 
 ## Run the promote script
 
 ```bash
-# Promote a specific skill
-echo y | TILE_NAME=nanoclaw-admin ./scripts/promote-skill.sh soul-review
-
 # Promote all skills + rules for a tile
 echo y | TILE_NAME=nanoclaw-admin ./scripts/promote-skill.sh
 
 # Promote only rules
-echo y | TILE_NAME=nanoclaw-untrusted ./scripts/promote-skill.sh --rules-only
+echo y | TILE_NAME=nanoclaw-trusted ./scripts/promote-skill.sh --rules-only
 ```
 
-The script handles both staging paths:
-- `skills/{name}/SKILL.md` — new skills
-- `skills/tessl__{name}/SKILL.md` — patches to existing tile skills
+The script:
+1. Pulls staged content from NAS into `tiles/{name}/`
+2. Commits and pushes to the nanoclaw repo
+3. Syncs the tile directory to its GitHub repo (jbaruch/{tile-name})
+4. GitHub Actions runs skill review (85% threshold), lint, and tessl publish
 
 ## After promoting
 
-1. Run `./scripts/reconcile-tiles.sh` to verify everything is in sync
+1. Check the GitHub Actions run on the tile repo to confirm publish succeeded
 2. Tell the agent to run `/verify-tiles` to clean up staging copies
 
-## If publish times out
+## If GHA fails
 
-The script falls back to git-only deploy. Re-publish manually:
-
+Check which skill failed the 85% review threshold. Fix locally:
 ```bash
-tessl tile publish --bump patch tiles/{tile-name}
+tessl skill review --optimize --yes tiles/{tile-name}/skills/{skill-name}/SKILL.md
 ```
-
-Then commit the version bump, push, and install in the orchestrator.
+Then commit and push to the tile repo.
