@@ -1,11 +1,11 @@
 ---
 name: promote
-description: Promote agent-created skills and rules from NAS staging to tile GitHub repos. Pulls from staging, commits to nanoclaw repo, syncs to tile repo where GHA handles review (85% threshold), lint, and tessl publish. Use when there are new items on staging, after check-staging shows pending items, or when asked to deploy skills, publish rules, or push to production.
+description: Promote agent-created skills and rules from NAS staging to tile GitHub repos. GHA handles review (85%), lint, and tessl publish. Use when there are items on staging, or after check-staging shows pending items.
 ---
 
 # Promote from Staging
 
-Promotes skills and rules from the agent's NAS staging area to tile GitHub repos via `scripts/promote-skill.sh`.
+Promotes skills and rules from the agent's NAS staging area directly to tile GitHub repos via `scripts/promote-from-host.sh`.
 
 ## Before promoting
 
@@ -27,27 +27,26 @@ Each item belongs to exactly one tile:
 
 ```bash
 # Promote all skills + rules for a tile
-echo y | TILE_NAME=nanoclaw-admin ./scripts/promote-skill.sh
+TILE_NAME=nanoclaw-admin ./scripts/promote-from-host.sh
+
+# Promote a specific skill
+TILE_NAME=nanoclaw-admin ./scripts/promote-from-host.sh heartbeat
 
 # Promote only rules
-echo y | TILE_NAME=nanoclaw-trusted ./scripts/promote-skill.sh --rules-only
+TILE_NAME=nanoclaw-trusted ./scripts/promote-from-host.sh --rules-only
 ```
 
-The script:
-1. Pulls staged content from NAS into `tiles/{name}/`
-2. Commits and pushes to the nanoclaw repo
-3. Syncs the tile directory to its GitHub repo (jbaruch/{tile-name})
-4. GitHub Actions runs skill review (85% threshold), lint, and tessl publish
+The script pulls staging from NAS, pushes directly to the tile's GitHub repo. GHA runs skill review (85% threshold), lint, and tessl publish automatically.
 
 ## After promoting
 
-1. Check the GitHub Actions run on the tile repo to confirm publish succeeded
-2. Tell the agent to run `/verify-tiles` to clean up staging copies
+Check the GitHub Actions run on the tile repo to confirm publish succeeded. Tell AyeAye to run `/verify-tiles` to clean up staging.
 
-## If GHA fails
+## If GHA review fails
 
-Check which skill failed the 85% review threshold. Fix locally:
+Fix locally and push to the tile repo:
 ```bash
-tessl skill review --optimize --yes tiles/{tile-name}/skills/{skill-name}/SKILL.md
+cd /tmp/tile-nanoclaw-admin
+tessl skill review --optimize --yes skills/{skill-name}/SKILL.md
+git add -A && git commit -m "fix: optimize skill" && git push origin main
 ```
-Then commit and push to the tile repo.
