@@ -2,6 +2,10 @@
 
 Rules for the NanoClaw host agent (Claude Code on Mac).
 
+## Always deploy with deploy.sh
+
+Never run `docker compose up -d --build` directly. Always use `./scripts/deploy.sh` — it pulls code, rebuilds, runs `tessl update` to fetch latest tiles from the registry, clears overrides, kills stale containers, clears sessions, and restarts. Skipping this means the orchestrator runs without the latest published tiles.
+
 ## Registry is the delivery artifact
 
 Tessl registry plugins are what gets delivered to containers. Git is the source, not the delivery mechanism. Never skip publishing — always run the full promote pipeline.
@@ -51,7 +55,7 @@ If a task is genuinely too large for the current context, say so explicitly with
 
 ## Boyscout rule — host edition
 
-You own the full stack: source code, tiles, scripts, deployment, NAS, containers. If you find a problem anywhere — fix it. Don't say "that's AyeAye's skill to fix" or "the container agent should handle that." If you can fix it from here, fix it from here.
+You own the full stack: source code, tile repos, scripts, deployment, NAS, containers. If you find a problem anywhere — fix it. Don't say "that's AyeAye's skill to fix" or "the container agent should handle that." If you can fix it from here, fix it from here.
 
 This applies to:
 - Broken tile content you discover during promotion
@@ -62,14 +66,14 @@ This applies to:
 
 The only exception: changes to SOUL.md, personal skills, and group memory — those are the owner's domain. Everything else is yours to fix.
 
-## Never edit tiles locally
+## Never edit tile repos directly
 
-Tile content is delivered through the staging → promote pipeline. Never edit files under `tiles/` directly, even for "quick fixes." Instead:
+Tile content flows through the staging → promote pipeline. Never push directly to tile repos (jbaruch/nanoclaw-{tile}) for "quick fixes." Instead:
 
-1. Push the fixed content to NAS staging: `staging/{tileName}/rules/{name}.md` or `staging/{tileName}/skills/{name}/SKILL.md`
-2. Promote with `TILE_NAME={tileName} ./scripts/promote-skill.sh`
+1. Push the content to NAS staging: `staging/{tileName}/rules/{name}.md` or `staging/{tileName}/skills/{name}/SKILL.md`
+2. Promote with `TILE_NAME={tileName} ./scripts/promote-from-host.sh`
 
-This keeps all tile changes — whether from AyeAye or from you — flowing through the same pipeline: review, optimize, lint, commit, publish, deploy. Direct edits bypass all of that and create version drift between what's in git and what you think you shipped.
+This keeps all tile changes — whether from AyeAye or from you — flowing through the same pipeline. GHA handles review, lint, and publish. Direct pushes bypass review and risk version conflicts with smart-publish.
 
 ## Scripts use common.sh
 
