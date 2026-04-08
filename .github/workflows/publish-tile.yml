@@ -1,0 +1,25 @@
+name: Review & Publish Tile
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tesslio/setup-tessl@v2
+        with:
+          token: ${{ secrets.TESSL_TOKEN }}
+      - run: tessl skill review --threshold 85 skills/check-staging
+      - run: tessl skill review --threshold 85 skills/nuke
+      - run: tessl skill review --threshold 85 skills/promote
+      - run: tessl skill review --threshold 85 skills/reconcile
+      - uses: jbaruch/tessl-smart-publish@v1
