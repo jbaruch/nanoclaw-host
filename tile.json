@@ -29,6 +29,9 @@
     },
     "update-from-public": {
       "path": "skills/update-from-public/SKILL.md"
+    },
+    "ship-code": {
+      "path": "skills/ship-code/SKILL.md"
     }
   }
 }
