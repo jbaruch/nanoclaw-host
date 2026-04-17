@@ -1,6 +1,8 @@
 ---
 name: ship-code
 description: PR-based lifecycle for shipping a code change through the NanoClaw fork chain. Covers the full path on private (jbaruch/nanoclaw) — create PR, summon Copilot, wait for review, fix CI + reasonable feedback, merge, clean up branches — then cherry-picks what qualifies to public (jbaruch/nanoclaw-public) and repeats the same lifecycle there. Enforces the scrub rules from repo-chain.md. Use when a code change is committed and needs to go out, when asked to ship a fix, open a PR, push to production, merge changes, or propagate a fix from private to public.
+placement-admin-content-ok: true
+skip-optimize: true
 ---
 
 # Ship Code
@@ -40,8 +42,15 @@ EOF
 
 Copilot auto-reviews some PRs but not all. Always request explicitly.
 
+**Important gotcha**: the REST endpoint `POST /requested_reviewers` silently drops bot reviewers — it returns `201` but `requested_reviewers` stays empty, and Copilot never posts a review. The correct path is the GraphQL `requestReviews` mutation with `botIds`:
+
 ```bash
-# REST POST /requested_reviewers silently drops bot reviewers — use GraphQL instead.
+# One-time: resolve the Copilot bot's node ID (BOT_kgDOCnlnWA at the time of writing).
+# If unknown, fish it out of a past PR review:
+#   gh api graphql -f query='{ repository(owner:"jbaruch",name:"nanoclaw") {
+#     pullRequest(number: 45) { reviews(first:5) { nodes {
+#       author { login ... on Bot { id } } } } } } }'
+
 PR_ID=$(gh api graphql -f query='{ repository(owner:"jbaruch",name:"nanoclaw") {
   pullRequest(number: <N>) { id } } }' --jq .data.repository.pullRequest.id)
 
@@ -53,13 +62,11 @@ mutation($prId: ID!, $botIds: [ID!]!) {
 }' -F prId="$PR_ID" -F 'botIds[]=BOT_kgDOCnlnWA'
 ```
 
-> **Bot node ID:** `BOT_kgDOCnlnWA` was current at time of writing. If it stops working, retrieve it from a past review: `gh api graphql -f query='{ repository(owner:"jbaruch",name:"nanoclaw") { pullRequest(number: 45) { reviews(first:5) { nodes { author { login ... on Bot { id } } } } } } }'`
-
 Verify with `gh api repos/jbaruch/nanoclaw/pulls/<N> --jq '.requested_reviewers[].login'` — you should see `Copilot`.
 
 ### 3. Wait for review + CI
 
-Let both complete before acting:
+Don't rush. Let both complete:
 
 ```bash
 gh pr checks <N> --repo jbaruch/nanoclaw
@@ -105,9 +112,18 @@ Not every private commit goes public. Apply the scrub rules from `repo-chain.md`
 
 ### 6. Decide what qualifies
 
-The authoritative scrub list lives in `scripts/sync-to-public.sh` — the `EXCLUDES` array plus the two in-file Python regex lists. **Read that script before deciding.** Don't maintain a parallel list here; duplicate lists drift, and drift is how private content leaks public.
+**Skip** the commit if it touches any of:
 
-**Skip** the commit if it touches anything in those exclusion lists (paths, private IPC handlers, MCP tool names, personal group content, private ops docs, secrets). **Ship** if the commit is a generic improvement (bug fix, feature, refactor, test) touching shared code.
+- `scripts/trakt-auth.py`, `scripts/audible-backup.sh` — private integration scripts
+- `src/hubitat-listener.ts` — private integration
+- Private IPC handlers / MCP tools (`sync_tripit`, `fetch_trakt_history`, `sessionize_*`, `audible_backup`) in `src/ipc.ts` or `container/agent-runner/src/ipc-mcp-stdio.ts`
+- `groups/main/`, `groups/telegram_*/` — personal group content
+- `docs/OPERATIONS.md` — private ops notes
+- `.env`, `dist/`, any secret — never
+
+**Ship** if the commit is a generic improvement (bug fix, feature, refactor, test) touching shared code.
+
+The authoritative scrub list is in `scripts/sync-to-public.sh` (`EXCLUDES` array + the two in-file Python regex lists). Read it before shipping if uncertain.
 
 ### 7. Cherry-pick + run Phase A on public
 
@@ -120,22 +136,37 @@ git checkout -b <same-branch-name-as-private>
 git cherry-pick <private-commit-sha>    # or a range
 ```
 
-If cherry-pick conflicts on private-only code: resolve by dropping those hunks — they must not reach public. Verify by running the same scrub the batch pipeline uses:
+If cherry-pick conflicts on private-only code: resolve by dropping those hunks — they must not reach public. Verify with:
 
 ```bash
-# Dry-run the scrub regex from sync-to-public.sh against your branch diff.
-# Grep extracts the scrub-pattern line from the script itself, so there is
-# no parallel list to drift.
-SCRUB_RE=$(grep -oE "r'\\\\b\\(?[a-zA-Z0-9_|]+\\)?\\\\b'" "$PROJECT_ROOT/scripts/sync-to-public.sh" | head -1)
-git diff main...HEAD -- scripts/ src/ container/ \
-  | grep -E "$SCRUB_RE" && echo "LEAK — fix before pushing" || echo "clean"
+git diff main...HEAD -- scripts/ src/ container/ | grep -E 'hubitat|sync_tripit|fetch_trakt|sessionize|audible_backup|trakt-auth' && echo "LEAK — fix before pushing" || echo "clean"
 ```
-
-If the pattern extraction fails (script structure changed), fall back to `scripts/sync-to-public.sh --dry-run` and review its output for flagged lines.
 
 Then re-run Phase A (steps 1–5) against `jbaruch/nanoclaw-public` — same PR template, same Copilot request, same CI/review cycle, same merge + cleanup. Replace every `jbaruch/nanoclaw` with `jbaruch/nanoclaw-public` in the `gh` commands.
 
----
+### 7b. Reconciling divergent Copilot feedback between repos
+
+Copilot reviews each repo independently. The private and public PR for "the same" change can get different comments — either because one got summoned and the other didn't, or because Copilot noticed something different the second time. Decision tree:
+
+| Case | What to do |
+|---|---|
+| Public Copilot catches a real bug that private Copilot missed (or was never asked) | Fix on public as normal. Then **push the same fix to private**. If private is merged, a direct push to `main` is OK *only when the diff is bit-for-bit identical to what public Copilot already approved*. Otherwise open a tiny private PR. |
+| Private Copilot caught something and you've already fixed it there, public Copilot asks about the same thing | Reply on public with a pointer to the private thread/commit: *"Applied on private in `<sha>` — porting the same fix here in `<sha>`."* |
+| Public Copilot asks for something you explicitly declined on private | Reply with the private rationale verbatim, link the private thread. Don't re-litigate. |
+| Public Copilot proposes something orthogonal (only relevant to public) | Handle locally. Don't propagate to private. |
+
+**Rule of thumb: the two repos must stay semantically identical** on any file that isn't in the scrub list. If a Copilot-validated fix lands on one, it lands on both — otherwise the next `sync-to-public.sh` or `update-from-public` will surface the drift as a churn commit.
+
+When you push the fix to private directly (rather than via PR), the commit message should reference the public PR and explain why the PR gate is being bypassed:
+
+```
+test: clarify TRIGGER_PATTERN comment — sync from nanoclaw-public#22
+
+Copilot review on the public counterpart pointed out that the
+test name/comment said "word boundary" but the actual gate is
+`(?:^|\s)` — `\b` is satisfied at end-of-string regardless.
+Applying the same wording here so the two repos don't drift.
+```
 
 ## Non-negotiables
 
@@ -147,20 +178,3 @@ Then re-run Phase A (steps 1–5) against `jbaruch/nanoclaw-public` — same PR 
 ## When to use batch sync instead
 
 This skill is for **per-change** ship. When a batch of private-only improvements has accumulated and you want a bulk scrubbed export, use the **`sync-to-public`** skill instead — it runs the full `rsync` + scrub pipeline in one go. Don't mix: cherry-pick OR batch sync for a given set of changes, not both.
-
----
-
-## Reference: Reconciling Divergent Copilot Feedback Between Repos
-
-Copilot reviews each repo independently and can surface different comments on the same change.
-
-| Case | What to do |
-|---|---|
-| Public Copilot catches a real bug that private Copilot missed | Fix on public as normal, then push the same fix to private. If private is already merged, a direct push to `main` is OK *only when the diff is bit-for-bit identical to what public Copilot approved*; otherwise open a tiny private PR. |
-| Private Copilot caught something already fixed there, public asks the same | Reply on public with a pointer to the private thread/commit: *"Applied on private in `<sha>` — porting the same fix here in `<sha>`."* |
-| Public Copilot asks for something you explicitly declined on private | Reply with the private rationale verbatim, link the private thread. Don't re-litigate. |
-| Public Copilot proposes something orthogonal (only relevant to public) | Handle locally. Don't propagate to private. |
-
-**Rule of thumb: the two repos must stay semantically identical** on any file that isn't in the scrub list. If a Copilot-validated fix lands on one, it lands on both — otherwise the next `sync-to-public.sh` or `update-from-public` will surface the drift as a churn commit.
-
-When pushing a fix to private directly (rather than via PR), reference the public PR in the commit message and explain why the PR gate is being bypassed.
