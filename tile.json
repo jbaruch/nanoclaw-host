@@ -9,6 +9,9 @@
     },
     "repo-chain": {
       "rules": "rules/repo-chain.md"
+    },
+    "copilot-nudge-after-10min": {
+      "rules": "rules/copilot-nudge-after-10min.md"
     }
   },
   "skills": {
