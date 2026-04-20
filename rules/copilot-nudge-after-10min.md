@@ -24,12 +24,22 @@ holds, post a comment:
 latest_copilot=$(gh api repos/<owner>/<repo>/pulls/<n>/reviews \
   --jq '[.[] | select(.user.login | contains("opilot")) | .submitted_at] | max // ""')
 
-gh pr comment <n> --repo <owner>/<repo> --body "@copilot review
+if [ -z "$latest_copilot" ]; then
+  # Never reviewed — asking for a first pass, not a re-review.
+  body="@copilot review
+
+Summoned via GraphQL earlier but no review has landed yet. Please take a look."
+else
+  # Prior review exists and is older than the latest commit — ask for
+  # a re-review on the current state.
+  body="@copilot review
 
 Summoned via GraphQL earlier — the requested changes from your previous pass are addressed in the latest commit on this branch. Please re-review."
+fi
+gh pr comment <n> --repo <owner>/<repo> --body "$body"
 ```
 
-An empty `latest_copilot` means Copilot has never reviewed — that's eligible for nudge (treat as older than any commit timestamp). Then reset the summon timestamp for that PR so the nudge doesn't re-fire until another 10 min have passed.
+Then reset the summon timestamp for that PR so the nudge doesn't re-fire until another 10 min have passed.
 
 ## Scope
 
