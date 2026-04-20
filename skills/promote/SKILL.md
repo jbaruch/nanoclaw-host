@@ -50,7 +50,7 @@ The script prints `PR opened: <url>` and `Branch: <name>` — capture both. Step
 
 ## Phase 2 — Wait for Copilot review
 
-The pre-merge gates on a tile PR are (a) the local `tessl skill review --optimize` pass that already ran during Phase 1, and (b) **Copilot review**. The tile repos' `publish-tile.yml` workflow runs on push to `main`, not on `pull_request` — so `gh pr checks` returns nothing and the 85% `tessl skill review` + lint + publish happen *after* merge. Don't wait for a green CI box that isn't coming; wait for Copilot.
+The pre-merge gates on a tile PR are **Copilot review** plus the local `tessl skill review --optimize` pass *when `tessl` was available and Step 5 ran during Phase 1*. If `tessl` was unavailable on the host and that local pass was skipped, the first `tessl`/lint gate happens post-merge in the tile repos' `publish-tile.yml` workflow. That workflow runs on push to `main`, not on `pull_request` — so `gh pr checks` returns nothing and the 85% `tessl skill review` + lint + publish happen *after* merge. Don't wait for a green CI box that isn't coming; wait for Copilot.
 
 ```bash
 gh api repos/jbaruch/<tile>/pulls/<N>/reviews \
@@ -86,11 +86,11 @@ gh api "repos/jbaruch/<tile>/pulls/<N>/comments/<COMMENT_ID>/replies" \
   -X POST -f body="Declining — <reason: out of scope / intentional / conflicts with X>."
 ```
 
-Repeat Phase 2 + 3 until CI is green and all Copilot threads are replied to.
+Repeat Phase 2 + 3 until Copilot review is clean, all Copilot threads are replied to, and the local `tessl skill review --optimize` succeeds if available.
 
 ## Phase 4 — Merge
 
-Only when CI is green and Copilot review is clean:
+Only when Copilot review is clean, all threads are replied to, and the local `tessl skill review --optimize` has succeeded if available:
 
 ```bash
 gh pr merge <N> --repo jbaruch/<tile> --merge --delete-branch
