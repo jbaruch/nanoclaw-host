@@ -48,12 +48,11 @@ The script:
 
 The script prints `PR opened: <url>` and `Branch: <name>` — capture both. Step 5 requires `tessl` on the host machine; if unavailable, the script warns and skips (Copilot + GHA still gate).
 
-## Phase 2 — Wait for review + CI
+## Phase 2 — Wait for Copilot review
 
-Don't merge until Copilot has posted a review AND any CI checks are green. Poll:
+The pre-merge gates on a tile PR are (a) the local `tessl skill review --optimize` pass that already ran during Phase 1, and (b) **Copilot review**. The tile repos' `publish-tile.yml` workflow runs on push to `main`, not on `pull_request` — so `gh pr checks` returns nothing and the 85% `tessl skill review` + lint + publish happen *after* merge. Don't wait for a green CI box that isn't coming; wait for Copilot.
 
 ```bash
-gh pr checks <N> --repo jbaruch/<tile>
 gh api repos/jbaruch/<tile>/pulls/<N>/reviews \
   --jq '.[] | select(.user.login | contains("opilot")) | {state, body: .body[:120]}'
 gh api repos/jbaruch/<tile>/pulls/<N>/comments \
@@ -65,7 +64,6 @@ An empty `reviews` array means Copilot hasn't posted yet — wait. Expect a few 
 ## Phase 3 — Fix what's fixable
 
 Same discipline as `ship-code`:
-- **CI failures**: fix every one. No exceptions.
 - **Copilot findings**: apply what's right and reasonable; push back on anything that misreads scope or suggests over-engineering. Reply on **every** thread — accepted or declined — so nothing is left dangling.
 
 **Fix in staging, not in the tile clone.** Otherwise the next re-promote of the same skill regresses the fix. Edit the NAS staging copy, then push the fixup onto the same branch:
@@ -98,11 +96,13 @@ Only when CI is green and Copilot review is clean:
 gh pr merge <N> --repo jbaruch/<tile> --merge --delete-branch
 ```
 
-GHA on `main` then runs the publish workflow. Watch it complete:
+GHA on `main` then runs `publish-tile.yml` — 85% `tessl skill review`, `tessl tile lint`, and publish to the tessl registry. Watch it complete:
 
 ```bash
 gh run list --repo jbaruch/<tile> --limit 1
 ```
+
+If the post-merge review fails, the registry didn't get a new version but the bad content is on `main`. Open a follow-up PR to fix and run the cycle again — don't force-publish around a failing gate.
 
 ## After merge
 
