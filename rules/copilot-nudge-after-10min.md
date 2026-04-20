@@ -20,8 +20,12 @@ now - last_summon > 10 minutes
 holds, post a comment:
 
 ```bash
-# Pull only Copilot's reviews, not any reviewer's:
-latest_copilot=$(gh api repos/<owner>/<repo>/pulls/<n>/reviews \
+# Pull only Copilot's reviews, not any reviewer's. `--paginate` is
+# important: gh's default page size is 30, and long-running PRs
+# accumulate many review rounds (mine + Copilot's + any humans') so
+# the latest Copilot review can fall off the first page and get
+# silently missed.
+latest_copilot=$(gh api --paginate repos/<owner>/<repo>/pulls/<n>/reviews \
   --jq '[.[] | select(.user.login | contains("opilot")) | .submitted_at] | max // ""')
 
 if [ -z "$latest_copilot" ]; then
