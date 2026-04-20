@@ -7,8 +7,6 @@ description: Promote agent-created skills and rules from NAS staging to tile Git
 
 Runs the tile-repo PR lifecycle on content in the agent's NAS staging area: opens a PR, summons Copilot, iterates fixups, merges. End state is a merged PR on the tile repo; GHA (tessl publish, lint, skill review at 85%) runs on merge. Same review discipline as source-code PRs — no direct pushes to `main`, no merging before Copilot clears.
 
-**Related skills / scripts:** `check-staging` (view pending items before promoting), `ship-code` (same PR discipline for source code). Key scripts: `promote-from-host.sh`, `push-staged-to-branch.sh`, `tile-repo-lib.sh`.
-
 ## Before promoting
 
 Run `./scripts/check-staging.sh` to see what's pending. Review each item before promoting.
