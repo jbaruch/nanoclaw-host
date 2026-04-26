@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Repo Chain and Upstream Safety
 
 ## The chain

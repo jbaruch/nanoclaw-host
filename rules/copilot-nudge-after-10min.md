@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Copilot nudge after 10 minutes
 
 When you summon a Copilot review via the GraphQL `requestReviews` mutation (see the `ship-code` and `promote` skills for the full lifecycle and the exact GraphQL call) and the review hasn't started within 10 minutes, post a follow-up PR comment that tags `@copilot` to re-activate it.

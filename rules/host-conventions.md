@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Host Agent Conventions
 
 Rules for the NanoClaw host agent (Claude Code on Mac).
