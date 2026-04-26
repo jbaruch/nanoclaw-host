@@ -55,6 +55,31 @@ gh pr create --base main
 gh pr create --repo jbaruch/nanoclaw-public --base main
 ```
 
+This rule applies to **every fork**, not just the qwibitai chain. The `gh` CLI's "open PR against parent" default is the same footgun in any forked repo. If a checkout has an `upstream` remote OR `git config remote.origin.gh-resolved` set, treat the next `gh` command as load-bearing — pass `--repo $(git remote get-url origin | sed -E 's|.*[:/]([^/]+/[^/]+)(\.git)?$|\1|')` (or the literal target) explicitly. The `(\.git)?$` group makes the suffix optional so the regex matches both SSH (`git@github.com:owner/repo.git`) and HTTPS-without-suffix (`https://github.com/owner/repo`) remotes — GitHub stores HTTPS clones either way.
+
+Concretely: when iterating across a fleet of forks (e.g. setting up shared CI on every nanoclaw\* repo), assume EVERY repo might be a fork until proven otherwise — pass `--repo` even when you "know" the repo isn't a fork. The cost of a stray `--repo` is zero; the cost of a misfired PR is closing it on the wrong upstream and re-opening on the right repo, plus the stomach-drop when you realize where the PR landed.
+
+### Detection helper
+
+A one-liner to check whether the current checkout has any fork relationship before running gh:
+
+```bash
+git config --get remote.upstream.url \
+  || git remote -v | grep -E '^upstream\b' \
+  || gh repo view --json parent --jq '.parent // empty'
+```
+
+If any of those produce output, the checkout is a fork (or has an upstream-style remote configured) — pass `--repo` explicitly. The `gh repo view --json parent` form catches the case where there's no `upstream` remote but GitHub still treats the repo as a fork.
+
+### Recovery
+
+A `gh pr create` that landed on the wrong upstream cannot be re-targeted (GitHub doesn't support changing a PR's base repo). Recovery is:
+
+1. `gh pr close <wrong-pr-number> --repo <wrong-target> --comment "Wrong target — re-opening against <correct-target>"`
+2. `gh pr create --repo <correct-target> ...` with the same body
+
+Branch already pushed to your fork's `origin` is fine — closing the wrong-target PR doesn't delete the branch.
+
 ## Updating private from public
 
 ```bash
