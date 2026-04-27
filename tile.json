@@ -17,8 +17,8 @@
     "post-merge-publish-watch": {
       "rules": "rules/post-merge-publish-watch.md"
     },
-    "tessl-version-pin-drift": {
-      "rules": "rules/tessl-version-pin-drift.md"
+    "tessl-version-floating": {
+      "rules": "rules/tessl-version-floating.md"
     }
   },
   "skills": {
