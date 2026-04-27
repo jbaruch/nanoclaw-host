@@ -29,13 +29,18 @@ gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review & Publis
    - Land the fix as a follow-up PR against the same tile repo (NOT a force-push to main).
    - Repeat the watch on the new post-merge run.
 
-4. Only declare the original PR's task done once the registry has the new version. Verify:
+4. Only declare the original PR's task done once the registry has the new version. Verify with **both** checks (the first is necessary, neither alone is sufficient):
 
 ```bash
+# (a) The bump commit landed in the source repo (proves patch-version-publish ran):
 gh api repos/jbaruch/<tile-repo>/contents/tile.json --jq '.content' | base64 -d | grep '"version"'
+
+# (b) The Review & Publish Tile workflow's `publish` step succeeded:
+gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review & Publish Tile' --limit 1 \
+  --json conclusion --jq '.[0].conclusion'   # must print "success"
 ```
 
-The version field should have moved past whatever it was before the original PR merged.
+The repo's bumped `tile.json` is a proxy for publish, but the workflow can fail AFTER the bump commits (very rare, but the registry POST is a separate step). Both must be green before the PR's task is done.
 
 ## Why this rule and not "make the threshold a PR-time check"
 
