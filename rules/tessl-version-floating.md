@@ -1,50 +1,45 @@
-# Tessl Version Floating
+# Tessl Version Pin Drift
 
-## Don't pin tile versions in git-tracked tessl.json
+## Pins are correct — the drift is the bug
 
-The orchestrator's `/app/tessl-workspace/tessl.json` is bind-mounted from `tessl-workspace/tessl.json` in the host repo (per `nanoclaw-host: host-conventions` deploy flow). When `tessl update` runs (deploy.sh, the 15-minute periodic catch-up in the orchestrator, or the `tessl_update` MCP tool), it rewrites the file in-place with the latest registry versions.
+Per `jbaruch/coding-policy: dependency-management`, dependency manifests should pin versions or commit a lock file for reproducibility. `tessl-workspace/tessl.json` follows the pin form: each `dependencies.<tile>.version` is a literal `0.1.x` string. That part is right; **don't switch the pins to `"latest"` or any floating range** — `tessl install` resolves the floating spec at runtime to whatever's currently on the registry, and `.tessl/tiles/<tile>/tile.json` (where the resolved version would otherwise be recorded) is gitignored. Floating manifest + ignored lock = no lock at all, which the dependency-management rule explicitly disallows.
 
-Hard pins (`"version": "0.1.50"`) in the git-tracked copy break the loop in two ways:
+The actual bug is downstream of the pins: **`tessl update` rewrites the manifest in-place, but nothing commits the resulting bump.**
 
-1. **Drift between git and runtime.** Each `tessl update` mutates the file, leaving the working tree dirty. Nothing auto-commits those bumps, so `git status` accumulates a permanent diff that nobody pushes. A subsequent `git pull` pulls the stale main pins and overwrites the runtime updates — silently rolling back tile versions inside the container.
+## How the drift happens
 
-2. **Misleading semantics.** A literal pin reads as "the operator wanted exactly this version", which is the opposite of the intent. Future agents (or the operator on a long-tail review) might honor the pin and refuse to bump.
+The orchestrator's `/app/tessl-workspace/tessl.json` is bind-mounted from the host repo's `tessl-workspace/tessl.json`. Three independent flows trigger `tessl update`:
 
-## Use floating specifiers instead
+1. `scripts/deploy.sh` step 3 (every deploy).
+2. The orchestrator's 15-minute periodic catch-up loop (`src/index.ts`).
+3. The `tessl_update` MCP tool (called from the agent after a promote).
 
-In the git-tracked `tessl-workspace/tessl.json`, declare each tile dependency with a floating range that says "always pull the latest compatible":
+Each flow writes the new pins back to the bind-mounted file. The host repo's working tree shows the modified manifest, but no automation commits it. A subsequent `git pull` (or fresh clone + container rebuild) overwrites the in-place bumps with whatever pins were last hand-committed — silently rolling tile content backward across the fleet.
 
-```json
-{
-  "name": "nanoclaw-orchestrator",
-  "mode": "managed",
-  "dependencies": {
-    "jbaruch/nanoclaw-core": { "version": "latest" },
-    "jbaruch/nanoclaw-admin": { "version": "latest" },
-    "jbaruch/nanoclaw-trusted": { "version": "latest" },
-    "jbaruch/nanoclaw-untrusted": { "version": "latest" },
-    "jbaruch/nanoclaw-host": { "version": "latest" },
-    "jbaruch/reclaim-tripit-sync": { "version": "latest" }
-  }
-}
+Verified on 2026-04-27: NAS working tree was 22 days behind `main` on every tile (e.g. `nanoclaw-core` 0.1.60 in git → 0.1.87 actual; `nanoclaw-admin` 0.1.101 → 0.1.229; `nanoclaw-host` 0.1.2 → 0.1.23).
+
+## Fix: auto-commit + push the bump after every successful `tessl update`
+
+Each of the three `tessl update` callers MUST, on success, check whether `tessl-workspace/tessl.json` has a working-tree diff against `HEAD` and — if so — commit and push the bump. Skeleton:
+
+```bash
+if ! git diff --quiet tessl-workspace/tessl.json; then
+  git add tessl-workspace/tessl.json
+  git -c user.email="$BOT_EMAIL" -c user.name="$BOT_NAME" commit \
+    -m "chore(tessl): bump tile pins from registry [skip ci]"
+  git push origin main
+fi
 ```
 
-`"latest"` resolves to the latest registry version at install / update time. The git file stays stable; tessl handles version resolution at runtime; `tessl update` becomes idempotent against the file (no rewrites, no drift). Verified 2026-04-27: `tessl install` + `tessl update` against `"version": "latest"` resolved to the live registry version without rewriting the manifest. The other tested forms (`"*"`, an empty object, omission) were rejected as invalid input.
+The `[skip ci]` tag is intentional — the bump itself doesn't need CI; the next promote PR will re-trigger the full gate. The push runs against `main` because the bump is a fact about what the orchestrator is actually running, not a proposal for review.
 
-## Deliberate pins ARE allowed — but commit them
+## Verification
 
-If a tile version genuinely needs to be pinned (rolling back a bad release, working around a known regression):
+After landing the auto-commit:
 
-1. Set the literal version in `tessl-workspace/tessl.json` (`"version": "0.1.49"`).
-2. **Commit and push the change** in the same operation. Add a CHANGELOG entry on the host repo explaining why.
-3. File a follow-up issue describing what needs to be true before the pin can lift.
+- `git log --oneline -- tessl-workspace/tessl.json | head` should show regular `chore(tessl): bump tile pins` commits, one per registry-published tile version.
+- `ssh nas 'cd /home/jbaruch/nanoclaw && git status tessl-workspace/tessl.json'` should report "clean" between deploys (or briefly show a diff that the next `tessl update` resolves).
 
-A pin without a commit is a leak. A pin with a commit is a deliberate hold. The first is a bug; the second is an operations decision.
+## Don't add lock-file workarounds
 
-## How the bug surfaced
-
-Observed 2026-04-27: `tessl-workspace/tessl.json` on the NAS had the working tree 22 days behind `main` (core 0.1.60 → 0.1.87, admin 0.1.101 → 0.1.229, trusted 0.1.30 → 0.1.50, untrusted 0.1.15 → 0.1.26, host 0.1.2 → 0.1.23). The container was running the latest pins thanks to in-place `tessl update`; a fresh `git pull` would have rolled the orchestrator back across the board. Running this rule's `"*"` recipe on the git-tracked file makes the pull safe.
-
-## Doesn't change anything host-side except the file
-
-`tessl install` / `tessl update` / `tessl outdated` all accept floating ranges. The Dockerfile's `COPY tessl-workspace/tessl.json` keeps working unchanged. The 15-minute orchestrator catch-up keeps working unchanged. Only the file's syntax shifts.
+Keep `.tessl/tiles/` gitignored. Don't try to repurpose it as a manifest. The pin in `tessl.json` IS the source of truth; the bind-mount + auto-commit flow keeps it accurate.
