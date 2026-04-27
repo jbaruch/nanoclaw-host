@@ -28,7 +28,11 @@ Each `tessl update` caller MUST, on success, check whether `tessl-workspace/tess
 
 ```bash
 if ! git diff --quiet tessl-workspace/tessl.json; then
-  branch="chore/tessl-pin-bump-$(date -u +%Y%m%dT%H%M%SZ)"
+  # 4-hex random suffix in addition to the UTC second avoids
+  # collision when two callers (e.g. deploy.sh + the 15-min loop)
+  # produce a bump in the same second on a busy day. Same shape as
+  # the promote-branch naming in scripts/promote-to-tile-repo.sh.
+  branch="chore/tessl-pin-bump-$(date -u +%Y%m%dT%H%M%SZ)-$(printf '%04x' $((RANDOM * RANDOM & 0xffff)))"
   git checkout -b "$branch"
   git add tessl-workspace/tessl.json
   git -c user.email="$BOT_EMAIL" -c user.name="$BOT_NAME" commit \

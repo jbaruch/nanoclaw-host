@@ -12,30 +12,30 @@ This has happened: `nanoclaw-admin#66` (the UTC `schedule_value` migration) merg
 
 ## Always watch the post-merge workflow
 
-After every `gh pr merge` against a tile repo:
+After every `gh pr merge` against a tile repo (substitute `<tile-repo>` consistently — e.g. `nanoclaw-admin`):
 
-1. Find the post-merge run — it triggers on `push` to `main` with the `Review & Publish Tile` workflow name:
+1. Find the post-merge run — it triggers on `push` to `main` with the `Review & Publish Tile` workflow name. Capture the run id directly so the next steps don't need re-parsing:
 
 ```bash
-gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review & Publish Tile' --limit 1 \
-  --json databaseId,status,conclusion --jq '.[0]'
+RUN_ID=$(gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review & Publish Tile' --limit 1 \
+  --json databaseId --jq '.[0].databaseId')
 ```
 
-2. Wait for it to finish (`gh run watch <id> --repo <repo> --exit-status`) or poll until `status == "completed"`. Don't move on while it's `in_progress`.
+2. Wait for it to finish: `gh run watch "$RUN_ID" --repo jbaruch/<tile-repo> --exit-status` (or poll until `status == "completed"`). Don't move on while it's `in_progress`.
 
 3. If `conclusion != "success"`:
-   - Pull the failed step's log: `gh run view <id> --repo <repo> --log-failed | tail -100`
+   - Pull the failed step's log: `gh run view "$RUN_ID" --repo jbaruch/<tile-repo> --log-failed | tail -100`
    - Fix the root cause (most common: `tessl skill review` score below 85% on a touched skill — trim the SKILL.md or extract reference content).
    - Land the fix as a follow-up PR against the same tile repo (NOT a force-push to main).
-   - Repeat the watch on the new post-merge run.
+   - Re-capture `RUN_ID` against the new push and repeat the watch.
 
-4. Only declare the original PR's task done once the registry has the new version. Verify with **both** checks (the first is necessary, neither alone is sufficient):
+4. Only declare the original PR's task done once the registry has the new version. Verify with **both** checks (the first is necessary, neither alone is sufficient). Both `gh` commands include explicit `--repo` per `nanoclaw-host: repo-chain`:
 
 ```bash
 # (a) The bump commit landed in the source repo (proves patch-version-publish ran):
-gh api repos/jbaruch/<tile-repo>/contents/tile.json --jq '.content' | base64 -d | grep '"version"'
+gh api --repo jbaruch/<tile-repo> contents/tile.json --jq '.content' | base64 -d | grep '"version"'
 
-# (b) The Review & Publish Tile workflow's `publish` step succeeded:
+# (b) The Review & Publish Tile workflow's conclusion is "success":
 gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review & Publish Tile' --limit 1 \
   --json conclusion --jq '.[0].conclusion'   # must print "success"
 ```
