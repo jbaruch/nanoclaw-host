@@ -15,7 +15,7 @@ This has happened: `nanoclaw-admin#66` merged with PR-time gates green, then the
 After every `gh pr merge` against a tile repo:
 
 - Locate the post-merge workflow run for the merge commit's SHA — match by `head_sha`, not by `--limit 1`, since another push could insert between merge and lookup.
-- Wait for it to finish (`gh run watch <id> --exit-status` or poll `status == "completed"`); don't move on while it's `in_progress`.
+- Wait for it to finish (`gh run watch <id> --repo jbaruch/<tile-repo> --exit-status` or poll `status == "completed"`; the `--repo` flag is mandatory per `nanoclaw-host: repo-chain` so the watch can't accidentally target a fork or upstream); don't move on while it's `in_progress`.
 - If the conclusion isn't `success`, pull the failed step's log, fix the root cause (most common: skill review below 85% — trim the SKILL.md or extract reference content), and land the fix as a follow-up PR. Re-watch on the new run. Don't force-push to main.
 
 ## Verify before declaring done

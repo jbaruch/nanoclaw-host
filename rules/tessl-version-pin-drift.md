@@ -18,7 +18,7 @@ Verified on 2026-04-27: NAS working tree was 22 days behind `main` on every tile
 
 ## Fix: surface the bump via a PR, never a direct push
 
-Each `tessl update` caller MUST, on success, check whether `tessl-workspace/tessl.json` has a working-tree diff against `HEAD` and — if so — open a `chore/tessl-pin-bump-<epoch-secs>-<rand>` PR via `gh pr create` against `main`. Reasons:
+Each `tessl update` caller MUST, on success, check whether `tessl-workspace/tessl.json` has a working-tree diff against `HEAD` and — if so — open a `chore/tessl-pin-bump-<epoch-secs>-<rand>` PR via `gh pr create --repo jbaruch/nanoclaw --base main` against the host repo. The `--repo` flag is mandatory per `nanoclaw-host: repo-chain` so the bump can't accidentally land on a fork or upstream. Reasons for the PR shape:
 
 - `coding-policy: ci-safety` forbids direct pushes to `main` and `[skip ci]` commits. The PR flow keeps both branch protections and CI gates intact.
 - `coding-policy: ci-safety` requires lowercase-hyphenated `<description>` in `<type>/<description>` branch names. Use epoch-seconds (numeric) plus a 4-hex random suffix; ISO 8601 has uppercase `T`/`Z`.
