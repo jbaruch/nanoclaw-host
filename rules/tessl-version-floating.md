@@ -27,12 +27,14 @@ Verified on 2026-04-27: NAS working tree was 22 days behind `main` on every tile
 Each `tessl update` caller MUST, on success, check whether `tessl-workspace/tessl.json` has a working-tree diff against `HEAD` and — if so — open a pull request with the bump on a `chore/tessl-pin-bump-<utc>` branch. Skeleton:
 
 ```bash
-if ! git diff --quiet tessl-workspace/tessl.json; then
-  # 4-hex random suffix in addition to the UTC second avoids
-  # collision when two callers (e.g. deploy.sh + the 15-min loop)
-  # produce a bump in the same second on a busy day. Same shape as
-  # the promote-branch naming in scripts/promote-to-tile-repo.sh.
-  branch="chore/tessl-pin-bump-$(date -u +%Y%m%dT%H%M%SZ)-$(printf '%04x' $((RANDOM * RANDOM & 0xffff)))"
+# `git diff HEAD --quiet -- <path>` compares working tree against
+# HEAD (not against the index), so a `git add` between the update
+# and this check doesn't mask the diff. Per `coding-policy: ci-safety`
+# branch names must be lowercase + hyphens, so the timestamp uses
+# epoch seconds (numeric only) plus a 4-hex random suffix to avoid
+# collision when two callers bump in the same second.
+if ! git diff HEAD --quiet -- tessl-workspace/tessl.json; then
+  branch="chore/tessl-pin-bump-$(date -u +%s)-$(printf '%04x' $((RANDOM * RANDOM & 0xffff)))"
   git checkout -b "$branch"
   git add tessl-workspace/tessl.json
   git -c user.email="$BOT_EMAIL" -c user.name="$BOT_NAME" commit \

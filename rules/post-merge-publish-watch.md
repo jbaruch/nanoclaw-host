@@ -32,8 +32,11 @@ RUN_ID=$(gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review
 4. Only declare the original PR's task done once the registry has the new version. Verify with **both** checks (the first is necessary, neither alone is sufficient). Both `gh` commands include explicit `--repo` per `nanoclaw-host: repo-chain`:
 
 ```bash
-# (a) The bump commit landed in the source repo (proves patch-version-publish ran):
-gh api --repo jbaruch/<tile-repo> contents/tile.json --jq '.content' | base64 -d | grep '"version"'
+# (a) The bump commit landed in the source repo (proves patch-version-publish ran).
+#     `--jq '.content | @base64d | fromjson | .version'` decodes the file content
+#     in jq itself — portable across macOS / GNU `base64` differences.
+gh api --repo jbaruch/<tile-repo> repos/jbaruch/<tile-repo>/contents/tile.json \
+  --jq '.content | @base64d | fromjson | .version'
 
 # (b) The Review & Publish Tile workflow's conclusion is "success":
 gh run list --repo jbaruch/<tile-repo> --branch main --workflow 'Review & Publish Tile' --limit 1 \
