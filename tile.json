@@ -13,6 +13,12 @@
     },
     "copilot-nudge-after-10min": {
       "rules": "rules/copilot-nudge-after-10min.md"
+    },
+    "post-merge-publish-watch": {
+      "rules": "rules/post-merge-publish-watch.md"
+    },
+    "tessl-version-floating": {
+      "rules": "rules/tessl-version-floating.md"
     }
   },
   "skills": {
