@@ -16,7 +16,9 @@ tessl install jbaruch/nanoclaw-host
 |------|---------|
 | [copilot-nudge-after-10min](rules/copilot-nudge-after-10min.md) | When you summon a Copilot review via the GraphQL `requestReviews` mutation (see the `ship-code` and `promote` skills for the full lifecycle and the exact GraphQL call) and the review hasn't started within 10 minutes, post a follow-up PR comment that tags `@copilot` to re-activate it. |
 | [host-conventions](rules/host-conventions.md) | Rules for the NanoClaw host agent (Claude Code on Mac). |
+| [post-merge-publish-watch](rules/post-merge-publish-watch.md) | After every tile-repo PR merge, watch the post-merge `Review & Publish Tile` workflow until the registry actually has the new version. A merge that doesn't reach the registry is incomplete. |
 | [repo-chain](rules/repo-chain.md) | Updates flow DOWN the chain: |
+| [tessl-version-pin-drift](rules/tessl-version-pin-drift.md) | Pins in `tessl-workspace/tessl.json` are correct; the bug is `tessl update` rewriting the manifest in-place without surfacing the bump to git. Each `tessl update` caller must open a `chore/tessl-pin-bump-*` PR with the bump. |
 
 ## Skills
 
