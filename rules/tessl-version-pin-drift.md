@@ -30,9 +30,10 @@ Each `tessl update` caller MUST, on success, check whether `tessl-workspace/tess
 # `git diff HEAD --quiet -- <path>` compares working tree against
 # HEAD (not against the index), so a `git add` between the update
 # and this check doesn't mask the diff. Per `coding-policy: ci-safety`
-# branch names must be lowercase + hyphens, so the timestamp uses
-# epoch seconds (numeric only) plus a 4-hex random suffix to avoid
-# collision when two callers bump in the same second.
+# the branch's <description> segment (after the `chore/` type prefix)
+# must be lowercase + hyphens, so the timestamp uses epoch seconds
+# (numeric only) plus a 4-hex random suffix to avoid collision when
+# two callers bump in the same second.
 if ! git diff HEAD --quiet -- tessl-workspace/tessl.json; then
   branch="chore/tessl-pin-bump-$(date -u +%s)-$(printf '%04x' $((RANDOM * RANDOM & 0xffff)))"
   git checkout -b "$branch"
