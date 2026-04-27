@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Post-Merge Publish Watch
 
 ## A merge is not a ship
