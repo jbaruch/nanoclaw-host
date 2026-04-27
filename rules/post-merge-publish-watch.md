@@ -14,7 +14,7 @@ This has happened: `nanoclaw-admin#66` merged with PR-time gates green, then the
 
 After every `gh pr merge` against a tile repo:
 
-- Locate the post-merge workflow run for the merge commit's SHA — match by the run's head-SHA field (`gh run list --json headSha,databaseId,status,conclusion --jq '.[] | select(.headSha == "<merge-sha>")'`; the REST API spells the same field `head_sha`), not by `--limit 1`, since another push could insert between merge and lookup.
+- Locate the post-merge workflow run for the merge commit's SHA — match by the run's head-SHA field (`gh run list --repo jbaruch/<tile-repo> --json headSha,databaseId,status,conclusion --jq '.[] | select(.headSha == "<merge-sha>")'`; the REST API spells the same field `head_sha`), not by `--limit 1`, since another push could insert between merge and lookup. The `--repo` flag is mandatory per `nanoclaw-host: repo-chain` on every `gh` invocation in this rule (including the `gh pr merge` that landed the PR in the first place).
 - Wait for it to finish (`gh run watch <id> --repo jbaruch/<tile-repo> --exit-status` or poll `status == "completed"`; the `--repo` flag is mandatory per `nanoclaw-host: repo-chain` so the watch can't accidentally target a fork or upstream); don't move on while it's `in_progress`.
 - If the conclusion isn't `success`, pull the failed step's log, fix the root cause (most common: skill review below 85% — trim the SKILL.md or extract reference content), and land the fix as a follow-up PR. Re-watch on the new run. Don't force-push to main.
 
@@ -25,7 +25,7 @@ Two checks, both required (the bump commit lands locally before the registry POS
 - The bumped `tile.json` is on the source repo's `main` (proves `patch-version-publish` ran).
 - The latest `Review & Publish Tile` run on `main` has `conclusion: "success"` (proves the registry POST landed too).
 
-Both `gh` invocations include explicit `--repo` per `nanoclaw-host: repo-chain`. The implementation lives in operator scripts; this rule names the contract.
+Both check commands take explicit `--repo` per `nanoclaw-host: repo-chain` (as does every other `gh` example in this rule). The implementation lives in operator scripts; this rule names the contract.
 
 ## Why this rule and not "raise the PR-time gate"
 

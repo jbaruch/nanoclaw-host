@@ -24,6 +24,6 @@ Each `tessl update` caller MUST, on success, check whether `tessl-workspace/tess
 - `coding-policy: ci-safety` requires lowercase-hyphenated `<description>` in `<type>/<description>` branch names. Use epoch-seconds (numeric) plus a 4-hex random suffix; ISO 8601 has uppercase `T`/`Z`.
 - The diff comparison is against `HEAD`, not the index — `git add` between the update and the check would otherwise mask the diff.
 
-The implementation lives in operator scripts (one per caller) referenced from `host-conventions`; this rule names the contract. Bump PRs are mechanical and auto-mergeable once CI is green; the cost is one fast review cycle, which is the right price for keeping branch protections intact.
+The implementation lives at the call sites — `scripts/deploy.sh` plus the orchestrator code paths (`src/index.ts` 15-min loop and `src/ipc.ts` `tessl_update` handler); this rule names the contract. Bump PRs are mechanical and auto-mergeable once CI is green; the cost is one fast review cycle, which is the right price for keeping branch protections intact.
 
 Human-driven bumps (operator runs `tessl update` locally after deploy) follow the same rule — the bump goes through a PR, never a direct commit to `main`.
