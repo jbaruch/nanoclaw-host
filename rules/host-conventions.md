@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Host Agent Conventions
 
 Rules for the NanoClaw host agent (Claude Code on Mac).
@@ -83,6 +87,6 @@ All scripts in `scripts/` source `scripts/common.sh` for shared config (`NAS_HOS
 
 Cross-trust-tier skills — those that may run in untrusted, trusted, AND main containers — must persist state under `/workspace/state/<skill-name>/`. Tier-pinned skills (admin-only, trusted-only) may continue using `/workspace/group/` since that mount is read-write for them.
 
-`/workspace/state/<skill-name>/` is mounted RW into every container regardless of trust tier (see `src/container-runner.ts`). `/workspace/group/` is RW for trusted/main and RO for untrusted, so a cross-tier skill writing there silently EACCES'd on the untrusted side before this mount existed.
+`/workspace/state/<skill-name>/` is mounted RW into every container regardless of trust tier. The mount is wired in the `jbaruch/nanoclaw` host repo (`src/container-runner.ts`, search for `'/workspace/state'`). `/workspace/group/` is RW for trusted/main and RO for untrusted, so a cross-tier skill writing there silently EACCES'd on the untrusted side before this mount existed.
 
 Reference implementations: `nanoclaw-core/check-unanswered/scripts/unanswered-precheck.py` reads/writes `/workspace/state/check-unanswered/`; `nanoclaw-admin/brief-cleanup` writes `/workspace/state/brief-cleanup/`. The `nanoclaw-core/status` skill takes a different approach for the same constraint: it computes its single piece of cross-tier data (container uptime) directly from `/.dockerenv` mtime, avoiding state persistence entirely. Both patterns are valid — pick the simpler one for the skill.
