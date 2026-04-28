@@ -18,7 +18,7 @@ tessl install jbaruch/nanoclaw-host
 | [host-conventions](rules/host-conventions.md) | Rules for the NanoClaw host agent (Claude Code on Mac). |
 | [post-merge-publish-watch](rules/post-merge-publish-watch.md) | After every tile-repo PR merge, watch the post-merge `Review & Publish Tile` workflow until the registry actually has the new version. A merge that doesn't reach the registry is incomplete. |
 | [repo-chain](rules/repo-chain.md) | Updates flow DOWN the chain: |
-| [tessl-version-pin-drift](rules/tessl-version-pin-drift.md) | Pins in `tessl-workspace/tessl.json` are correct; the bug is `tessl update` rewriting the manifest in-place without surfacing the bump to git. Each `tessl update` caller must open a `chore/tessl-pin-bump-*` PR with the bump. |
+| [tessl-version-floating](rules/tessl-version-floating.md) | `tessl-workspace/tessl.json` MUST use `"version": "latest"` for every tile (approved exception to `coding-policy: dependency-management`). `deploy.sh` verifies on each deploy that no literal pins have crept in. |
 
 ## Skills
 
