@@ -19,6 +19,9 @@
     },
     "tessl-version-floating": {
       "rules": "rules/tessl-version-floating.md"
+    },
+    "orchestrator-dep-refresh": {
+      "rules": "rules/orchestrator-dep-refresh.md"
     }
   },
   "skills": {
