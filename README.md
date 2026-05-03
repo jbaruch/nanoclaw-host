@@ -16,6 +16,7 @@ tessl install jbaruch/nanoclaw-host
 |------|---------|
 | [copilot-nudge-after-10min](rules/copilot-nudge-after-10min.md) | When you summon a Copilot review via the GraphQL `requestReviews` mutation (see the `ship-code` and `promote` skills for the full lifecycle and the exact GraphQL call) and the review hasn't started within 10 minutes, post a follow-up PR comment that tags `@copilot` to re-activate it. |
 | [host-conventions](rules/host-conventions.md) | Rules for the NanoClaw host agent (Claude Code on Mac). |
+| [orchestrator-dep-refresh](rules/orchestrator-dep-refresh.md) | When an npm-from-GitHub dep in `Dockerfile.orchestrator` ships a new version, the default `./scripts/deploy.sh` does NOT pick it up because BuildKit caches `RUN npm install -g <GitHub-repo>` by Dockerfile string, not by GitHub state. Use `./scripts/deploy.sh --no-cache` and verify the resulting dep version against the running container. |
 | [post-merge-publish-watch](rules/post-merge-publish-watch.md) | After every tile-repo PR merge, watch the post-merge `Review & Publish Tile` workflow until the registry actually has the new version. A merge that doesn't reach the registry is incomplete. |
 | [repo-chain](rules/repo-chain.md) | Updates flow DOWN the chain: |
 | [tessl-version-floating](rules/tessl-version-floating.md) | `tessl-workspace/tessl.json` MUST use `"version": "latest"` for every tile (approved exception to `coding-policy: dependency-management`). `deploy.sh` verifies on each deploy that no literal pins have crept in. |
