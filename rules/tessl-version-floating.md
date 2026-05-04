@@ -24,8 +24,8 @@ alwaysApply: true
 
 The check exists to catch:
 
-- A `tessl install <tile>` invocation that wrote a pin (the default behaviour).
-- A `tessl init` shape from an older CLI that wrote `mode: "vendored"`.
+- A `tessl install <tile>` invocation that wrote a pin (the default behavior).
+- A `tessl init` shape from an older CLI that wrote `"mode": "vendored"`.
 - A merge from a fork where the pinned or vendored form leaked back in.
 - An operator hand-edit "for one quick test" that never got reverted.
 
