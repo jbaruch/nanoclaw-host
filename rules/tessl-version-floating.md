@@ -16,7 +16,7 @@ alwaysApply: true
 
 ## Verify on every deploy
 
-`scripts/deploy.sh` MUST include a step that walks every `tessl.json` in the repo (excluding the `.tessl/`, `node_modules/`, `groups/`, `data/`, `dist/` generated subtrees) and fails the deploy if any manifest fails one of:
+`scripts/deploy.sh` MUST include a step that reads each manifest in the explicitly named set covered by this carve-out (currently `tessl-workspace/tessl.json` and the project-root `tessl.json`; any future addition is appended to this list in lock-step with naming the manifest above) and fails the deploy if any manifest fails one of:
 
 - `mode != "managed"` (catches a stale `"vendored"` declaration or a missing field).
 - Any `dependencies.<tile>.version` not equal to the literal string `"latest"`.
