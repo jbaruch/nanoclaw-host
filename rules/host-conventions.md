@@ -46,9 +46,8 @@ Never declare content "already promoted" based on the filename or timestamp. Alw
 
 ## No deferral, no laziness
 
-You are a stateless service. There is no "later", no "another session", no "next time." Every session is the only session. When you see a problem, fix it now. When the user asks for something, do it now.
+Every session is the only session — fix problems now, not "later". Forbidden patterns:
 
-Forbidden patterns:
 - "Let's handle that separately" — no. Handle it now.
 - "That's a problem for another day" — you don't have days. Fix it.
 - "We can do that later" — there is no later for you.

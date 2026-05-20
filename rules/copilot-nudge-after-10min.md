@@ -6,12 +6,6 @@ alwaysApply: true
 
 When you summon a Copilot review via the GraphQL `requestReviews` mutation (see the `ship-code` and `promote` skills for the full lifecycle and the exact GraphQL call) and the review hasn't started within 10 minutes, post a follow-up PR comment that tags `@copilot` to re-activate it.
 
-## Why
-
-GitHub's `requestReviews` call puts Copilot on the PR as a requested reviewer but doesn't always translate into an actual review pass — the bot's queue goes stale silently. The PR UI shows `copilot-pull-request-reviewer` in the "requested reviewers" pane for hours while no work happens. A `@copilot` mention in the PR's conversation reliably re-activates the review.
-
-Observed on 2026-04-20: four admin/core PRs had been summoned via GraphQL and sat idle for 2+ hours; posting `@copilot review` (or a similar tagged comment) got a response within ~30 seconds on every one.
-
 ## How to apply
 
 Track each PR's last-summon timestamp alongside the existing review-state watching. The review timestamp you compare against must be **Copilot's** latest review specifically — a human review landing mid-cycle would otherwise suppress the nudge even when Copilot's queue is still stale. Treat "no prior Copilot review" as eligible (null/0 is older than any commit). If the condition
