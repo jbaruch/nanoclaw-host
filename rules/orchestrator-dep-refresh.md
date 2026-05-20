@@ -8,7 +8,7 @@ alwaysApply: true
 
 `Dockerfile.orchestrator` installs npm packages directly from GitHub repos (e.g. `RUN npm install -g jbaruch/reclaim-tripit-timezones-sync`). When the upstream GitHub repo ships a new version, a default `./scripts/deploy.sh` run does NOT pick it up — even though the script reports "deploy complete" and exits 0. The orchestrator silently keeps running the prior version of the dep.
 
-BuildKit caches `RUN npm install -g <GitHub-repo>` on the Dockerfile string, not on the GitHub repo's current state. A bare `docker compose build --no-cache --pull` followed by `up -d --build` is also unsafe — BuildKit can resurrect an older cached image for the second `--build`.
+Do not run `docker compose build --no-cache --pull` followed by `up -d --build` as a workaround. Use `./scripts/deploy.sh --no-cache` per `## How to refresh` below.
 
 ## How to refresh
 

@@ -23,7 +23,7 @@ The check catches:
 - A merge from a fork where the pinned or vendored form leaked back in.
 - An operator hand-edit "for one quick test" that never got reverted.
 
-Runs in `deploy.sh`, not just CI — silent runtime drift only surfaces at deploy.
+Run this check in `scripts/deploy.sh`, not just CI.
 
 ## When `tessl install <tile>` writes a pin, fix it before commit
 
