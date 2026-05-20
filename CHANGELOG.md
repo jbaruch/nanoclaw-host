@@ -2,9 +2,20 @@
 
 ## Unreleased
 
-### Rules — conciseness pass per `coding-policy: context-writing-style` (tier 3)
+### Rules — structural split of `host-conventions` per `coding-policy: context-artifacts`
 
-- **post-merge-publish-watch** — dropped `nanoclaw-admin#66 merged with PR-time gates green, then the post-merge skill-review gate scored a touched-but-borderline skill below 85% and failed publish-tile…` reference-incident paragraph from `## A merge is not a ship`. Cut "since other workflows (skill-review, lint) also run on the same commit" rationale clause from the head-SHA-match bullet. Cut three `--repo flag mandatory per nanoclaw-host: repo-chain` cross-rule shoulder-tap clauses and folded them into one operative bullet at the end of the watch section. Cut `## Why this rule and not "raise the PR-time gate"` meta-justification section in full. Cut trailing "The implementation lives in operator scripts; this rule names the contract" rationale sentence.
+Split the 11-H2 `host-conventions.md` into 8 single-concept rules per `Rules Are Prose → One concept per rule file`. Trimmed `host-conventions.md` to the three deployment-mechanics sections (deploy.sh, registry, common.sh); the other eight concepts moved to standalone rules:
+
+- **nuke-semantics** (new) — group nuke = kill container only; never delete registrations or group folders
+- **no-error-suppression** (new) — forbids `|| true`, `2>/dev/null`, empty `catch {}`, silent swallowing
+- **dual-agent-coexistence** (new) — AyeAye + host agent run asynchronously; never assume the latest version or that the other's work is stale
+- **staging-diff-protocol** (new) — diff/read/reason/merge before promoting staging content; "stale" = empty diff only
+- **no-deferral** (new) — every session is the only session; forbidden-pattern bullets
+- **boyscout-host** (new) — host agent owns the full stack; in-scope/out-of-scope split with owner's-domain carve-out
+- **tile-content-pipeline** (new — replaces "Never edit tile repos directly") — staging→promote pipeline for live-NAS edits; explicitly carves out feature-branch PRs against tile repos as the same review surface, resolving the conflict between the old wording and `feedback_plugin_repo_prs_ok` agent memory
+- **cross-tier-skill-state** (new) — `/workspace/state/<skill-name>/` for skills crossing trust tiers; `/workspace/group/` for tier-pinned
+
+Trimmed `host-conventions.md` from 91 body lines (post-tier-3) to 17. Rule count: 6 → 14. Sync surfaces per `coding-policy: context-artifacts` Surface Sync: `tile.json` rules entries added; README rules table extended.
 
 ### Rules — conciseness pass per `coding-policy: context-writing-style`
 
