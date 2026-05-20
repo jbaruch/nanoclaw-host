@@ -6,46 +6,60 @@
   "private": false,
   "rules": {
     "host-conventions": {
-      "rules": "rules/host-conventions.md"
+      "rules": "rules/host-conventions.md",
+      "alwaysApply": true
     },
     "repo-chain": {
-      "rules": "rules/repo-chain.md"
+      "rules": "rules/repo-chain.md",
+      "alwaysApply": true
     },
     "copilot-nudge-after-10min": {
-      "rules": "rules/copilot-nudge-after-10min.md"
+      "rules": "rules/copilot-nudge-after-10min.md",
+      "alwaysApply": true
     },
     "post-merge-publish-watch": {
-      "rules": "rules/post-merge-publish-watch.md"
+      "rules": "rules/post-merge-publish-watch.md",
+      "alwaysApply": true
     },
     "tessl-version-floating": {
-      "rules": "rules/tessl-version-floating.md"
+      "rules": "rules/tessl-version-floating.md",
+      "alwaysApply": true
     },
     "orchestrator-dep-refresh": {
-      "rules": "rules/orchestrator-dep-refresh.md"
+      "rules": "rules/orchestrator-dep-refresh.md",
+      "alwaysApply": true
     },
     "nuke-semantics": {
-      "rules": "rules/nuke-semantics.md"
+      "rules": "rules/nuke-semantics.md",
+      "alwaysApply": true
     },
     "no-error-suppression": {
-      "rules": "rules/no-error-suppression.md"
+      "rules": "rules/no-error-suppression.md",
+      "alwaysApply": true
     },
     "dual-agent-coexistence": {
-      "rules": "rules/dual-agent-coexistence.md"
+      "rules": "rules/dual-agent-coexistence.md",
+      "alwaysApply": true
     },
     "staging-diff-protocol": {
-      "rules": "rules/staging-diff-protocol.md"
+      "rules": "rules/staging-diff-protocol.md",
+      "alwaysApply": true
     },
     "no-deferral": {
-      "rules": "rules/no-deferral.md"
+      "rules": "rules/no-deferral.md",
+      "alwaysApply": true
     },
     "boyscout-host": {
-      "rules": "rules/boyscout-host.md"
+      "rules": "rules/boyscout-host.md",
+      "alwaysApply": true
     },
     "tile-content-pipeline": {
-      "rules": "rules/tile-content-pipeline.md"
+      "rules": "rules/tile-content-pipeline.md",
+      "alwaysApply": true
     },
     "cross-tier-skill-state": {
-      "rules": "rules/cross-tier-skill-state.md"
+      "rules": "rules/cross-tier-skill-state.md",
+      "alwaysApply": true
     }
   },
   "skills": {

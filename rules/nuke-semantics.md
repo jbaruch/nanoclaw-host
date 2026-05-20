@@ -4,4 +4,17 @@ alwaysApply: true
 
 # Nuke Semantics
 
-When asked to nuke a group: kill the running container only. Never delete registrations or group folders. The orchestrator respawns a fresh container on the next message.
+## What gets killed
+
+- The running container for the named group
+
+## What is preserved
+
+- Group registration in `messages.db`
+- Group folder under `/workspace/group/<name>/`
+- Per-group `.checkpoints/` (unless `skipReentry: true` is passed — see `nuke-payload-semantics` on the admin tile)
+
+## After the kill
+
+- Orchestrator respawns a fresh container on the next inbound message
+- No manual restart needed

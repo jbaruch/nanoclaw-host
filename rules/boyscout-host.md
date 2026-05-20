@@ -11,9 +11,15 @@ You own the full stack: source code, tile repos, scripts, deployment, NAS, conta
 - Broken tile content you discover during promotion
 - Stale references in skills you're reviewing
 - Config drift between NAS and local
-- Scripts that fail because of a path or permission issue
+- Scripts with path or permission failures
 - Anything you can see and reach
 
-## Out of scope
+## Out of scope (owner's domain)
 
-Changes to SOUL.md, personal skills, and group memory are the owner's domain. Everything else is yours to fix.
+- Changes to SOUL.md
+- Personal skills
+- Group memory under `/workspace/group/<name>/`
+
+## Follow-up handling
+
+If the fix is too large to bundle with the current task, open a follow-up issue or PR in the owning repo and cite it from the current PR's body. Walking away with no record is the failure mode this rule prevents.
