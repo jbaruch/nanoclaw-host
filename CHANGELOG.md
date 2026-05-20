@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Rules — conciseness pass per `coding-policy: context-writing-style` (tier 3)
+
+- **post-merge-publish-watch** — dropped `nanoclaw-admin#66 merged with PR-time gates green, then the post-merge skill-review gate scored a touched-but-borderline skill below 85% and failed publish-tile…` reference-incident paragraph from `## A merge is not a ship`. Cut "since other workflows (skill-review, lint) also run on the same commit" rationale clause from the head-SHA-match bullet. Cut three `--repo flag mandatory per nanoclaw-host: repo-chain` cross-rule shoulder-tap clauses and folded them into one operative bullet at the end of the watch section. Cut `## Why this rule and not "raise the PR-time gate"` meta-justification section in full. Cut trailing "The implementation lives in operator scripts; this rule names the contract" rationale sentence.
+
 ### Rules — conciseness pass per `coding-policy: context-writing-style`
 
 Always-on rules are loaded into every agent invocation, so meta-justification prose and dated incident references inflate the per-invocation token budget for no operational gain. This pass strips that content while preserving the operative contracts. Cut content is archived here per the rule's "What to Cut → move to CHANGELOG" guidance.
