@@ -14,12 +14,20 @@ tessl install jbaruch/nanoclaw-host
 
 | Rule | Summary |
 |------|---------|
+| [boyscout-host](rules/boyscout-host.md) | Host agent owns the full stack (source, tile repos, scripts, deploy, NAS, containers) — fix any problem you find, except owner's-domain content (SOUL.md, personal skills, group memory). |
 | [copilot-nudge-after-10min](rules/copilot-nudge-after-10min.md) | When you summon a Copilot review via the GraphQL `requestReviews` mutation (see the `ship-code` and `promote` skills for the full lifecycle and the exact GraphQL call) and the review hasn't started within 10 minutes, post a follow-up PR comment that tags `@copilot` to re-activate it. |
-| [host-conventions](rules/host-conventions.md) | Rules for the NanoClaw host agent (Claude Code on Mac). |
+| [cross-tier-skill-state](rules/cross-tier-skill-state.md) | Cross-trust-tier skills must persist state under `/workspace/state/<skill-name>/` (RW in every container). Tier-pinned skills may use `/workspace/group/`. |
+| [dual-agent-coexistence](rules/dual-agent-coexistence.md) | Two agents (AyeAye and host) update this system asynchronously. Never assume the latest version; never assume the other agent's work is stale or inferior without reading it. |
+| [host-conventions](rules/host-conventions.md) | Deployment mechanics: always use `./scripts/deploy.sh`, registry is the delivery artifact, scripts source `scripts/common.sh`. |
+| [no-deferral](rules/no-deferral.md) | Every session is the only session — fix problems now, not "later". Forbidden-pattern bullets enumerated. |
+| [no-error-suppression](rules/no-error-suppression.md) | Never use `\|\| true`, `2>/dev/null`, empty `catch {}`, or any form of silent error swallowing in scripts. If something fails, it must fail visibly. |
+| [nuke-semantics](rules/nuke-semantics.md) | Nuke a group = kill the running container only. Never delete registrations or group folders. |
 | [orchestrator-dep-refresh](rules/orchestrator-dep-refresh.md) | When an npm-from-GitHub dep in `Dockerfile.orchestrator` ships a new version, the default `./scripts/deploy.sh` does NOT pick it up because BuildKit caches `RUN npm install -g <GitHub-repo>` by Dockerfile string, not by GitHub state. Use `./scripts/deploy.sh --no-cache` and verify the resulting dep version against the running container. |
 | [post-merge-publish-watch](rules/post-merge-publish-watch.md) | After every tile-repo PR merge, watch the post-merge `Review & Publish Tile` workflow until the registry actually has the new version. A merge that doesn't reach the registry is incomplete. |
 | [repo-chain](rules/repo-chain.md) | Updates flow DOWN the chain: |
+| [staging-diff-protocol](rules/staging-diff-protocol.md) | Before judging staging content: diff, read, reason, merge improvements, then decide. Stale = empty diff only. |
 | [tessl-version-floating](rules/tessl-version-floating.md) | `tessl-workspace/tessl.json` MUST use `"version": "latest"` for every tile (approved exception to `coding-policy: dependency-management`). `deploy.sh` verifies on each deploy that no literal pins have crept in. |
+| [tile-content-pipeline](rules/tile-content-pipeline.md) | Tile content updates flow through staging → promote (forbids live-NAS edits). Feature-branch PRs against a tile repo are OK — same review surface. |
 
 ## Skills
 

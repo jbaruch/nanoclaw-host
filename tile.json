@@ -22,6 +22,30 @@
     },
     "orchestrator-dep-refresh": {
       "rules": "rules/orchestrator-dep-refresh.md"
+    },
+    "nuke-semantics": {
+      "rules": "rules/nuke-semantics.md"
+    },
+    "no-error-suppression": {
+      "rules": "rules/no-error-suppression.md"
+    },
+    "dual-agent-coexistence": {
+      "rules": "rules/dual-agent-coexistence.md"
+    },
+    "staging-diff-protocol": {
+      "rules": "rules/staging-diff-protocol.md"
+    },
+    "no-deferral": {
+      "rules": "rules/no-deferral.md"
+    },
+    "boyscout-host": {
+      "rules": "rules/boyscout-host.md"
+    },
+    "tile-content-pipeline": {
+      "rules": "rules/tile-content-pipeline.md"
+    },
+    "cross-tier-skill-state": {
+      "rules": "rules/cross-tier-skill-state.md"
     }
   },
   "skills": {
