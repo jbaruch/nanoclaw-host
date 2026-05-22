@@ -29,6 +29,10 @@
       "rules": "rules/orchestrator-dep-refresh.md",
       "alwaysApply": true
     },
+    "overlay-tile-authoring": {
+      "rules": "rules/overlay-tile-authoring.md",
+      "alwaysApply": true
+    },
     "nuke-semantics": {
       "rules": "rules/nuke-semantics.md",
       "alwaysApply": true
@@ -71,6 +75,9 @@
     },
     "check-staging": {
       "path": "skills/check-staging/SKILL.md"
+    },
+    "extract-to-overlay": {
+      "path": "skills/extract-to-overlay/SKILL.md"
     },
     "reconcile": {
       "path": "skills/reconcile/SKILL.md"
