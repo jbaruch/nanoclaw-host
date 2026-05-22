@@ -10,7 +10,7 @@ Per-chat overlay tiles layer on the trust-tier baseline via `containerConfig.add
 
 - Cadence-driven skills declare `cadence:` + `script:` in `SKILL.md` frontmatter
 - Both fields required — partial declaration silently produces no `scheduled_tasks` row
-- Validator surface lives in `src/cadence-registry.ts`
+- Validator surface lives in `jbaruch/nanoclaw` at `src/cadence-registry.ts`
 - One-shot overlays without recurring work omit both fields
 
 ## One cadence per SKILL.md

@@ -51,7 +51,7 @@ If any read points at a writer that won't be loaded for the affected chats, halt
 
 Proceed immediately to Step 3.
 
-## Step 3 — Move artefacts
+## Step 3 — Move artifacts
 
 Worktree-isolate per `coding-policy: agent-worktree-isolation`. Two worktrees — one per tile repo.
 
@@ -62,7 +62,7 @@ In the source worktree (`jbaruch/nanoclaw-admin`):
 - Add `CHANGELOG.md` entry under Unreleased — `Removed: <name> migrated to <TARGET_TILE>`
 
 In the target worktree (`jbaruch/<TARGET_TILE>`):
-- Copy the artefacts preserving relative paths inside the new tile
+- Copy the artifacts preserving relative paths inside the new tile
 - Update `tile.json` — add the entry
 - Update `README.md` table — add the row
 - Add `CHANGELOG.md` entry under Unreleased — `Added: <name> migrated from nanoclaw-admin`
@@ -73,7 +73,7 @@ Proceed immediately to Step 4.
 
 For each affected chat group JID:
 - Read current `containerConfig.additionalTiles` from `messages.db` on the NAS
-- Add bare tile name `<TARGET_TILE>` to the list if absent (per `feedback_additional_tiles_bare_names.md` memory — never workspace-qualified)
+- Add bare tile name `<TARGET_TILE>` to the list if absent — bare name only (`nanoclaw-flight-assist`), never workspace-qualified (`jbaruch/nanoclaw-flight-assist`). The workspace-qualified form trips the spawn validator and the circuit breaker
 - Write via `update_group_config` IPC — write-time validator rejects non-existent tiles per `jbaruch/nanoclaw#305`
 
 If the target tile is not yet published, defer this step until Step 5 completes the target-tile publish.

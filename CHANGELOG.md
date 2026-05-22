@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Rules — plugin-evals closed-loop carve-out (2026-05-22)
+
+`jbaruch/nanoclaw-host` claims the closed-loop automated-system carve-out in `jbaruch/coding-policy: rules/plugin-evals.md` and ships no `evals/**` scenarios. The entire `nanoclaw-*` tile family is owner-approved exempt from `plugin-evals`'s Coverage and Persistence sections — eval output has no human consumer and gates no downstream automated action. Re-introducing any consumption requires re-introducing evals first under the standard requirement.
+
 ### Rule + skill — overlay tile authoring contract and extract-to-overlay workflow
 
 Lessons learned shipping `nanoclaw-flight-assist` (the first per-chat overlay tile under `jbaruch/nanoclaw#305`) surfaced four distinct silent-no-op failure modes in v0.1.7–v0.1.10:
@@ -11,7 +15,7 @@ Lessons learned shipping `nanoclaw-flight-assist` (the first per-chat overlay ti
 - **Issue #20** (byAir HTTP 400) — MCP client sent `Accept: application/json` only; endpoint required `application/json, text/event-stream` per the streamable-HTTP spec. Mocked unit tests stayed green through the entire failure window.
 - **Issue #18** (reader-without-writer) — `time_to_leave` consumed `/workspace/state/flight-assist/current-location.json` per `cross-tier-skill-state.md`, but the orchestrator-side writer was deferred as "follow-up host PR" in the PR body with no tracked issue. Plugin shipped silently degraded.
 
-All four share one shape: skill exists, tile installs, env resolves, exit 0, no data flow. Same shape as `feedback_silent_success_shape.md` and the broader silent-no-op pattern.
+All four share one shape: skill exists, tile installs, env resolves, exit 0, no data flow. The broader silent-no-op pattern — `task_run_logs.status='success'` with `duration<10s` and empty result — has been observed across multiple maintenance fires; the heartbeat-crash incident is the same shape.
 
 **New rule `overlay-tile-authoring`** (always-on) codifies the contract:
 
