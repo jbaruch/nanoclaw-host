@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Rule + skill — overlay tile authoring contract and extract-to-overlay workflow
+
+Lessons learned shipping `nanoclaw-flight-assist` (the first per-chat overlay tile under `jbaruch/nanoclaw#305`) surfaced four distinct silent-no-op failure modes in v0.1.7–v0.1.10:
+
+- **Issue #17** (precheck wake never scheduled) — `SKILL.md` shipped without `cadence:` + `script:` frontmatter, so `cadence-registry` never provisioned a `scheduled_tasks` row. The skill installed, scripts ran, exit 0, zero data flowed. Caught only when the operator stood at Arlanda on 2026-05-20 with two live KL flights and no notifications.
+- **Issue #21** (sync_tripit not scheduled) — `sync_tripit.py` shipped with a docstring claim "Run cadence: daily at ~04:00 local" but no registry entry. Each SKILL.md owns exactly one `scheduled_tasks` row; multiplexing two cadences in one skill is not supported. Fix extracted `skills/sync-tripit/` as a second skill directory.
+- **Issue #20** (byAir HTTP 400) — MCP client sent `Accept: application/json` only; endpoint required `application/json, text/event-stream` per the streamable-HTTP spec. Mocked unit tests stayed green through the entire failure window.
+- **Issue #18** (reader-without-writer) — `time_to_leave` consumed `/workspace/state/flight-assist/current-location.json` per `cross-tier-skill-state.md`, but the orchestrator-side writer was deferred as "follow-up host PR" in the PR body with no tracked issue. Plugin shipped silently degraded.
+
+All four share one shape: skill exists, tile installs, env resolves, exit 0, no data flow. Same shape as `feedback_silent_success_shape.md` and the broader silent-no-op pattern.
+
+**New rule `overlay-tile-authoring`** (always-on) codifies the contract:
+
+- Cadence frontmatter is mandatory (both `cadence:` + `script:` or both absent)
+- One cadence per SKILL.md (second axis = second skill directory)
+- Reader-without-writer is a release blocker (carve-out for ladder-fallback degraded mode with tracked writer issue + tests for both paths)
+- Live-runtime verification before shipped (`scheduled_tasks` row probe + MCP/API handshake)
+- Cross-skill subprocess composition (no in-process sibling imports; mount-path runtime resolution with dev-clone fallback)
+
+**New skill `extract-to-overlay`** is the migration workflow this rule's contract executes against. Six sequential steps: identify candidate + target, audit (cadence + state-plane + cross-skill imports for skills; scope + links for rules), move artefacts across two tile repos with full tile.json/README/CHANGELOG updates on both sides, update per-group `containerConfig.additionalTiles`, ship each side via `Skill(skill: "ship-code")` (target first), post-deploy live verification with three probes. Conditional sub-tasks for skill vs. rule artefacts keep both paths in one skill rather than splitting. Scoped to migrations from `nanoclaw-admin` to existing overlay tiles; brand-new overlay tile scaffolding deliberately out of scope.
+
+Skill review: 90% (description 100%, content 77%).
+
 ### Rules — structural split of `host-conventions` per `coding-policy: context-artifacts`
 
 Split the 11-H2 `host-conventions.md` into 8 single-concept rules per `Rules Are Prose → One concept per rule file`. Trimmed `host-conventions.md` to the three deployment-mechanics sections (deploy.sh, registry, common.sh); the other eight concepts moved to standalone rules:
