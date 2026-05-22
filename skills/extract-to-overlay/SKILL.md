@@ -84,9 +84,11 @@ Proceed immediately to Step 5.
 
 Order: target tile first (publishes the destination), then source tile (removes the now-orphaned admin entry).
 
-Invoke `Skill(skill: "ship-code")` once per tile worktree. Each invocation runs the full PR lifecycle for its tile: Copilot summon, review iteration, merge, post-merge publish-tile per `rules/post-merge-publish-watch.md`.
+Invoke `Skill(skill: "release")` once per tile worktree. Each invocation runs the full PR lifecycle for its tile: PR creation, dual-lens automated review (gh-aw + Copilot), review iteration, merge, post-merge publish-tile watch per `rules/post-merge-publish-watch.md`.
 
-Wait for both `Review & Publish Tile` runs to land green AND for the registry to advance past the prior versions of both tiles. Per `feedback_shipped_means_registry.md`, only registry version advance counts as shipped.
+Do NOT invoke `Skill(skill: "ship-code")` here — `ship-code` is scoped to the `jbaruch/nanoclaw` private→public fork chain per `rules/repo-chain.md`, not tile-repo lifecycles.
+
+Wait for both `Review & Publish Tile` runs to land green AND for the registry to advance past the prior versions of both tiles. Only registry version advance counts as shipped.
 
 Proceed immediately to Step 6.
 
