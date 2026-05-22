@@ -69,30 +69,37 @@ In the target worktree (`jbaruch/<TARGET_TILE>`):
 
 Proceed immediately to Step 4.
 
-## Step 4 — Update per-group additionalTiles
+## Step 4 — Ship target tile
 
-For each affected chat group JID:
-- Read current `containerConfig.additionalTiles` from `messages.db` on the NAS
-- Add bare tile name `<TARGET_TILE>` to the list if absent — bare name only (`nanoclaw-flight-assist`), never workspace-qualified (`jbaruch/nanoclaw-flight-assist`). The workspace-qualified form trips the spawn validator and the circuit breaker
-- Write via `update_group_config` IPC — write-time validator rejects non-existent tiles per `jbaruch/nanoclaw#305`
-
-If the target tile is not yet published, defer this step until Step 5 completes the target-tile publish.
-
-Proceed immediately to Step 5.
-
-## Step 5 — Ship both tiles
-
-Order: target tile first (publishes the destination), then source tile (removes the now-orphaned admin entry).
-
-Invoke `Skill(skill: "release")` once per tile worktree. Each invocation runs the full PR lifecycle for its tile: PR creation, dual-lens automated review (gh-aw + Copilot), review iteration, merge, post-merge publish-tile watch per `rules/post-merge-publish-watch.md`.
+Worktree-isolate the target tile's worktree if not already done in Step 3. Invoke `Skill(skill: "release")` once for the target tile. The release skill runs the full PR lifecycle: PR creation, dual-lens automated review (gh-aw + Copilot), review iteration, merge, post-merge publish-tile watch per `rules/post-merge-publish-watch.md`.
 
 Do NOT invoke `Skill(skill: "ship-code")` here — `ship-code` is scoped to the `jbaruch/nanoclaw` private→public fork chain per `rules/repo-chain.md`, not tile-repo lifecycles.
 
-Wait for both `Review & Publish Tile` runs to land green AND for the registry to advance past the prior versions of both tiles. Only registry version advance counts as shipped.
+Wait for the target tile's `Review & Publish Tile` run to land green AND for the registry to advance past the prior version. Only registry version advance counts as shipped. The source tile MUST NOT ship before the target — Step 6 is gated on this ordering.
+
+Proceed immediately to Step 5.
+
+## Step 5 — Update per-group additionalTiles
+
+The target tile is now in the registry, so the `update_group_config` write-time validator will accept `<TARGET_TILE>` as a valid additionalTiles entry per `jbaruch/nanoclaw#305`. For each affected chat group JID:
+
+- Read current `containerConfig.additionalTiles` from `messages.db` on the NAS
+- Add bare tile name `<TARGET_TILE>` to the list if absent — bare name only (`nanoclaw-flight-assist`), never workspace-qualified (`jbaruch/nanoclaw-flight-assist`). The workspace-qualified form trips the spawn validator and the circuit breaker
+- Write via `update_group_config` IPC
+
+Without this step the source tile removal in Step 6 strands the affected chats — the skill is gone from `nanoclaw-admin` but the target tile isn't loaded for those chats yet. Order matters.
 
 Proceed immediately to Step 6.
 
-## Step 6 — Post-deploy live verification
+## Step 6 — Ship source tile
+
+Invoke `Skill(skill: "release")` once for the source tile (`jbaruch/nanoclaw-admin`). Same release lifecycle as Step 4. This PR removes the migrated entry from `tile.json`, the README table, and adds the Unreleased CHANGELOG entry recording the migration.
+
+Wait for the source tile's `Review & Publish Tile` run to land green AND for the registry to advance past the prior version.
+
+Proceed immediately to Step 7.
+
+## Step 7 — Post-deploy live verification
 
 Deploy on the NAS:
 
@@ -100,14 +107,16 @@ Deploy on the NAS:
 ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh"
 ```
 
-Probes fire conditionally on artifact type.
+Probes fire conditionally on artifact type and cadence presence per `rules/overlay-tile-authoring.md`.
 
-**Skill artifact** — three probes per `rules/overlay-tile-authoring.md`, all required:
+**Cadence-declared skill artifact** — three probes, all required:
 - Target row materialises: `SELECT * FROM scheduled_tasks WHERE id LIKE 'cadence-registry::%::tessl__<skill-name>'` returns at least one row
 - Source row is gone: same query against the pre-migration skill name returns zero rows
 - Live handshake against every external MCP or API surface in the moved skill's data plane
 
-**Rule artifact** — manifest integrity is enforced by `tessl tile lint` at publish in Step 5; no further probe. Agents load the rule on next session start.
+**User-driven skill artifact** (no `cadence:`/`script:` frontmatter) — no `scheduled_tasks` row exists for this skill class. Manifest integrity is enforced by `tessl tile lint` at publish in Steps 4 and 6. Verify by triggering the skill from the affected chat with its declared user intent and confirming it loads from the target tile, not the source tile.
+
+**Rule artifact** — manifest integrity is enforced by `tessl tile lint` at publish in Steps 4 and 6; no further probe. Agents load the rule on next session start.
 
 If any probe fails, fix in a follow-up PR on the appropriate tile and re-verify. Do not declare done until all applicable probes pass.
 
