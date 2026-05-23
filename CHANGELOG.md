@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Rule + skill — UGOS Pro symlinked-compose-project topology (2026-05-23)
+
+`jbaruch/nanoclaw` PR #610 (NAS-LiteLLM router) plus follow-ups #621, #623, #624, #626, #627 empirically discovered a non-obvious workflow for running a Docker Compose project on UGOS Pro / NASync while keeping the compose file in the repo as source-of-truth. The proven pattern took 4–5 rounds of mistakes to land on — each mistake's failure mode was UGOS Pro rewriting the compose file at the symlinked path and leaking secrets or UI-entered config back into the tracked repo file. A close-call on 2026-05-23 caught one such rewrite before any git contamination, motivating this rule + skill.
+
+**New rule `ugos-compose-projects`** (always-on) codifies the contract:
+
+- Topology — `/volume1/docker/<project>/` directory symlink to the in-repo dir; `<repo>/container/<project>/.env` → `../../.env` resolves through both layers to `~/nanoclaw/.env`; compose YAML carries `${VAR}` placeholders only and docker compose interpolates from the symlinked `.env` at spawn time
+- Registration is a sudo INSERT into `/volume1/@appstore/com.ugreen.docker/db/docker_info_log.db` table `compose`; the row's `path` column points at the symlinked compose path. UGOS Pro's "Create Project" UI flow is forbidden — it rewrites the compose file at the symlinked path
+- UI is Start/Stop only — never "Edit"; never paste env literals; UGOS dumps UI-entered env into the compose file's `environment:` block and the dir symlink lands those literals in the tracked repo file
+- Surface sync — DB row, dir symlink, `.env` symlink, `deploy.sh` agent-kill grep predicates that match `^<project>` or `^nanoclaw-`, the consuming repo's CHANGELOG
+
+**New skill `add-ugos-project`** walks an operator/agent through registering a new compose project: confirm `<project-name>` + `<in-repo-dir>`; run `register-ugos-project.sh` to plumb the symlinks and stage the INSERT helper on the NAS; run the printed sudo command from an interactive TTY (the script cannot run sudo non-interactively); Start the project from UGOS Pro UI; verify a Stop+Start round-trip preserves the compose-file byte count exactly (the regression-mode check that catches a UGOS UI rewrite). Five sequential steps, em-dash headings, typed cross-reference to the rule.
+
+**New script `skills/add-ugos-project/scripts/register-ugos-project.sh`** is the deterministic plumbing per `coding-policy: script-delegation`: validates the compose file exists on the NAS via SSH, creates or verifies the `/volume1/docker/<project>` directory symlink (refuses when an existing symlink points elsewhere), creates the in-repo `.env` symlink (skipped when the in-repo dir is the repo root since `.env` is already there), writes a Python INSERT helper to `/tmp/register-ugos-<project>.py` on the NAS (with a `name` uniqueness pre-check), prints the operator-facing sudo command on stderr, and emits a JSON summary on stdout including the baseline compose byte count for Step 5's verification. Writing the helper script to a tmp file on the NAS dodges the six-level shell/Python/SQLite escape stack that direct in-script INSERT generation would require.
+
 ### Rules — plugin-evals closed-loop carve-out (2026-05-22)
 
 `jbaruch/nanoclaw-host` claims the closed-loop automated-system carve-out in `jbaruch/coding-policy: rules/plugin-evals.md` and ships no `evals/**` scenarios. The entire `nanoclaw-*` tile family is owner-approved exempt from `plugin-evals`'s Coverage and Persistence sections — eval output has no human consumer and gates no downstream automated action. Re-introducing any consumption requires re-introducing evals first under the standard requirement.

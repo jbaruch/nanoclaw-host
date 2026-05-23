@@ -64,6 +64,10 @@
     "cross-tier-skill-state": {
       "rules": "rules/cross-tier-skill-state.md",
       "alwaysApply": true
+    },
+    "ugos-compose-projects": {
+      "rules": "rules/ugos-compose-projects.md",
+      "alwaysApply": true
     }
   },
   "skills": {
@@ -90,6 +94,9 @@
     },
     "ship-code": {
       "path": "skills/ship-code/SKILL.md"
+    },
+    "add-ugos-project": {
+      "path": "skills/add-ugos-project/SKILL.md"
     }
   }
 }
