@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Rule — persona-persist-direct-push authority-of-record (2026-06-21)
+
+`jbaruch/nanoclaw` PR #700 (`jbaruch/nanoclaw-admin#393`) adds a `persist_global_file` IPC handler that direct-pushes the operator persona files to `main` at runtime so an operator-approved soul-searching edit survives the next `deploy.sh` `git pull` — the edit otherwise lived only in the deploy-ephemeral `/workspace/global/` mirror and was reverted every deploy. A direct push to a protected branch needs the `coding-policy: ci-safety` Content-Only Direct-Push Carve-Out, which requires an authority-of-record rule in the governing plugin naming the exact paths, why they qualify, what review the push skips, and the deterministic push-time gate. This rule is that record: it covers `groups/global/SOUL.md` + `groups/global/SOUL-untrusted.md` only, classifies them as operator persona prose (not code/rules/skills/manifests), and names the Form-B gate — `validateGlobalFilesToPersist` + the pre-push `git diff --name-only origin/main..HEAD` allowlist check in `jbaruch/nanoclaw` `src/ipc.ts`, which refuses any out-of-glob path outright. Modeled on `tessl-version-floating` (the authority-of-record for the `dependency-management` carve-out).
+
+**Surface sync:** `rules/persona-persist-direct-push.md` (new), `tile.json` (rules entry), `README.md` (rules table).
+
 ### Rule + skill — UGOS Pro symlinked-compose-project topology (2026-05-23)
 
 `jbaruch/nanoclaw` PR #610 (NAS-LiteLLM router) plus follow-ups #621, #623, #624, #626, #627 empirically discovered a non-obvious workflow for running a Docker Compose project on UGOS Pro / NASync while keeping the compose file in the repo as source-of-truth. The proven pattern took 4–5 rounds of mistakes to land on — each mistake's failure mode was UGOS Pro rewriting the compose file at the symlinked path and leaking secrets or UI-entered config back into the tracked repo file. A close-call on 2026-05-23 caught one such rewrite before any git contamination, motivating this rule + skill.

@@ -37,6 +37,10 @@
       "rules": "rules/nuke-semantics.md",
       "alwaysApply": true
     },
+    "persona-persist-direct-push": {
+      "rules": "rules/persona-persist-direct-push.md",
+      "alwaysApply": true
+    },
     "no-error-suppression": {
       "rules": "rules/no-error-suppression.md",
       "alwaysApply": true
