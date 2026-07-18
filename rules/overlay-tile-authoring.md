@@ -19,6 +19,15 @@ Per-chat overlay tiles layer on the trust-tier baseline via `containerConfig.add
 - Second cadence axis = second skill directory
 - A docstring claim of "runs daily at 04:00" without a frontmatter entry does NOT qualify as scheduled
 
+## Cadence cap must not equal a cron-interval multiple
+
+- Applies to any cadence precheck (overlay or baseline-tier) that gates on a filesystem cursor cap
+- The cap (`CADENCE` in the precheck) MUST NOT equal an exact integer multiple of the skill's cron period
+- The cursor stamps at run completion, not fire time, so a multiple near-misses: on a weekly cron a 168h cap leaves every same-time fire ~167.8h old and skips forever; on a daily cron an N-day-multiple cap slips the run by a whole period
+- Set the cap strictly below the intended multiple with slack for run latency and DST — weekly caps 24h under (`6d` for weekly, `13d` for biweekly); daily caps a half-period under (`36h` for every-other-day, `60h` for every-third-day)
+- Author-time gate is a per-skill `near_miss` regression test: a cursor stamped a few minutes under the cron interval MUST still wake
+- Runtime net: `detectCadenceCapRace` in `jbaruch/nanoclaw` `src/cadence-registry.ts` warns at rebuild when a cap divides the cron interval evenly — it warns, never skips, so a raced cap still registers
+
 ## Reader-without-writer is a release blocker
 
 - A skill that reads `/workspace/state/<other-skill>/<file>.json` cannot ship before the writer is merged in its owning repo

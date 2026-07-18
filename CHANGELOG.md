@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Rule — cadence cap must not equal a cron-interval multiple (2026-07-17)
+
+`overlay-tile-authoring` gains a cadence-authoring invariant: a precheck's `CADENCE` cap must not equal an exact integer multiple of the skill's cron period. The cursor stamps at run completion, so a multiple near-misses — on a weekly cron a 168h cap leaves every fire ~167.8h old and skips forever; on a daily cron an N-day-multiple slips a whole period. This is the fleet-wide bug behind `jbaruch/nanoclaw#803`, which `jbaruch/nanoclaw-admin#353`/#354 had to hand-fix twice before it was generalised. The rule prescribes sub-multiple caps with slack (`6d`/`13d` weekly, `36h`/`60h` daily), names the per-skill `near_miss` test as the author-time gate, and points at the `detectCadenceCapRace` runtime warn-not-skip net added in `jbaruch/nanoclaw` `src/cadence-registry.ts` (#803).
+
 ### Rule — persona-persist-direct-push authority-of-record (2026-06-21)
 
 `jbaruch/nanoclaw` PR #700 (`jbaruch/nanoclaw-admin#393`) adds a `persist_global_file` IPC handler that direct-pushes the operator persona files to `main` at runtime so an operator-approved soul-searching edit survives the next `deploy.sh` `git pull` — the edit otherwise lived only in the deploy-ephemeral `/workspace/global/` mirror and was reverted every deploy. A direct push to a protected branch needs the `coding-policy: ci-safety` Content-Only Direct-Push Carve-Out, which requires an authority-of-record rule in the governing plugin naming the exact paths, why they qualify, what review the push skips, and the deterministic push-time gate. This rule is that record: it covers `groups/global/SOUL.md` + `groups/global/SOUL-untrusted.md` only, classifies them as operator persona prose (not code/rules/skills/manifests), and names the Form-B gate — `validateGlobalFilesToPersist` + the pre-push `git diff --name-only origin/main..HEAD` allowlist check in `jbaruch/nanoclaw` `src/ipc.ts`, which refuses any out-of-glob path outright. Modeled on `tessl-version-floating` (the authority-of-record for the `dependency-management` carve-out).
