@@ -1,8 +1,9 @@
-name: Publish plugin
+name: Review & Publish Tile
 
 # Thin caller for the canonical fleet publish pipeline
 # (jbaruch/coding-policy#206). All steps live in the reusable workflow;
-# this file carries only the triggers and this repo's inputs.
+# this file carries only the triggers and this repo's inputs. The display
+# name is unchanged so tooling that watches this run by name keeps working.
 
 on:
   push:
@@ -20,7 +21,9 @@ permissions:
 jobs:
   publish:
     uses: jbaruch/coding-policy/.github/workflows/publish-plugin.yml@b7eb9d08b78f72810891aa5fe7bf3e4fa6eb55f6
-    secrets: inherit
+    # Forward only the token the reusable workflow declares (not `inherit`).
+    secrets:
+      TESSL_TOKEN: ${{ secrets.TESSL_TOKEN }}
     with:
       # This repo opts into the tessl out-of-credits tolerance (default fail).
       skill-review-credit-outage: skip

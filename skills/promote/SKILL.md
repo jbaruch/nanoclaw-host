@@ -50,7 +50,7 @@ The script prints `PR opened: <url>` and `Branch: <name>` — capture both. Step
 
 ## Phase 2 — Wait for Copilot review
 
-The pre-merge gates on a tile PR are **Copilot review** plus the local `tessl skill review --optimize` pass *when `tessl` was available and Step 5 ran during Phase 1*. If `tessl` was unavailable on the host and that local pass was skipped, the first `tessl`/lint gate happens post-merge in the tile repos' `publish-tile.yml` workflow. That workflow runs on push to `main`, not on `pull_request` — so `gh pr checks` returns nothing and the 85% `tessl skill review` + lint + publish happen *after* merge. Don't wait for a green CI box that isn't coming; wait for Copilot.
+The pre-merge gates on a tile PR are **Copilot review** plus the local `tessl skill review --optimize` pass *when `tessl` was available and Step 5 ran during Phase 1*. If `tessl` was unavailable on the host and that local pass was skipped, the first `tessl`/lint gate happens post-merge in the tile repos' `publish.yml` workflow. That workflow runs on push to `main`, not on `pull_request` — so `gh pr checks` returns nothing and the 85% `tessl skill review` + lint + publish happen *after* merge. Don't wait for a green CI box that isn't coming; wait for Copilot.
 
 ```bash
 gh api repos/jbaruch/<tile>/pulls/<N>/reviews \
@@ -96,7 +96,7 @@ Only when Copilot review is clean, all threads are replied to, and the local `te
 gh pr merge <N> --repo jbaruch/<tile> --merge --delete-branch
 ```
 
-GHA on `main` then runs `publish-tile.yml` — 85% `tessl skill review`, `tessl tile lint`, and publish to the tessl registry. Watch it complete:
+GHA on `main` then runs `publish.yml` — 85% `tessl skill review`, `tessl tile lint`, and publish to the tessl registry. Watch it complete:
 
 ```bash
 gh run list --repo jbaruch/<tile> --limit 1
