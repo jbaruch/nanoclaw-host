@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Rule — persona-persist path refs follow the #845 ipc.ts split (2026-07-21)
+
+`jbaruch/nanoclaw` PR #864 (#845 slice 6) moves the `persist_global_file` handler out of the legacy `processTaskIpc` switch into `src/ipc-handlers/ops.ts` and the persist machinery (`validateGlobalFilesToPersist`, `persistGlobalFilesToGit`, `PERSISTABLE_GLOBAL_FILES`) into the new `src/git-persist.ts`. `persona-persist-direct-push` is the authority-of-record naming those file paths, so its three `src/ipc.ts` references update in lock-step per `coding-policy: context-artifacts` Surface Sync. Gate semantics unchanged — same functions, same allowlist, new home.
+
 ### Rule — cadence cap must not equal a cron-interval multiple (2026-07-17)
 
 `overlay-tile-authoring` gains a cadence-authoring invariant: a precheck's `CADENCE` cap must not equal an exact integer multiple of the skill's cron period. The cursor stamps at run completion, so a multiple near-misses — on a weekly cron a 168h cap leaves every fire ~167.8h old and skips forever; on a daily cron an N-day-multiple slips a whole period. This is the fleet-wide bug behind `jbaruch/nanoclaw#803`, which `jbaruch/nanoclaw-admin#353`/#354 had to hand-fix twice before it was generalised. The rule prescribes sub-multiple caps with slack (`6d`/`13d` weekly, `36h`/`60h` daily), names the per-skill `near_miss` test as the author-time gate, and points at the `detectCadenceCapRace` runtime warn-not-skip net added in `jbaruch/nanoclaw` `src/cadence-registry.ts` (#803).
