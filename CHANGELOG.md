@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Rule — snitchmd image floating carve-out (2026-07-26)
+
+New `snitchmd-image-floating` rule. `jbaruch/nanoclaw`'s `fetch_markdown` handler has always defaulted its sidecar image to the floating tag `syabro/snitchmd:latest`, with the reasoning sitting in a code comment beside the constant — which is not where `coding-policy: dependency-management` looks. The fleet policy reviewer flagged it on `jbaruch/nanoclaw` PR #883 (the #879 ops.ts split, which relocated the line verbatim) and correctly declined a follow-up ticket as a resolution: the rule's carve-out requires an authority-of-record rule plus deploy-time enforcement, not a promise.
+
+This rule is that authority-of-record. It names the covered path, states why this particular dependency floats (snitchmd's value is adversarial freshness — each release carries updated CloakBrowser fingerprints, so a pin degrades toward blocked fetches as anti-bot detection advances, and a pin's renewal cadence competes with an adversary's release cadence), and requires `scripts/deploy.sh` to fail the deploy on any non-floating committed default. `SNITCHMD_IMAGE` remains the per-box escape hatch and is explicitly out of the gate's scope: environment configuration is not a committed dependency.
+
+Enforcement lands in `jbaruch/nanoclaw` #883 as `verify_snitchmd_image_floating`, mirroring the existing `mode: managed` + `version: latest` manifest gate that `tessl-version-floating` owns.
+
 ### Rule — persona-persist path refs follow the #845 ipc.ts split (2026-07-21)
 
 `jbaruch/nanoclaw` PR #864 (#845 slice 6) moves the `persist_global_file` handler out of the legacy `processTaskIpc` switch into `src/ipc-handlers/ops.ts` and the persist machinery (`validateGlobalFilesToPersist`, `persistGlobalFilesToGit`, `PERSISTABLE_GLOBAL_FILES`) into the new `src/git-persist.ts`. `persona-persist-direct-push` is the authority-of-record naming those file paths, so this change updates its three `src/ipc.ts` references in lock-step per `coding-policy: context-artifacts` Surface Sync. Gate semantics unchanged — same functions, same allowlist, new home.
