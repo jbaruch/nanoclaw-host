@@ -72,6 +72,10 @@
     "ugos-compose-projects": {
       "rules": "rules/ugos-compose-projects.md",
       "alwaysApply": true
+    },
+    "snitchmd-image-floating": {
+      "rules": "rules/snitchmd-image-floating.md",
+      "alwaysApply": true
     }
   },
   "skills": {

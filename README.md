@@ -29,6 +29,7 @@ tessl install jbaruch/nanoclaw-host
 | [repo-chain](rules/repo-chain.md) | Updates flow DOWN the chain: |
 | [staging-diff-protocol](rules/staging-diff-protocol.md) | Before judging staging content: diff, read, reason, merge improvements, then decide. Stale = empty diff only. |
 | [tessl-version-floating](rules/tessl-version-floating.md) | `tessl-workspace/tessl.json` MUST use `"version": "latest"` for every tile (approved exception to `coding-policy: dependency-management`). `deploy.sh` verifies on each deploy that no literal pins have crept in. |
+| [snitchmd-image-floating](rules/snitchmd-image-floating.md) | The `fetch_markdown` sidecar image default MUST stay `syabro/snitchmd:latest` (approved exception to `coding-policy: dependency-management`) — this dependency's value is adversarial freshness, so a pin degrades toward blocked fetches. `deploy.sh` verifies on each deploy that no pin has crept in. |
 | [tile-content-pipeline](rules/tile-content-pipeline.md) | Tile content updates flow through staging → promote (forbids live-NAS edits). Feature-branch PRs against a tile repo are OK — same review surface. |
 | [ugos-compose-projects](rules/ugos-compose-projects.md) | Topology + UI contract for Docker Compose projects on UGOS Pro (NASync) where the compose file is source-of-truth in the repo: `/volume1/docker/<project>` directory symlink, in-repo `.env` symlink, sudo INSERT into UGOS Pro's SQLite DB. UGOS Pro UI is Start/Stop only — never "Edit"; never paste env literals. |
 
