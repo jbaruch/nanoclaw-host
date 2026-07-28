@@ -76,6 +76,10 @@
     "snitchmd-image-floating": {
       "rules": "rules/snitchmd-image-floating.md",
       "alwaysApply": true
+    },
+    "sync-cli-floating": {
+      "rules": "rules/sync-cli-floating.md",
+      "alwaysApply": true
     }
   },
   "skills": {

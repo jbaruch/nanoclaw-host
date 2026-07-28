@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Rule — sync CLI floating carve-out (2026-07-28)
+
+New `sync-cli-floating` rule. `jbaruch/nanoclaw`'s agent image installs `jbaruch/reclaim-tripit-timezones-sync`, which was pinned to a tag per `coding-policy: dependency-management` Pinning. The package gained OneCLI gateway support on 2026-07-10 — the support that container needs, since the `GOOGLE_*` OAuth trio left it in the #638 native-Google migration — and no tag was cut for those commits. Renovate's github-tags manager had nothing newer to propose, so the pin read as current while the deployed CLI created zero OOO blocks for 19 days.
+
+Both repos are the same operator's, and the package's only consumer is that Dockerfile, so the pin was not standing between the consumer and unreviewed upstream change. It was holding the consumer on a build that predated a fix written for it. This rule is the authority-of-record for unpinning it, under the First-Party Co-Shipped Dependency Carve-Out added in `coding-policy` #250.
+
+The deploy gate runs in `scripts/deploy.sh` rather than only in CI because the gate exists to keep a pin off the NAS, and a deploy can be driven from a working tree CI never saw — rationale that lives here rather than in the rule body.
+
+The pin's failure mode is what makes this worth a rule rather than a commit message: the package gained OneCLI support on 2026-07-10 with no tag cut, Renovate's github-tags manager had nothing to propose, and the agent image kept a build that created zero OOO blocks for 19 days while the timezone half of the same sync kept working normally. Nothing was red. That incident detail lives here rather than in the rule body per `coding-policy: context-writing-style`.
+
+The rule carries two enforcement obligations rather than one. The familiar one is the deploy gate: `verify_sync_cli_floating` in `scripts/deploy.sh` fails on any `#<ref>` specifier, mirroring the `snitchmd-image-floating` and `tessl-version-floating` gates. The second is specific to a Docker-layer dependency — the `ADD` of the upstream commit JSON above the `RUN`, without which BuildKit serves the cached layer forever and "unpinned" quietly means "whatever the last rebuild fetched". A floating reference behind a layer cache is a pin nobody can read, so the gate checks for the trigger too, not just the absence of a specifier.
+
 ### Rule — snitchmd image floating carve-out (2026-07-26)
 
 New `snitchmd-image-floating` rule. `jbaruch/nanoclaw`'s `fetch_markdown` handler has always defaulted its sidecar image to the floating tag `syabro/snitchmd:latest`, with the reasoning sitting in a code comment beside the constant — which is not where `coding-policy: dependency-management` looks. The fleet policy reviewer flagged it on `jbaruch/nanoclaw` PR #883 (the #879 ops.ts split, which relocated the line verbatim) and correctly declined a follow-up ticket as a resolution: the rule's carve-out requires an authority-of-record rule plus deploy-time enforcement, not a promise.
