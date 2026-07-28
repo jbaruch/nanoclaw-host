@@ -17,7 +17,8 @@ The `reclaim-tripit-timezones-sync` install in `jbaruch/nanoclaw` `container/Doc
 ## Refetch is mandatory, not decoration
 
 - `container/Dockerfile` MUST carry an `ADD <url> <dest>` instruction on the line directly above the `RUN npm install -g`, where `<url>` is `https://api.github.com/repos/jbaruch/reclaim-tripit-timezones-sync/commits/main`
-- The `<dest>` argument is required by Dockerfile `ADD` syntax; the current line writes to `/tmp/rtts-head.json` and the `RUN` deletes it
+- The `<dest>` argument is required by Dockerfile `ADD` syntax
+- The current line writes to `/tmp/rtts-head.json`, which the `RUN` deletes
 - The commit JSON changes when upstream `main` moves, which invalidates the layer and forces the reinstall
 - A cached layer under a bare install resolves to whatever the last rebuild fetched
 - `./scripts/deploy.sh --no-cache` is a manual override, never the refetch mechanism
@@ -30,7 +31,7 @@ The `reclaim-tripit-timezones-sync` install in `jbaruch/nanoclaw` `container/Doc
 - The `ADD` refetch trigger is absent, sits anywhere other than the line directly above the `RUN`, or names a different repo than the install line
 - The install line cannot be located at all — a moved or renamed target fails loudly, never passes vacuously
 
-Run this in `scripts/deploy.sh`, not only in CI: the gate exists to keep a pin off the NAS, and a deploy can run from a working tree CI never saw.
+Run this in `scripts/deploy.sh`, not only in CI.
 
 ## Scope
 
