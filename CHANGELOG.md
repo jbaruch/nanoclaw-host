@@ -8,6 +8,8 @@ New `sync-cli-floating` rule. `jbaruch/nanoclaw`'s agent image installs `jbaruch
 
 Both repos are the same operator's, and the package's only consumer is that Dockerfile, so the pin was not standing between the consumer and unreviewed upstream change. It was holding the consumer on a build that predated a fix written for it. This rule is the authority-of-record for unpinning it, under the First-Party Co-Shipped Dependency Carve-Out added in `coding-policy` #250.
 
+The pin's failure mode is what makes this worth a rule rather than a commit message: the package gained OneCLI support on 2026-07-10 with no tag cut, Renovate's github-tags manager had nothing to propose, and the agent image kept a build that created zero OOO blocks for 19 days while the timezone half of the same sync kept working normally. Nothing was red. That incident detail lives here rather than in the rule body per `coding-policy: context-writing-style`.
+
 The rule carries two enforcement obligations rather than one. The familiar one is the deploy gate: `verify_sync_cli_floating` in `scripts/deploy.sh` fails on any `#<ref>` specifier, mirroring the `snitchmd-image-floating` and `tessl-version-floating` gates. The second is specific to a Docker-layer dependency — the `ADD` of the upstream commit JSON above the `RUN`, without which BuildKit serves the cached layer forever and "unpinned" quietly means "whatever the last rebuild fetched". A floating reference behind a layer cache is a pin nobody can read, so the gate checks for the trigger too, not just the absence of a specifier.
 
 ### Rule — snitchmd image floating carve-out (2026-07-26)
