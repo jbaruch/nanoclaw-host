@@ -6,7 +6,7 @@ alwaysApply: true
 
 ## Approved exception to `coding-policy: dependency-management`
 
-The `reclaim-tripit-timezones-sync` install in `jbaruch/nanoclaw` `container/Dockerfile` MUST be the bare `jbaruch/reclaim-tripit-timezones-sync` form — never `#v0.x.y`, never `#<sha>`, never a branch ref. This file is the authority-of-record for that reference under the First-Party Co-Shipped Dependency Carve-Out.
+The `reclaim-tripit-timezones-sync` install in `jbaruch/nanoclaw` `container/Dockerfile` MUST be the bare `jbaruch/reclaim-tripit-timezones-sync` form — never `#v0.x.y`, never `#<sha>`, never a branch ref. This file is the authority-of-record for that reference under the First-Party Co-Shipped Dependency Carve-Out, introduced in `jbaruch/coding-policy` 0.3.129.
 
 ## Why this dependency floats
 
