@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Rule — OS package floating carve-out (2026-08-02)
+
+New `os-package-floating` rule, the authority-of-record for the unversioned `apt-get install` lists in all three of `jbaruch/nanoclaw`'s container images, under the OS-Package Runtime Carve-Out added in `coding-policy` #252.
+
+The fleet reviewer raised it on `jbaruch/nanoclaw` #896, which had documented `ffmpeg` as deliberately unversioned while claiming an exception the policy did not define. Pinning it would have been worse than the gap: Debian's archive serves only the current version of a package, so `ffmpeg=<version>` resolves until the next security update supersedes it and then fails every build of that image. The pin schedules an outage rather than freezing behaviour.
+
+Scope deliberately covers all three images rather than only the sidecar that triggered it. The agent image installs 22 unversioned packages and the orchestrator 7 — same shape, same reasoning — and a rule naming only `ffmpeg` would have left the larger surface undocumented while looking complete.
+
+What keeps it bounded is the pair of conditions the carve-out demands. The base image must stay pinned, because the distro release is what makes "current in trixie" a bounded range; a base moved to `:latest` voids the exemption for that image. And `deploy.sh` step 3b-quater fails on an unpinned base or on any package outside the recorded set, so adding one is a reviewed edit to `COVERED_IMAGES` rather than a silent one-line growth.
+
 ### Rule — sync CLI floating carve-out (2026-07-28)
 
 New `sync-cli-floating` rule. `jbaruch/nanoclaw`'s agent image installs `jbaruch/reclaim-tripit-timezones-sync`, which was pinned to a tag per `coding-policy: dependency-management` Pinning. The package gained OneCLI gateway support on 2026-07-10 — the support that container needs, since the `GOOGLE_*` OAuth trio left it in the #638 native-Google migration — and no tag was cut for those commits. Renovate's github-tags manager had nothing newer to propose, so the pin read as current while the deployed CLI created zero OOO blocks for 19 days.

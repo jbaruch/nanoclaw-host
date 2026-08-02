@@ -80,6 +80,10 @@
     "sync-cli-floating": {
       "rules": "rules/sync-cli-floating.md",
       "alwaysApply": true
+    },
+    "os-package-floating": {
+      "rules": "rules/os-package-floating.md",
+      "alwaysApply": true
     }
   },
   "skills": {
