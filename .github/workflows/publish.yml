@@ -27,3 +27,8 @@ jobs:
     with:
       # This repo opts into the tessl out-of-credits tolerance (default fail).
       skill-review-credit-outage: skip
+      # Stamp the version heading onto the top un-headed CHANGELOG entries.
+      # Without this the reusable workflow skips its stamp step, which is why
+      # every entry back to 2026-05 sat under a forbidden `## Unreleased`
+      # bucket that nothing was ever going to replace.
+      stamp-changelog: true
