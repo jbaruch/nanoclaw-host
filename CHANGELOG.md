@@ -1,8 +1,24 @@
 # Changelog
 
-## Unreleased
+### Rule — OS package floating carve-out (2026-08-02)
 
-### Rule — sync CLI floating carve-out (2026-07-28)
+New `os-package-floating` rule, the authority-of-record for the unversioned `apt-get install` lists in all three of `jbaruch/nanoclaw`'s container images, under the OS-Package Runtime Carve-Out added in `coding-policy` #252.
+
+The fleet reviewer raised it on `jbaruch/nanoclaw` #896, which had documented `ffmpeg` as deliberately unversioned while claiming an exception the policy did not define. Pinning it would have been worse than the gap: Debian's archive serves only the current version of a package, so `ffmpeg=<version>` resolves until the next security update supersedes it and then fails every build of that image. The pin schedules an outage rather than freezing behaviour.
+
+Scope deliberately covers all three images rather than only the sidecar that triggered it. The agent image installs 22 unversioned packages and the orchestrator 7 — same shape, same reasoning — and a rule naming only `ffmpeg` would have left the larger surface undocumented while looking complete.
+
+CHANGELOG stamping is switched on in the same change, because the reviewer's remedy for the forbidden `## Unreleased` bucket only works with it: the reusable publish workflow has always carried a stamp step, and this repo's caller never passed `stamp-changelog: true`, so un-headed entries would have stayed un-headed forever. The two entries whose versions the registry confirms are stamped directly (`0.1.54` published 2026-07-28, `0.1.53` on 2026-07-27); everything older is grouped under `## 0.1.52 and earlier` rather than left sitting under a heading it does not belong to. Those older entries keep their own dates and are not retro-mapped — that would take per-entry archaeology this change does not attempt.
+
+Published as `coding-policy` 0.3.131, not 0.3.130 — an unrelated `response-clarity` change took that number while this sat, and the rule's citation was corrected to match rather than left pointing at the wrong release.
+
+The gate earned its keep before it shipped: the first run against the real tree flagged `gh` in `Dockerfile.orchestrator`, which a hand-read of the apt blocks had missed because that image installs it in a second `apt-get install` after adding GitHub's repo. A prose-only rule would have carried that omission indefinitely.
+
+What keeps it bounded is the pair of conditions the carve-out demands. The base image must stay pinned, because the distro release is what makes "current in trixie" a bounded range; a base moved to `:latest` voids the exemption for that image. And `deploy.sh` step 3b-quater fails on an unpinned base or on any package outside the recorded set, so adding one is a reviewed edit to `COVERED_IMAGES` rather than a silent one-line growth.
+
+## 0.1.54 — 2026-07-28
+
+### Rule — sync CLI floating carve-out
 
 New `sync-cli-floating` rule. `jbaruch/nanoclaw`'s agent image installs `jbaruch/reclaim-tripit-timezones-sync`, which was pinned to a tag per `coding-policy: dependency-management` Pinning. The package gained OneCLI gateway support on 2026-07-10 — the support that container needs, since the `GOOGLE_*` OAuth trio left it in the #638 native-Google migration — and no tag was cut for those commits. Renovate's github-tags manager had nothing newer to propose, so the pin read as current while the deployed CLI created zero OOO blocks for 19 days.
 
@@ -14,13 +30,19 @@ The pin's failure mode is what makes this worth a rule rather than a commit mess
 
 The rule carries two enforcement obligations rather than one. The familiar one is the deploy gate: `verify_sync_cli_floating` in `scripts/deploy.sh` fails on any `#<ref>` specifier, mirroring the `snitchmd-image-floating` and `tessl-version-floating` gates. The second is specific to a Docker-layer dependency — the `ADD` of the upstream commit JSON above the `RUN`, without which BuildKit serves the cached layer forever and "unpinned" quietly means "whatever the last rebuild fetched". A floating reference behind a layer cache is a pin nobody can read, so the gate checks for the trigger too, not just the absence of a specifier.
 
-### Rule — snitchmd image floating carve-out (2026-07-26)
+## 0.1.53 — 2026-07-27
+
+### Rule — snitchmd image floating carve-out
 
 New `snitchmd-image-floating` rule. `jbaruch/nanoclaw`'s `fetch_markdown` handler has always defaulted its sidecar image to the floating tag `syabro/snitchmd:latest`, with the reasoning sitting in a code comment beside the constant — which is not where `coding-policy: dependency-management` looks. The fleet policy reviewer flagged it on `jbaruch/nanoclaw` PR #883 (the #879 ops.ts split, which relocated the line verbatim) and correctly declined a follow-up ticket as a resolution: the rule's carve-out requires an authority-of-record rule plus deploy-time enforcement, not a promise.
 
 This rule is that authority-of-record. It names the covered path, states why this particular dependency floats (snitchmd's value is adversarial freshness — each release carries updated CloakBrowser fingerprints, so a pin degrades toward blocked fetches as anti-bot detection advances, and a pin's renewal cadence competes with an adversary's release cadence), and requires `scripts/deploy.sh` to fail the deploy on any non-floating committed default. `SNITCHMD_IMAGE` remains the per-box escape hatch and is explicitly out of the gate's scope: environment configuration is not a committed dependency.
 
 Enforcement lands in `jbaruch/nanoclaw` #883 as `verify_snitchmd_image_floating`, mirroring the existing `mode: managed` + `version: latest` manifest gate that `tessl-version-floating` owns.
+
+## 0.1.52 and earlier
+
+Entries below predate CHANGELOG stamping in this repo; each carries its own date, and mapping them to published versions would take per-entry archaeology this change does not attempt.
 
 ### Rule — persona-persist path refs follow the #845 ipc.ts split (2026-07-21)
 
