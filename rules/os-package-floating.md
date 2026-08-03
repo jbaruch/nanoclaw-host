@@ -21,7 +21,7 @@ The authoritative machine-readable copy is `COVERED_IMAGES` in `jbaruch/nanoclaw
 - Debian's archive serves only the current version of a package, so a literal `pkg=<version>` pin stops resolving at the next security update and fails every build of the image
 - The consumed surface is a command-line invocation or a distro-managed ABI, not a semver-governed source API
 
-## Bounds
+## Bounds and deploy-time enforcement
 
 - Each covered image's base MUST stay pinned to a specific tag or digest: agent and orchestrator pin `node:26-trixie-slim` by digest, the sidecar pins `python:3.14-slim` by minor tag
 - `.github/dependabot.yml`'s `docker` ecosystem tracks all three
@@ -29,8 +29,6 @@ The authoritative machine-readable copy is `COVERED_IMAGES` in `jbaruch/nanoclaw
 - Each covered image MUST be rebuilt on every deploy: agent at `deploy.sh` step 2a, orchestrator at 2b, sidecars at 2a-bis
 - CI additionally builds the audible-backup image on every pull request
 - Each rebuild runs `apt-get update` against the current archive
-
-## Verify on every deploy
 
 `scripts/deploy.sh` step 3b-quater MUST fail the deploy when:
 
