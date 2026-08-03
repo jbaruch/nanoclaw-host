@@ -10,6 +10,8 @@ The fleet reviewer raised it on `jbaruch/nanoclaw` #896, which had documented `f
 
 Scope deliberately covers all three images rather than only the sidecar that triggered it. The agent image installs 22 unversioned packages and the orchestrator 7 — same shape, same reasoning — and a rule naming only `ffmpeg` would have left the larger surface undocumented while looking complete.
 
+Published as `coding-policy` 0.3.131, not 0.3.130 — an unrelated `response-clarity` change took that number while this sat, and the rule's citation was corrected to match rather than left pointing at the wrong release.
+
 The gate earned its keep before it shipped: the first run against the real tree flagged `gh` in `Dockerfile.orchestrator`, which a hand-read of the apt blocks had missed because that image installs it in a second `apt-get install` after adding GitHub's repo. A prose-only rule would have carried that omission indefinitely.
 
 What keeps it bounded is the pair of conditions the carve-out demands. The base image must stay pinned, because the distro release is what makes "current in trixie" a bounded range; a base moved to `:latest` voids the exemption for that image. And `deploy.sh` step 3b-quater fails on an unpinned base or on any package outside the recorded set, so adding one is a reviewed edit to `COVERED_IMAGES` rather than a silent one-line growth.
