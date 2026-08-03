@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.55 — 2026-08-03
+
 ### Rule — OS package floating carve-out (2026-08-02)
 
 New `os-package-floating` rule, the authority-of-record for the unversioned `apt-get install` lists in all three of `jbaruch/nanoclaw`'s container images, under the OS-Package Runtime Carve-Out added in `coding-policy` #252.
