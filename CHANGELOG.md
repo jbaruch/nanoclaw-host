@@ -1,5 +1,11 @@
 # Changelog
 
+### Rule — `jq` joins the agent image's recorded package set
+
+`jbaruch/nanoclaw-travel#270` overlays the `jbaruch/tripit-api` tile onto the travel chat, and its `using-tripit` scripts parse every response with `jq`. Their shared `tripit_require` asserts `curl` and `jq` before any request, so on an image without it the skill fails at the first step rather than degrading — the agent gets a missing-tool error, not travel data.
+
+The agent image had `curl` and not `jq`. Adding it grows the covered set, which is exactly what this rule bounds, so the two mirrors move together: `COVERED_IMAGES` in `jbaruch/nanoclaw` `scripts/deploy.sh` (authoritative, deploy-gated) and the list here (human-readable). `jbaruch/nanoclaw#925` carries the Dockerfile and the gate.
+
 ## 0.1.55 — 2026-08-03
 
 ### Rule — OS package floating carve-out (2026-08-02)
