@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.56 — 2026-08-16
+
 ### Rule — `jq` joins the agent image's recorded package set
 
 `jbaruch/nanoclaw-travel#270` overlays the `jbaruch/tripit-api` tile onto the travel chat, and its `using-tripit` scripts parse every response with `jq`. Their shared `tripit_require` asserts `curl` and `jq` before any request, so on an image without it the skill fails at the first step rather than degrading — the agent gets a missing-tool error, not travel data.
