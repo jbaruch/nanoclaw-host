@@ -1,0 +1,9 @@
+{
+  "name": "nanoclaw-host",
+  "mode": "managed",
+  "dependencies": {
+    "finsi/codex-review": {
+      "version": "0.1.2"
+    }
+  }
+}

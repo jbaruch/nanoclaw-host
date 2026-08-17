@@ -1,1 +1,5 @@
 skills/**/tests/
+
+# Tessl consumer-side install state. `tessl.json` is committed (it is the
+# manifest, not install state) but has no place in a consumer's checkout.
+/tessl.json
