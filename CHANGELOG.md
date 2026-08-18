@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.61 — 2026-08-18
+
 ### Rule — the publish watch matches the workflow file, not its display name
 
 `post-merge-publish-watch` matched the post-merge run by display name (`--workflow 'Review & Publish Tile'`). The tile→plugin rename split that name three ways across the fleet, so the match silently found nothing on the repos that moved — `jbaruch/nanoclaw-media` reported `NO PUBLISH RUN FOUND` for a run that had already succeeded. The rule now passes the workflow FILE, `publish.yml`, which is stable across the rename; an unresolvable file argument exits non-zero rather than returning an empty list that reads as a clean pass.
