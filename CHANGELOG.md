@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.62 — 2026-08-18
+
 ### Fix — typed cross-skill references in `extract-to-overlay`
 
 Steps 4 and 6 named the release skill in prose ("the release skill's Step 7") after 0.1.61 rewrote them to delegate the release contract. `coding-policy: skill-authoring` Typed Calls requires cross-skill references in the typed `Skill(skill: "name")` form so the dependency stays machine-recognizable; both now read `Skill(skill: "release")` Step 7, matching the typed `ship-code` reference two lines above them.
