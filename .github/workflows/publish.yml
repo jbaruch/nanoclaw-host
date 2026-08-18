@@ -3,7 +3,9 @@ name: Review & Publish Tile
 # Thin caller for the canonical fleet publish pipeline
 # (jbaruch/coding-policy#206). All steps live in the reusable workflow;
 # this file carries only the triggers and this repo's inputs. The display
-# name is unchanged so tooling that watches this run by name keeps working.
+# name is NOT load-bearing: watchers match the workflow file (`publish.yml`)
+# per `nanoclaw-host: post-merge-publish-watch`, because the fleet's display
+# names diverged during the tile→plugin rename.
 
 on:
   push:

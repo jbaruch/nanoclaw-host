@@ -6,20 +6,29 @@ alwaysApply: true
 
 ## A merge is not a ship
 
-Merging a tile-repo PR puts content on `main`. The post-merge `Review & Publish Tile` workflow is what bumps `tile.json` and pushes the new version to the registry. **If that workflow fails, the registry never sees the new content** — `tessl outdated` reports "all up-to-date" against the prior version, and `tessl update` is a no-op forever.
+Merging a tile-repo PR does not publish it. Registry publication is a separate gate.
 
-## Watch the post-merge workflow
+- Ship a tile repo through `coding-policy` `Skill(skill: "release")`, invoked BEFORE the merge.
+- Merging outside that skill: run `skills/release/capture-registry-baseline.sh` before the merge.
+- Never hand-roll a `gh run list` watch in place of the contract (`coding-policy: script-as-black-box`).
+- Pass `--repo` on every `gh` invocation (`nanoclaw-host: repo-chain`).
+- Report a tile shipped only when the release contract's conjunction is confirmed (`coding-policy: ci-safety`).
 
-After every `gh pr merge` against a tile repo:
+## Pass the workflow FILE, never its display name
 
-- Locate the post-merge `Review & Publish Tile` run for the merge commit's SHA. Match BOTH workflow name and head-SHA (`gh run list --repo jbaruch/<tile-repo> --workflow 'Review & Publish Tile' --json headSha,databaseId,status,conclusion --jq '.[] | select(.headSha == "<merge-sha>")'`; the REST API spells the same field `head_sha`). Don't use `--limit 1` alone.
-- Wait for it to finish: `gh run watch <id> --repo jbaruch/<tile-repo> --exit-status`, or poll `status == "completed"`. Don't move on while it's `in_progress`.
-- If the conclusion isn't `success`, pull the failed step's log, fix the root cause, and land the fix as a follow-up PR. Re-watch on the new run. Don't force-push to main.
-- Every `gh` invocation in this rule MUST pass `--repo` per `nanoclaw-host: repo-chain`.
+- Pass `publish.yml` as `skills/release/resolve-publish-run.sh`'s `<workflow>` argument:
 
-## Verify before declaring done
+  ```bash
+  skills/release/resolve-publish-run.sh jbaruch <tile-repo> "$merge_sha" publish.yml
+  ```
 
-Two checks, both required (the bump commit lands locally before the registry POST):
+- Never pass a display name.
+- Confirm the filename on a repo outside the `nanoclaw*` set with `gh workflow list --repo jbaruch/<repo> --json name,path`.
 
-- The bumped `tile.json` is on the source repo's `main` (proves `patch-version-publish` ran).
-- The latest `Review & Publish Tile` run on `main` has `conclusion: "success"` (proves the registry POST landed too).
+## An unresolved run is never a passed one
+
+On a non-zero exit from `skills/release/resolve-publish-run.sh`:
+
+- Fix the identifier and re-run it.
+- Never read that exit as "nothing to publish".
+- Never proceed to the conjunction on it.
