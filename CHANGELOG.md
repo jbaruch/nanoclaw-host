@@ -1,5 +1,15 @@
 # Changelog
 
+### Rule — the publish watch matches the workflow file, not its display name
+
+`post-merge-publish-watch` matched the post-merge run by display name (`--workflow 'Review & Publish Tile'`). The tile→plugin rename split that name three ways across the fleet, so the match silently found nothing on the repos that moved — `jbaruch/nanoclaw-media` reported `NO PUBLISH RUN FOUND` for a run that had already succeeded. The rule now passes the workflow FILE, `publish.yml`, which is stable across the rename; an unresolvable file argument exits non-zero rather than returning an empty list that reads as a clean pass.
+
+Reviewing the fix surfaced the larger gap: the rule hand-rolled a watch the fleet already owns. `coding-policy: ci-safety` defines a three-conjunct release contract — run `success`, registry advance past a pre-merge baseline, moderation cleared — implemented in `coding-policy` `skills/release` Step 7. This rule verified a `tile.json` bump and a run conclusion, neither of them a conjunct, and `extract-to-overlay` Steps 4 and 6 gated tile ordering on registry advance alone. Moderation gates `tessl install`, so both surfaces could call a version shipped while it was still install-blocked. Both now delegate to the release skill and report shipped on its confirmation.
+
+The rule keeps only its own specialization — which identifier to pass — and is directives throughout. `.github/hooks/` joins the ignore list as tessl-generated scaffolding. This repo's `publish.yml` keeps the `Review & Publish Tile` display name in this change; 0.1.60 held that rename pending exactly this rule, and it is now unblocked rather than done — the rename itself belongs to the vocabulary sweep in `#53`.
+
+Fixes #50. Full incident detail, the fleet-wide name/file survey, and the review history are in the PR.
+
 ## 0.1.60 — 2026-08-18
 
 ### Chore — migrate from `tile.json` to `.tessl-plugin/plugin.json` (`jbaruch/nanoclaw-core#97`)

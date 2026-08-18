@@ -75,7 +75,7 @@ Worktree-isolate the target tile's worktree if not already done in Step 3. Invok
 
 Do NOT invoke `Skill(skill: "ship-code")` here — `ship-code` is scoped to the `jbaruch/nanoclaw` private→public fork chain per `rules/repo-chain.md`, not tile-repo lifecycles.
 
-Wait for the target tile's `Review & Publish Tile` run to land green AND for the registry to advance past the prior version. Only registry version advance counts as shipped. The source tile MUST NOT ship before the target — Step 6 is gated on this ordering.
+The target tile is shipped when the release skill's Step 7 reports the release confirmed — not on a green run, and not on a registry advance. Step 5's `update_group_config` validator needs the version installable, which is downstream of that confirmation. The source tile MUST NOT ship before the target: Step 6 is gated on this ordering.
 
 Proceed immediately to Step 5.
 
@@ -95,7 +95,7 @@ Proceed immediately to Step 6.
 
 Invoke `Skill(skill: "release")` once for the source tile (`jbaruch/nanoclaw-admin`). Same release lifecycle as Step 4. This PR removes the migrated entry from `tile.json`, the README table, and adds the Unreleased CHANGELOG entry recording the migration.
 
-Wait for the source tile's `Review & Publish Tile` run to land green AND for the registry to advance past the prior version.
+The source tile is shipped on the same signal — the release skill's Step 7 reporting the release confirmed. Do not proceed to Step 7 of this skill before then.
 
 Proceed immediately to Step 7.
 
