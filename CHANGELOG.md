@@ -1,5 +1,13 @@
 # Changelog
 
+### Chore — migrate from `tile.json` to `.tessl-plugin/plugin.json` (`jbaruch/nanoclaw-core#97`)
+
+Ran `Skill(skill: "tessl__migrate-to-plugin")`: `tessl plugin migrate` wrote `.tessl-plugin/plugin.json` at the current version (0.1.59, published from `main` while this branch was in review), `.tileignore` became `.tesslignore`, and `tile.json` is gone. The exclusion set moves across unchanged — `skills/**/tests/` and an anchored `/tessl.json` — so package contents do not move. Verified against the packed archive: `register-ugos-project.sh` ships, its `tests/` sibling does not, `tessl.json` is out. All 20 rules keep their `alwaysApply` frontmatter in the rule files themselves, which is where `jbaruch/coding-policy: rule-frontmatter` puts scope.
+
+Only the unambiguous renames ride along: the plugin description, and `tessl tile lint` → `tessl plugin lint` in the `promote` and `extract-to-overlay` skills. The `publish.yml` display name stays `Review & Publish Tile` here. `rules/post-merge-publish-watch.md` locates the post-merge run by exact display name, so renaming the workflow in this repo would leave the published rule hunting for a string that no longer exists — the same failure `jbaruch/nanoclaw-host#50` reports and `#51` fixes by matching the workflow file instead. The rename lands once that rule stops depending on the name.
+
+The rest of this repo's "tile" vocabulary is deferred to `jbaruch/nanoclaw-host#53`. Three reasons, and none of them is a find-and-replace: `rules/overlay-tile-authoring.md` and `rules/tile-content-pipeline.md` are published rule identifiers other repos cite by name; `rules/post-merge-publish-watch.md` is owned by in-flight `#51`; and much of the remainder is live contract rather than prose — `containerConfig.additionalTiles`, `TILE_NAME=`, `reconcile-tiles.sh`, `staging/{tileName}/` NAS paths. Issue #53 carries the full keep-list and the per-file scope.
+
 ## 0.1.59 — 2026-08-18
 
 ### Rule — the floating requirement covers `jbaruch/*`, not every dependency

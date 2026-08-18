@@ -96,7 +96,7 @@ Only when Copilot review is clean, all threads are replied to, and the local `te
 gh pr merge <N> --repo jbaruch/<tile> --merge --delete-branch
 ```
 
-GHA on `main` then runs `publish.yml` — 85% `tessl skill review`, `tessl tile lint`, and publish to the tessl registry. Watch it complete:
+GHA on `main` then runs `publish.yml` — 85% `tessl skill review`, `tessl plugin lint`, and publish to the tessl registry. Watch it complete:
 
 ```bash
 gh run list --repo jbaruch/<tile> --limit 1

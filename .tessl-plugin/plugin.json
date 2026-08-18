@@ -1,0 +1,39 @@
+{
+  "name": "jbaruch/nanoclaw-host",
+  "version": "0.1.59",
+  "description": "Skills and rules for the NanoClaw host agent (Claude Code on Mac), covering plugin promotion, container management, staging checks, repo chain safety, and public sync.",
+  "private": false,
+  "skills": [
+    "skills/promote",
+    "skills/nuke",
+    "skills/check-staging",
+    "skills/extract-to-overlay",
+    "skills/reconcile",
+    "skills/sync-to-public",
+    "skills/update-from-public",
+    "skills/ship-code",
+    "skills/add-ugos-project"
+  ],
+  "rules": [
+    "rules/host-conventions.md",
+    "rules/repo-chain.md",
+    "rules/copilot-nudge-after-10min.md",
+    "rules/post-merge-publish-watch.md",
+    "rules/tessl-version-floating.md",
+    "rules/orchestrator-dep-refresh.md",
+    "rules/overlay-tile-authoring.md",
+    "rules/nuke-semantics.md",
+    "rules/persona-persist-direct-push.md",
+    "rules/no-error-suppression.md",
+    "rules/dual-agent-coexistence.md",
+    "rules/staging-diff-protocol.md",
+    "rules/no-deferral.md",
+    "rules/boyscout-host.md",
+    "rules/tile-content-pipeline.md",
+    "rules/cross-tier-skill-state.md",
+    "rules/ugos-compose-projects.md",
+    "rules/snitchmd-image-floating.md",
+    "rules/sync-cli-floating.md",
+    "rules/os-package-floating.md"
+  ]
+}

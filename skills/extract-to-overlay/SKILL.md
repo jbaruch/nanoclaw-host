@@ -114,9 +114,9 @@ Probes fire conditionally on artifact type and cadence presence per `rules/overl
 - Source row is gone: same query against the pre-migration skill name returns zero rows
 - Live handshake against every external MCP or API surface in the moved skill's data plane
 
-**User-driven skill artifact** (no `cadence:`/`script:` frontmatter) — no `scheduled_tasks` row exists for this skill class. Manifest integrity is enforced by `tessl tile lint` at publish in Steps 4 and 6. Verify by triggering the skill from the affected chat with its declared user intent and confirming it loads from the target tile, not the source tile.
+**User-driven skill artifact** (no `cadence:`/`script:` frontmatter) — no `scheduled_tasks` row exists for this skill class. Manifest integrity is enforced by `tessl plugin lint` at publish in Steps 4 and 6. Verify by triggering the skill from the affected chat with its declared user intent and confirming it loads from the target tile, not the source tile.
 
-**Rule artifact** — manifest integrity is enforced by `tessl tile lint` at publish in Steps 4 and 6; no further probe. Agents load the rule on next session start.
+**Rule artifact** — manifest integrity is enforced by `tessl plugin lint` at publish in Steps 4 and 6; no further probe. Agents load the rule on next session start.
 
 If any probe fails, fix in a follow-up PR on the appropriate tile and re-verify. Do not declare done until all applicable probes pass.
 
