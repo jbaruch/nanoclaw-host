@@ -75,7 +75,7 @@ Worktree-isolate the target tile's worktree if not already done in Step 3. Invok
 
 Do NOT invoke `Skill(skill: "ship-code")` here — `ship-code` is scoped to the `jbaruch/nanoclaw` private→public fork chain per `rules/repo-chain.md`, not tile-repo lifecycles.
 
-The target tile is shipped when the release skill's Step 7 reports the release confirmed — not on a green run, and not on a registry advance. Step 5's `update_group_config` validator needs the version installable, which is downstream of that confirmation. The source tile MUST NOT ship before the target: Step 6 is gated on this ordering.
+The target tile is shipped when the release skill's Step 7 reports the release confirmed — not on a green run, and not on a registry advance. Step 5's `update_group_config` validator requires the confirmed version. The source tile MUST NOT ship before the target: Step 6 is gated on this ordering.
 
 Proceed immediately to Step 5.
 
