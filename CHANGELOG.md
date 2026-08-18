@@ -2,11 +2,35 @@
 
 ### Chore — migrate from `tile.json` to `.tessl-plugin/plugin.json` (`jbaruch/nanoclaw-core#97`)
 
-Ran `Skill(skill: "tessl__migrate-to-plugin")`: `tessl plugin migrate` wrote `.tessl-plugin/plugin.json` at the current version (0.1.58), `.tileignore` became `.tesslignore`, and `tile.json` is gone. The exclusion set moves across unchanged — `skills/**/tests/` and an anchored `/tessl.json` — so package contents do not move. Verified against the packed archive: `register-ugos-project.sh` ships, its `tests/` sibling does not, `tessl.json` is out. All 20 rules keep their `alwaysApply` frontmatter in the rule files themselves, which is where `jbaruch/coding-policy: rule-frontmatter` puts scope.
+Ran `Skill(skill: "tessl__migrate-to-plugin")`: `tessl plugin migrate` wrote `.tessl-plugin/plugin.json` at the current version (0.1.59, published from `main` while this branch was in review), `.tileignore` became `.tesslignore`, and `tile.json` is gone. The exclusion set moves across unchanged — `skills/**/tests/` and an anchored `/tessl.json` — so package contents do not move. Verified against the packed archive: `register-ugos-project.sh` ships, its `tests/` sibling does not, `tessl.json` is out. All 20 rules keep their `alwaysApply` frontmatter in the rule files themselves, which is where `jbaruch/coding-policy: rule-frontmatter` puts scope.
 
 Only the unambiguous renames ride along: the plugin description, and `tessl tile lint` → `tessl plugin lint` in the `promote` and `extract-to-overlay` skills. The `publish.yml` display name stays `Review & Publish Tile` here. `rules/post-merge-publish-watch.md` locates the post-merge run by exact display name, so renaming the workflow in this repo would leave the published rule hunting for a string that no longer exists — the same failure `jbaruch/nanoclaw-host#50` reports and `#51` fixes by matching the workflow file instead. The rename lands once that rule stops depending on the name.
 
 The rest of this repo's "tile" vocabulary is deferred to `jbaruch/nanoclaw-host#53`. Three reasons, and none of them is a find-and-replace: `rules/overlay-tile-authoring.md` and `rules/tile-content-pipeline.md` are published rule identifiers other repos cite by name; `rules/post-merge-publish-watch.md` is owned by in-flight `#51`; and much of the remainder is live contract rather than prose — `containerConfig.additionalTiles`, `TILE_NAME=`, `reconcile-tiles.sh`, `staging/{tileName}/` NAS paths. Issue #53 carries the full keep-list and the per-file scope.
+
+## 0.1.59 — 2026-08-18
+
+### Rule — the floating requirement covers `jbaruch/*`, not every dependency
+
+`tessl-version-floating` opened by requiring every `dependencies.<tile>.version` in every NanoClaw `tessl.json` to be `"latest"`. `jbaruch/coding-policy` `dependency-management` says the narrower thing: its Runtime-Managed Manifest Carve-Out floats `jbaruch/*`, and third-party dependencies "pin normally and stay out of scope." Nine `nanoclaw*` repos ship a committed manifest pinning `finsi/codex-review@0.1.2` with every `jbaruch/*` dep floating, and the policy reviewer blocked eight companion PRs until that pin went back in. The pin is the enforced behaviour; this rule's text was the outlier, and Copilot said so on #48 against `tessl.json:7`.
+
+The rule now scopes the floating requirement to `jbaruch/*` and names two covered sets rather than one, because they genuinely differ.
+
+**Why `jbaruch/nanoclaw`'s two manifests still float everything.** Not grandfathering — `tessl update` does not honour a pin. It rewrites the specifier in place: a manifest pinned to `0.1.57` came back `0.1.58`, resolved state and all. Three unattended callers run it against `tessl-workspace/tessl.json` and the project-root `tessl.json` — `scripts/deploy.sh`, the orchestrator's 15-minute catch-up loop, the `tessl_update` MCP tool — none on a tree anyone reviews. A pin there is rewritten on the NAS with no commit behind it, and the next `git pull` reverts the rewrite and rolls the deployment backward against the registry. `deploy.sh` step 3b already asserts exactly this for exactly these two files, so it needs no reconciliation; the rule's wording was what had drifted away from the gate, not the other way round.
+
+**What checks the other nine.** `deploy.sh` runs in `jbaruch/nanoclaw`'s tree and never sees those repos, which is why the divergence went unnoticed. The check is `hooks/check-tessl-latest.sh`, the `SessionStart` hook `coding-policy` ships, which flags any `jbaruch/*` dependency not at `latest` — the carve-out explicitly accepts a plugin-shipped session hook in place of a deploy gate. That makes the hook load-bearing rather than incidental, so the rule now requires every repo in the set to declare `jbaruch/coding-policy` as a dependency.
+
+`nanoclaw-host` was the one repo in its own covered set that did not. Eight of the nine install `coding-policy`; this one authored the rules citing it as authority and installed neither the policy nor its hook, so its manifest had no deterministic check at all — the same shape as the gitignored-manifest gap 0.1.58 closed, one level up. It is now a dependency, floating at `latest`, and the hook resolves against this manifest. `tessl install` wrote `0.3.162` on the way in, which is the pin the rule's own closing section says to float before committing.
+
+**A third-party pin does not hold itself.** The `tessl update --yes` that hook runs every session rewrites third-party pins too, the moment upstream publishes past them. `finsi/codex-review@0.1.2` has held only because `0.1.2` is still latest.
+
+That makes the renewal automatic, which changes which half of Freshness applies. Freshness asks every pin for a renewal *mechanism*, and asks for a documented *cadence* only where no automated mechanism tracks it. README used to promise a quarterly `tessl outdated` sweep — a cadence for a pin that already had a mechanism, and one describing a chore the tooling performs unattended. Both surfaces now state the mechanism instead: the tooling bumps the pin and leaves the manifest diff in the working tree, and reviewing that diff is the renewal. Land it as its own commit rather than letting it ride along on whatever branch is open.
+
+The rule and README carry directives only. The mechanical reasoning the reviewer moved off those surfaces — why a glob would void the carve-out, why the unattended manifests cannot hold a pin, why the session hook is load-bearing rather than incidental — is above, per `coding-policy: context-writing-style`.
+
+`.github/hooks/` joins the ignore list. `tessl install` generates it, it points into the gitignored `.tessl/` tree, and it belongs with `.github/skills/` and `.github/mcp.json` rather than in the tree as a permanently-untracked file.
+
+Out of scope, per the issue: the nine merged manifest PRs. They match `coding-policy` as installed. This is the rule text catching up to them.
 
 ## 0.1.58 — 2026-08-18
 
