@@ -1,5 +1,23 @@
 # Changelog
 
+### Rule — the floating requirement covers `jbaruch/*`, not every dependency
+
+`tessl-version-floating` opened by requiring every `dependencies.<tile>.version` in every NanoClaw `tessl.json` to be `"latest"`. `jbaruch/coding-policy` `dependency-management` says the narrower thing: its Runtime-Managed Manifest Carve-Out floats `jbaruch/*`, and third-party dependencies "pin normally and stay out of scope." Nine `nanoclaw*` repos ship a committed manifest pinning `finsi/codex-review@0.1.2` with every `jbaruch/*` dep floating, and the policy reviewer blocked eight companion PRs until that pin went back in. The pin is the enforced behaviour; this rule's text was the outlier, and Copilot said so on #48 against `tessl.json:7`.
+
+The rule now scopes the floating requirement to `jbaruch/*` and names two covered sets rather than one, because they genuinely differ.
+
+**Why `jbaruch/nanoclaw`'s two manifests still float everything.** Not grandfathering — `tessl update` does not honour a pin. It rewrites the specifier in place: a manifest pinned to `0.1.57` came back `0.1.58`, resolved state and all. Three unattended callers run it against `tessl-workspace/tessl.json` and the project-root `tessl.json` — `scripts/deploy.sh`, the orchestrator's 15-minute catch-up loop, the `tessl_update` MCP tool — none on a tree anyone reviews. A pin there is rewritten on the NAS with no commit behind it, and the next `git pull` reverts the rewrite and rolls the deployment backward against the registry. `deploy.sh` step 3b already asserts exactly this for exactly these two files, so it needs no reconciliation; the rule's wording was what had drifted away from the gate, not the other way round.
+
+**What checks the other nine.** `deploy.sh` runs in `jbaruch/nanoclaw`'s tree and never sees those repos, which is why the divergence went unnoticed. The check is `hooks/check-tessl-latest.sh`, the `SessionStart` hook `coding-policy` ships, which flags any `jbaruch/*` dependency not at `latest` — the carve-out explicitly accepts a plugin-shipped session hook in place of a deploy gate. That makes the hook load-bearing rather than incidental, so the rule now requires every repo in the set to declare `jbaruch/coding-policy` as a dependency.
+
+`nanoclaw-host` was the one repo in its own covered set that did not. Eight of the nine install `coding-policy`; this one authored the rules citing it as authority and installed neither the policy nor its hook, so its manifest had no deterministic check at all — the same shape as the gitignored-manifest gap 0.1.58 closed, one level up. It is now a dependency, floating at `latest`, and the hook resolves against this manifest. `tessl install` wrote `0.3.162` on the way in, which is the pin the rule's own closing section says to float before committing.
+
+**A third-party pin does not hold itself.** The `tessl update --yes` that hook runs every session rewrites third-party pins too, the moment upstream publishes past them. `finsi/codex-review@0.1.2` has held only because `0.1.2` is still latest. So the renewal mechanism Freshness asks for is not the quarterly `tessl outdated` sweep README used to promise — the tooling performs the bump and leaves the manifest diff in the working tree, and reviewing that diff is the renewal. README now says that, and says to land it as its own commit rather than let it ride along on whatever branch is open.
+
+`.github/hooks/` joins the ignore list. `tessl install` generates it, it points into the gitignored `.tessl/` tree, and it belongs with `.github/skills/` and `.github/mcp.json` rather than in the tree as a permanently-untracked file.
+
+Out of scope, per the issue: the nine merged manifest PRs. They match `coding-policy` as installed. This is the rule text catching up to them.
+
 ## 0.1.58 — 2026-08-18
 
 ### Chore — commit `tessl.json` as the dependency manifest it is
