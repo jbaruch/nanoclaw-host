@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.59 — 2026-08-18
+
 ### Rule — the floating requirement covers `jbaruch/*`, not every dependency
 
 `tessl-version-floating` opened by requiring every `dependencies.<tile>.version` in every NanoClaw `tessl.json` to be `"latest"`. `jbaruch/coding-policy` `dependency-management` says the narrower thing: its Runtime-Managed Manifest Carve-Out floats `jbaruch/*`, and third-party dependencies "pin normally and stay out of scope." Nine `nanoclaw*` repos ship a committed manifest pinning `finsi/codex-review@0.1.2` with every `jbaruch/*` dep floating, and the policy reviewer blocked eight companion PRs until that pin went back in. The pin is the enforced behaviour; this rule's text was the outlier, and Copilot said so on #48 against `tessl.json:7`.
