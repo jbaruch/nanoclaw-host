@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.60 — 2026-08-18
+
 ### Chore — migrate from `tile.json` to `.tessl-plugin/plugin.json` (`jbaruch/nanoclaw-core#97`)
 
 Ran `Skill(skill: "tessl__migrate-to-plugin")`: `tessl plugin migrate` wrote `.tessl-plugin/plugin.json` at the current version (0.1.59, published from `main` while this branch was in review), `.tileignore` became `.tesslignore`, and `tile.json` is gone. The exclusion set moves across unchanged — `skills/**/tests/` and an anchored `/tessl.json` — so package contents do not move. Verified against the packed archive: `register-ugos-project.sh` ships, its `tests/` sibling does not, `tessl.json` is out. All 20 rules keep their `alwaysApply` frontmatter in the rule files themselves, which is where `jbaruch/coding-policy: rule-frontmatter` puts scope.
