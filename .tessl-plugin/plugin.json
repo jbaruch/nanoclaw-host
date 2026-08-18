@@ -1,7 +1,7 @@
 {
   "name": "jbaruch/nanoclaw-host",
   "version": "0.1.58",
-  "description": "Skills and rules for the NanoClaw host agent (Claude Code on Mac). Plugin promotion, container management, staging checks, repo chain safety, and public sync.",
+  "description": "Skills and rules for the NanoClaw host agent (Claude Code on Mac), covering plugin promotion, container management, staging checks, repo chain safety, and public sync.",
   "private": false,
   "skills": [
     "skills/promote",
