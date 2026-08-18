@@ -50,3 +50,10 @@ tessl install jbaruch/nanoclaw-host
 | [update-from-public](skills/update-from-public/SKILL.md) | Pull upstream updates into private NanoClaw. The chain is qwibitai → public → private. This skill handles both pulling qwibitai changes into public and then merging public into private. Use when upstream has new features, when the user asks to update, or when /update-nanoclaw is invoked. |
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+## Development dependencies
+
+`tessl.json` declares this repo's dev-time plugin dependencies.
+
+- Every `jbaruch/*` dependency floats at `latest` (Runtime-Managed Manifest Carve-Out, `jbaruch/coding-policy: dependency-management`).
+- `finsi/codex-review` is third-party and pins. No dependency scanner covers the tessl ecosystem. Renewal cadence: quarterly — run `tessl outdated` and bump the pin in its own commit.
