@@ -29,6 +29,7 @@ Merging a tile-repo PR does not publish it. Registry publication is a separate g
 
 On a non-zero exit from `skills/release/resolve-publish-run.sh`:
 
-- Fix the identifier and re-run it.
+- Fix the identifier.
+- Re-run the resolver.
 - Never read that exit as "nothing to publish".
 - Never proceed to the conjunction on it.
