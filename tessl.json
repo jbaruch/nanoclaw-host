@@ -4,6 +4,9 @@
   "dependencies": {
     "finsi/codex-review": {
       "version": "0.1.2"
+    },
+    "jbaruch/coding-policy": {
+      "version": "latest"
     }
   }
 }

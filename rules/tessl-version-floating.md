@@ -6,25 +6,41 @@ alwaysApply: true
 
 ## Approved exception to `coding-policy: dependency-management`
 
-Every `tessl.json` in NanoClaw MUST declare `"mode": "managed"` AND every `dependencies.<tile>.version` MUST be `"latest"` — never `"vendored"` mode, never a literal `0.1.x` pin. Covers the orchestrator-workspace manifest (`tessl-workspace/tessl.json`) AND the project-root manifest (`tessl.json`). This file is the authority-of-record.
+Authority-of-record for the fleet's Runtime-Managed Manifest Carve-Out. On every manifest named below:
 
-## Verify on every deploy
+- `"mode": "managed"`. Never `"vendored"`.
+- Every `jbaruch/*` dependency at `"version": "latest"`. Never a literal pin.
 
-`scripts/deploy.sh` MUST read each manifest in the carve-out set (`tessl-workspace/tessl.json`, project-root `tessl.json`; future additions append here in lock-step) and fail the deploy if any manifest fails one of:
+Third-party dependencies (`finsi/*`, `tessl-labs/*`, `tessl/npm-*`) are outside the carve-out. They pin, with a stated renewal mechanism per `coding-policy: dependency-management` Freshness. The unattended-update set below is the sole exception.
 
-- `mode != "managed"` (catches a stale `"vendored"` declaration or a missing field).
-- Any `dependencies.<tile>.version` not equal to the literal string `"latest"`.
-- `OSError` / `JSONDecodeError` reading the file (catches a partial write).
+Renewal mechanism for third-party pins in this fleet: `tessl update --yes`, run each session by the hook named below, rewrites any pin the registry has passed. Review the resulting manifest diff and land it as its own commit.
 
-The check catches:
+## Covered manifests
 
-- A `tessl install <tile>` invocation that wrote a pin (the default behavior).
-- A `tessl init` shape from an older CLI that wrote `"mode": "vendored"`.
-- A merge from a fork where the pinned or vendored form leaked back in.
-- An operator hand-edit "for one quick test" that never got reverted.
+Every covered manifest is named explicitly, never matched by glob. Adding one means naming it here in lock-step with wiring its check.
 
-Run this check in `scripts/deploy.sh`, not just CI.
+### Unattended-update set — `jbaruch/nanoclaw`
 
-## When `tessl install <tile>` writes a pin, fix it before commit
+- `tessl-workspace/tessl.json`
+- `tessl.json`
 
-`tessl install jbaruch/<tile>` writes a literal pin into the manifest (no flag for floating). Edit the just-installed entry to `"version": "latest"` BEFORE committing. If the same install call left `"mode": "vendored"` on the surrounding manifest, flip it to `"mode": "managed"` in the same edit.
+Requirements:
+
+- Every dependency floats at `"latest"`, third-party included.
+- Deterministic check: `scripts/deploy.sh` step 3b. It fails the deploy on a non-`managed` mode, on any dependency not at `latest`, and on an unreadable manifest.
+
+### Plugin-repo set
+
+The project-root `tessl.json` in each of `jbaruch/nanoclaw-host`, `nanoclaw-admin`, `nanoclaw-core`, `nanoclaw-trusted`, `nanoclaw-untrusted`, `nanoclaw-conferences`, `nanoclaw-media`, `nanoclaw-orders`, `nanoclaw-travel`.
+
+Requirements:
+
+- `jbaruch/*` floats at `"latest"`. Third-party pins.
+- Deterministic check: `hooks/check-tessl-latest.sh`, the `SessionStart` hook shipped by `jbaruch/coding-policy`.
+- Each repo in this set MUST declare `jbaruch/coding-policy` as a dependency. The check ships with it.
+
+## When `tessl install <plugin>` writes a pin, fix it before commit
+
+- `tessl install jbaruch/<plugin>` writes a literal pin. Edit the entry to `"version": "latest"` before committing.
+- If the same install left `"mode": "vendored"` on the manifest, flip it to `"mode": "managed"` in the same edit.
+- A third-party install keeps its pin.

@@ -28,7 +28,7 @@ tessl install jbaruch/nanoclaw-host
 | [post-merge-publish-watch](rules/post-merge-publish-watch.md) | After every tile-repo PR merge, watch the post-merge `Review & Publish Tile` workflow until the registry actually has the new version. A merge that doesn't reach the registry is incomplete. |
 | [repo-chain](rules/repo-chain.md) | Updates flow DOWN the chain: |
 | [staging-diff-protocol](rules/staging-diff-protocol.md) | Before judging staging content: diff, read, reason, merge improvements, then decide. Stale = empty diff only. |
-| [tessl-version-floating](rules/tessl-version-floating.md) | `tessl-workspace/tessl.json` MUST use `"version": "latest"` for every tile (approved exception to `coding-policy: dependency-management`). `deploy.sh` verifies on each deploy that no literal pins have crept in. |
+| [tessl-version-floating](rules/tessl-version-floating.md) | Authority-of-record for the Runtime-Managed Manifest Carve-Out (approved exception to `coding-policy: dependency-management`). Every covered `tessl.json` declares `"mode": "managed"` and floats `jbaruch/*` at `latest`; third-party pins, except in `jbaruch/nanoclaw`'s two unattended-update manifests where everything floats. Enforcement: `jbaruch/nanoclaw`'s `scripts/deploy.sh` step 3b for that pair, `coding-policy`'s `check-tessl-latest.sh` `SessionStart` hook for the nine plugin repos. |
 | [snitchmd-image-floating](rules/snitchmd-image-floating.md) | The `fetch_markdown` sidecar image default MUST stay `syabro/snitchmd:latest` (approved exception to `coding-policy: dependency-management`) — this dependency's value is adversarial freshness, so a pin degrades toward blocked fetches. `deploy.sh` verifies on each deploy that no pin has crept in. |
 | [sync-cli-floating](rules/sync-cli-floating.md) | The agent image's `reclaim-tripit-timezones-sync` install MUST stay specifier-less (approved exception to `coding-policy: dependency-management`, First-Party Co-Shipped Dependency Carve-Out). `deploy.sh` verifies the bare reference AND the `ADD` refetch trigger directly above it. |
 | [os-package-floating](rules/os-package-floating.md) | The `apt-get install` lists in the three container images carry no version specifiers (approved exception to `coding-policy: dependency-management`, OS-Package Runtime Carve-Out). `deploy.sh` verifies each covered image's base stays pinned and that no package appears outside the recorded set. |
@@ -53,7 +53,8 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## Development dependencies
 
-`tessl.json` declares this repo's dev-time plugin dependencies.
+`tessl.json` declares this repo's dev-time plugin dependencies. See [tessl-version-floating](rules/tessl-version-floating.md) for the carve-out this repo's manifest sits under.
 
 - Every `jbaruch/*` dependency floats at `latest` (Runtime-Managed Manifest Carve-Out, `jbaruch/coding-policy: dependency-management`).
-- `finsi/codex-review` is third-party and pins. No dependency scanner covers the tessl ecosystem. Renewal cadence: quarterly — run `tessl outdated` and bump the pin in its own commit.
+- `jbaruch/coding-policy` also installs the carve-out's deterministic check, the `check-tessl-latest.sh` `SessionStart` hook. Removing the dependency leaves this manifest unchecked.
+- `finsi/codex-review` is third-party and pins. Renewal mechanism: `tessl update --yes` runs each session via that hook and rewrites the pin once the registry passes it. Review the resulting manifest diff and land it as its own commit.
