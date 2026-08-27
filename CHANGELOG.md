@@ -1,5 +1,11 @@
 # Changelog
 
+### Drop `nanoclaw-orders` from the plugin-repo set
+
+The overlay is retired (`jbaruch/nanoclaw#935` dropped its `orders` / `orders_metadata` tables, `jbaruch/nanoclaw-admin#519` removed every reader) and its repo is archived. The plugin-repo set is an authority-of-record list of manifests the `check-tessl-latest.sh` `SessionStart` hook is expected to police; naming an archived repo there points the hook's contract at a manifest nobody edits any more.
+
+The other eight entries are unchanged, as are both requirements.
+
 ## 0.1.62 — 2026-08-18
 
 ### Fix — typed cross-skill references in `extract-to-overlay`
