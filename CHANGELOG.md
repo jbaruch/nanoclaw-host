@@ -4,7 +4,9 @@
 
 The overlay is retired (`jbaruch/nanoclaw#935` dropped its `orders` / `orders_metadata` tables, `jbaruch/nanoclaw-admin#519` removed every reader) and its repo is archived. The plugin-repo set is an authority-of-record list of manifests the `check-tessl-latest.sh` `SessionStart` hook is expected to police; naming an archived repo there points the hook's contract at a manifest nobody edits any more.
 
-The other eight entries are unchanged, as are both requirements.
+The other eight entries are unchanged, as are both requirements. README's rules-table row said the hook enforces "the nine plugin repos" and now says eight — `context-artifacts`' Post-Edit Rule Audit asks that the repo match the rule it just edited, and the count was the one place it did not.
+
+`.cursor/` joins `.claude/` / `.agents/` / `.codex/` / `.gemini/` in `.gitignore`. It was the one Tessl consumer-side scaffolding directory missing from that list, so `git add -A` committed its generated `hooks.json` and two `.gitignore` stubs into this PR. Caught by the policy reviewer.
 
 ## 0.1.62 — 2026-08-18
 
