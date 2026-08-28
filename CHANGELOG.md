@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.64 — 2026-08-28
+
 ### Restructure `promote` and `reconcile`, and stop gating promote on Copilot (`#57` review)
 
 Both skills were touched by the vocabulary sweep, which put them in scope for the policy reviewer. It found six blocking violations, four of them substantive rather than formatting:
