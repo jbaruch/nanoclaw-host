@@ -60,14 +60,16 @@ Copilot does NOT gate. Per `coding-policy: review-severity`, Copilot findings ar
 
 Plugin repos run `publish.yml` on push to `main`, not on `pull_request`, so `gh pr checks` returns nothing at PR time. Do not wait for a green CI box that is not coming.
 
+Fetch complete bodies. `coding-policy: reviewer-feedback-reading` requires reading every review body and every inline comment in full before judging any item non-blocking, so these queries must not truncate:
+
 ```bash
 gh api repos/jbaruch/<plugin>/pulls/<N>/reviews \
-  --jq '.[] | {reviewer: .user.login, state, body: .body[:200]}'
+  --jq '.[] | {reviewer: .user.login, state, body}'
 gh api repos/jbaruch/<plugin>/pulls/<N>/comments \
-  --jq '.[] | {path, line, body: .body[:200]}'
+  --jq '.[] | {path, line, body}'
 ```
 
-Read every reviewer's body in full before judging any finding non-blocking, per `coding-policy: reviewer-feedback-reading`. Proceed immediately to Step 5.
+A `COMMENTED` state and a zero-comment review both still carry a body that must be read. State classifies gating, never whether to read. Proceed immediately to Step 5.
 
 ## Step 5 — Fix what the review found
 
@@ -95,22 +97,33 @@ gh api "repos/jbaruch/<plugin>/pulls/<N>/comments/<COMMENT_ID>/replies" \
 
 Repeat Steps 4 and 5 until no blocking finding stands. Proceed immediately to Step 6.
 
-## Step 6 — Merge and confirm the publish
+## Step 6 — Merge through the release skill
 
-Merging is not shipping. Registry publication is a separate gate, and confirming it is the release contract's three-part conjunction — run `success`, registry advanced past a pre-merge baseline, moderation cleared — never a newest-run glance.
+Invoke `Skill(skill: "release")` for this PR. One invocation, which is why this is one step: the skill captures the registry's current version as a pre-merge baseline before merging. The baseline is required — Step 7 confirms the publish by the registry advancing *past* it, and a version already present proves nothing about this run.
 
-Invoke `Skill(skill: "release")` and follow its merge and Step 7 post-merge verification for this PR. It captures the registry baseline before the merge, resolves the publish run by merge-commit `headSha` + push event + workflow file (`publish.yml`), watches that run to a terminal conclusion, and waits for moderation to clear.
+Proceed immediately to Step 7.
+
+## Step 7 — Confirm the publish landed
+
+Merging is not shipping. Registry publication is a separate gate, and confirming it is the release contract's three-part conjunction: the resolved run concludes `success`, the registry advances past the Step 6 baseline, and the published version's moderation state clears.
+
+Follow `Skill(skill: "release")` Step 7. It resolves the publish run by merge-commit `headSha` + push event + workflow file (`publish.yml`) and watches that run to a terminal conclusion.
 
 Never substitute `gh run list --limit 1`: it watches whichever run happens to be newest, which is not necessarily the run this merge started. `rules/post-merge-publish-watch.md` forbids the hand-rolled form.
 
 If the post-merge review fails, the registry did not get a new version but the content is on `main`. Open a follow-up PR and run the cycle again — never force-publish around a failing gate.
 
-Proceed immediately to Step 7.
+Proceed immediately to Step 8.
 
-## Step 7 — Clean up staging and pick up the new version
+## Step 8 — Clean up staging copies
 
-1. Run `/verify-tiles` to clean up staging copies. The command keeps its historical name.
-2. For the `nanoclaw-host` plugin, run `tessl update` locally to pull the new version. For container plugins, the next `./scripts/deploy.sh` picks them up.
+Run `/verify-tiles`. The command keeps its historical name; there is no `/verify-plugins`.
+
+Proceed immediately to Step 9.
+
+## Step 9 — Pick up the published version
+
+For the `nanoclaw-host` plugin, run `tessl update` locally to pull the new version. For container plugins, the next `./scripts/deploy.sh` picks them up.
 
 Finish here.
 

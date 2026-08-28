@@ -14,6 +14,8 @@ Copilot's four advisories are folded in rather than deferred, since a blocking r
 
 `.github/workflows/publish.yml` gains its missing trailing newline.
 
+A second review round found four more contract violations in `promote`, all of them inherited rather than introduced. The review-fetch snippets truncated every body with `.body[:200]`, which lets the workflow classify feedback it has not read — `coding-policy: reviewer-feedback-reading` requires reading each review body and inline comment in full, and a `COMMENTED` state with zero inline comments still carries a body. The queries now return complete bodies. Two steps also joined distinct actions with "and": merge-plus-confirm split into Step 6 (merge through the release skill, which captures the pre-merge registry baseline) and Step 7 (confirm the three-conjunct landing), and cleanup-plus-pickup split into Steps 8 and 9. Nothing in the repo references `promote` by step number, so the renumber has no cross-file surface.
+
 ### Sweep package-sense "tile" vocabulary to "plugin" (`#53`)
 
 Deferred from the `tile.json` → `.tessl-plugin/plugin.json` migration (`jbaruch/nanoclaw-core#97`), which took only the unambiguous renames. The sweep covers package-sense prose in `README.md`, eight rules, and six skills — including every `description:` frontmatter, which is the agent's discovery surface, mirrored into the README table rows in lock-step.
