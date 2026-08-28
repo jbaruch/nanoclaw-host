@@ -1,118 +1,98 @@
 ---
 name: promote
-description: Promote agent-created skills and rules from NAS staging to tile GitHub repos via a full PR lifecycle — opens a PR, summons Copilot, iterates fixups until the review is clean, then merges so GHA publishes. Use when there are new items on staging, after check-staging shows pending items, or when asked to deploy skills, push to production, or publish rules to a tile repo.
+description: Promote agent-created skills and rules from NAS staging to plugin GitHub repos — opens a PR from staging, then hands the review, merge, and publish-confirmation lifecycle to the release skill. Use when there are new items on staging, after check-staging shows pending items, or when asked to deploy skills, push to production, or publish rules to a plugin repo. The promote scripts keep the historical `TILE_NAME` env var.
 ---
 
 # Promote from Staging
 
-Runs the tile-repo PR lifecycle on content in the agent's NAS staging area: opens a PR, summons Copilot, iterates fixups, merges. End state is a merged PR on the tile repo; GHA (tessl publish, lint, skill review at 85%) runs on merge. Same review discipline as source-code PRs — no direct pushes to `main`, no merging before Copilot clears.
+Process steps in order. Do not skip ahead.
 
-## Before promoting
+Runs the plugin-repo PR lifecycle on content in the agent's NAS staging area. End state is a merged PR whose registry publish has been confirmed through the `coding-policy` release contract — not merely a merged PR. Same review discipline as source-code PRs: no direct pushes to `main`.
 
-Run `./scripts/check-staging.sh` to see what's pending. Review each item before promoting.
+## Step 1 — Review what is pending
 
-## Determine the target tile
+```bash
+./scripts/check-staging.sh
+```
 
-Each item belongs to exactly one tile:
+Review each item before promoting. Proceed immediately to Step 2.
 
-| Content | Target tile | GitHub repo |
-|---------|------------|-------------|
+## Step 2 — Determine the target plugin
+
+Each item belongs to exactly one plugin:
+
+| Content | Target plugin | GitHub repo |
+|---------|---------------|-------------|
 | Admin/operational skills | `nanoclaw-admin` | jbaruch/nanoclaw-admin (private) |
 | Trusted shared operational | `nanoclaw-trusted` | jbaruch/nanoclaw-trusted |
 | Security rules for untrusted | `nanoclaw-untrusted` | jbaruch/nanoclaw-untrusted |
 | Shared behavior (all containers) | `nanoclaw-core` | jbaruch/nanoclaw-core |
 | Host agent conventions | `nanoclaw-host` | jbaruch/nanoclaw-host |
 
-## Phase 1 — Open the PR
+Proceed immediately to Step 3.
+
+## Step 3 — Open the PR
+
+`TILE_NAME` is the env var the scripts read. It keeps its historical spelling — do not substitute a `PLUGIN_NAME` variant, which the scripts do not recognise.
 
 ```bash
-# Promote a specific skill to a tile
+# Promote a specific skill to a plugin
 TILE_NAME=nanoclaw-admin ./scripts/promote-from-host.sh heartbeat
 
-# Promote all skills + rules for a tile
+# Promote all skills + rules for a plugin
 TILE_NAME=nanoclaw-admin ./scripts/promote-from-host.sh all
 
 # Promote only rules
 TILE_NAME=nanoclaw-trusted ./scripts/promote-from-host.sh --rules-only
 ```
 
-The script:
-1. Clones the tile repo from GitHub
-2. Validates tile placement (blocks admin content from untrusted/core)
-3. Checks for cross-tile duplicates
-4. Copies skills and rules into the tile repo clone
-5. Runs `tessl skill review --optimize --yes` on each promoted skill (shift-left — catches quality issues before PR)
-6. Creates a `promote/<timestamp>-<tile>-<hex>` branch, commits, pushes
-7. Opens a PR (`--base main`, `--head <branch>`) on the tile repo
-8. **Summons Copilot** via the GraphQL `requestReviews` mutation (REST silently drops bot reviewers — see `tile-repo-lib.sh`)
+The script clones the plugin repo, validates placement (blocks admin content from untrusted/core), checks for cross-plugin duplicates, copies the artifacts in, runs `tessl skill review --optimize --yes` on each promoted skill, creates a `promote/<timestamp>-<plugin>-<hex>` branch, pushes, opens the PR, and summons the reviewers via the GraphQL `requestReviews` mutation — REST silently drops bot reviewers, see `tile-repo-lib.sh`.
 
-The script prints `PR opened: <url>` and `Branch: <name>` — capture both. Step 5 requires `tessl` on the host machine; if unavailable, the script warns and skips (Copilot + GHA still gate).
+It prints `PR opened: <url>` and `Branch: <name>` — capture both. The `tessl skill review` pass requires `tessl` on the host machine; if unavailable the script warns and skips it, and the first quality gate then happens post-merge in `publish.yml`.
 
-## Phase 2 — Wait for Copilot review
+Proceed immediately to Step 4.
 
-The pre-merge gates on a tile PR are **Copilot review** plus the local `tessl skill review --optimize` pass *when `tessl` was available and Step 5 ran during Phase 1*. If `tessl` was unavailable on the host and that local pass was skipped, the first `tessl`/lint gate happens post-merge in the tile repos' `publish.yml` workflow. That workflow runs on push to `main`, not on `pull_request` — so `gh pr checks` returns nothing and the 85% `tessl skill review` + lint + publish happen *after* merge. Don't wait for a green CI box that isn't coming; wait for Copilot.
+## Step 4 — Ship through the release skill
 
-```bash
-gh api repos/jbaruch/<tile>/pulls/<N>/reviews \
-  --jq '.[] | select(.user.login | contains("opilot")) | {state, body: .body[:120]}'
-gh api repos/jbaruch/<tile>/pulls/<N>/comments \
-  --jq '.[] | {path, line, body: .body[:200]}'
+```
+Skill(skill: "release")
 ```
 
-An empty `reviews` array means Copilot hasn't posted yet — wait. Expect a few minutes, sometimes longer under GitHub load.
+One typed call, and it runs to completion: it watches the PR to a terminal review state, carries the fix loop, merges, and confirms the registry publish. Do not treat its internals as steps of this skill and do not re-enter it partway — invoke it once and branch on what it returns.
 
-## Phase 3 — Fix what's fixable
+Two things this skill owns that `release` cannot know:
 
-Same discipline as `ship-code`:
-- **Copilot findings**: apply what's right and reasonable; push back on anything that misreads scope or suggests over-engineering. Reply on **every** thread — accepted or declined — so nothing is left dangling.
-
-**Fix in staging, not in the tile clone.** Otherwise the next re-promote of the same skill regresses the fix. Edit the NAS staging copy, then push the fixup onto the same branch:
+**Fix in staging, not in the plugin clone.** When the review asks for a change, edit the NAS staging copy and push the fixup onto the same branch. A fix applied in the clone is regressed by the next re-promote of that skill.
 
 ```bash
-# Host-side (this is the common path when you kicked off the promote from here)
-TILE_NAME=<tile> ./scripts/push-staged-to-branch.sh \
-  <local-staging-dir> <tile> <branch> "<commit msg>" <skill|all|--rules-only>
+TILE_NAME=<plugin> ./scripts/push-staged-to-branch.sh \
+  <local-staging-dir> <plugin> <branch> "<commit msg>" <skill|all|--rules-only>
 ```
 
-Inside containers, the equivalent is the `push_staged_to_branch` MCP tool. Both call `scripts/push-staged-to-branch.sh`, which re-summons Copilot after pushing.
+Inside containers, the equivalent is the `push_staged_to_branch` MCP tool. Both call `scripts/push-staged-to-branch.sh`, which re-summons the reviewers after pushing.
 
-Reply on threads:
-```bash
-# Accepted:
-gh api "repos/jbaruch/<tile>/pulls/<N>/comments/<COMMENT_ID>/replies" \
-  -X POST -f body="Fixed in <sha> — <what changed>."
-# Declined:
-gh api "repos/jbaruch/<tile>/pulls/<N>/comments/<COMMENT_ID>/replies" \
-  -X POST -f body="Declining — <reason: out of scope / intentional / conflicts with X>."
-```
+**Never hand-roll the review watch.** `coding-policy: ci-safety` routes it through `skills/release/watch-pr-reviews.sh` alone, which resolves each gating bot's latest verdict by login and owns its own poll interval and give-up budget. A `gh api .../reviews` loop here would re-invent those as agent guesses, and an empty `reviews` array is indistinguishable from "the reviewer has not posted yet" without the watcher's terminal-state contract.
 
-Repeat Phase 2 + 3 until Copilot review is clean, all Copilot threads are replied to, and the local `tessl skill review --optimize` succeeds if available.
+Plugin repos run `publish.yml` on push to `main`, not on `pull_request`, so `gh pr checks` returns nothing at PR time. Do not wait for a green CI box that is not coming.
 
-## Phase 4 — Merge
+Proceed immediately to Step 5 once `release` reports the release confirmed.
 
-Only when Copilot review is clean, all threads are replied to, and the local `tessl skill review --optimize` has succeeded if available:
+## Step 5 — Clean up staging copies
 
-```bash
-gh pr merge <N> --repo jbaruch/<tile> --merge --delete-branch
-```
+Run `/verify-tiles`. The command keeps its historical name; there is no `/verify-plugins`.
 
-GHA on `main` then runs `publish.yml` — 85% `tessl skill review`, `tessl plugin lint`, and publish to the tessl registry. Watch it complete:
+Proceed immediately to Step 6.
 
-```bash
-gh run list --repo jbaruch/<tile> --limit 1
-```
+## Step 6 — Pick up the published version
 
-If the post-merge review fails, the registry didn't get a new version but the bad content is on `main`. Open a follow-up PR to fix and run the cycle again — don't force-publish around a failing gate.
+For the `nanoclaw-host` plugin, run `tessl update` locally to pull the new version. For container plugins, the next `./scripts/deploy.sh` picks them up.
 
-## After merge
-
-1. Confirm the GHA publish run succeeded (tile version bump visible in the tessl registry).
-2. Tell the agent to run `/verify-tiles` to clean up staging copies.
-3. For the `nanoclaw-host` tile, run `tessl update` locally to pull the new version; for container tiles, the next `./scripts/deploy.sh` picks them up.
+Finish here.
 
 ## Non-negotiables
 
 - **Always `--repo`** in every `gh` call. Defaults leak to upstream.
-- **Never push directly to `main`** on any tile repo — always PR.
-- **Never edit tile repos directly** — all content flows through NAS staging → promote / push-staged pipeline.
-- **Never merge before Copilot clears** — same gate as source-code PRs.
+- **Never push directly to `main`** on any plugin repo — always PR.
+- **Never edit plugin repos directly** — all content flows through NAS staging → promote / push-staged pipeline.
+- **Never report a plugin shipped** on a merge alone — only on the release contract's confirmation.
+- **Never hand-roll a review watch or a publish watch** — `Skill(skill: "release")` owns both.

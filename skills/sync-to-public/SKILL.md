@@ -68,7 +68,7 @@ gh pr merge NUMBER --repo jbaruch/nanoclaw-public --merge
 
 **Removed files:** hubitat-listener.ts, trakt-auth.py, audible-backup.sh, SOUL.md, SOUL-untrusted.md (replaced with generic), HEARTBEAT.md, groups/main/, groups/telegram_*/, research/, maintenance/, blog-notes.md, OPERATIONS.md, dist/
 
-**In-file scrubs:** Private IPC handlers and MCP tools (sync_tripit, fetch_trakt_history, sessionize_*, audible_backup), Hubitat config/DB/index, reclaim-tripit Dockerfile dep, private tile deps from tessl.json, private integration names from comments and promote scripts
+**In-file scrubs:** Private IPC handlers and MCP tools (sync_tripit, fetch_trakt_history, sessionize_*, audible_backup), Hubitat config/DB/index, reclaim-tripit Dockerfile dep, private plugin deps from tessl.json, private integration names from comments and promote scripts
 
 **Sanitized:** CLAUDE.md kept as upstream generic version, SOUL-untrusted.md replaced with generic template
 

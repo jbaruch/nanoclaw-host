@@ -46,6 +46,6 @@ Per-chat overlay tiles layer on the trust-tier baseline via `containerConfig.add
 
 ## Cross-skill subprocess composition
 
-- Two skills in one tile that share data invoke each other via subprocess + `{wake_agent, data}` JSON contract
-- Importing skill resolves the called skill at runtime via the tile mount path `/home/node/.claude/skills/tessl__<skill-name>/`, with a dev-clone fallback for unit tests
+- Two skills in one plugin that share data invoke each other via subprocess + `{wake_agent, data}` JSON contract
+- Importing skill resolves the called skill at runtime via the plugin mount path `/home/node/.claude/skills/tessl__<skill-name>/`, with a dev-clone fallback for unit tests
 - Composition lives in the calling precheck script, not duplicated across SKILL.md prose

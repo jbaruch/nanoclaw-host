@@ -17,7 +17,7 @@ Before making ANY judgment about staging content:
 ## The diff command
 
 ```bash
-ssh -n "$NAS_HOST" "cat <staging-path>" | diff - <local-tile-path>
+ssh -n "$NAS_HOST" "cat <staging-path>" | diff - <local-plugin-path>
 ```
 
 ## What "stale" means

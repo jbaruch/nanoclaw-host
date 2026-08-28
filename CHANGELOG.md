@@ -1,5 +1,43 @@
 # Changelog
 
+### Restructure `promote` and `reconcile`, and stop gating promote on Copilot (`#57` review)
+
+Both skills were touched by the vocabulary sweep, which put them in scope for the policy reviewer. It found six blocking violations, four of them substantive rather than formatting:
+
+`promote` Step 4 made **Copilot review the pre-merge gate** — "Never merge before Copilot clears", repeated in the non-negotiables. `coding-policy: review-severity` says Copilot findings are always advisory regardless of the state Copilot posts, and Copilot never gates. The gate is now the policy reviewer's posted verdict plus the local `tessl skill review --optimize` pass.
+
+`promote` Step 6 watched the publish with `gh run list --repo jbaruch/<plugin> --limit 1` and confirmed success from "a version bump visible in the registry". That is the exact hand-rolled shape `rules/post-merge-publish-watch.md` — a rule in this same plugin — forbids: `--limit 1` watches whichever run is newest, not the run this merge started, and a visible bump is one conjunct of a three-part contract that also requires a pre-merge registry baseline and a moderation clear. It now delegates to `Skill(skill: "release")` Step 7. The skill had been contradicting its own repo's rule.
+
+Both skills gain the sequential execution-mode preamble and flat `## Step N — Title` numbering with explicit continuations, per `coding-policy: skill-authoring`. `promote`'s phases become Steps 1–7; `reconcile`'s prose sections become a run / fix / re-run loop that terminates on exit `0`.
+
+Copilot's four advisories are folded in rather than deferred, since a blocking round was already in flight: every place the prose now says "plugin" beside a protected token that still says "tile" says so explicitly — `--tiles-only`, `TILE_NAME`, `reconcile-tiles.sh`, `/verify-tiles`, and the `staging/{tile-name}/` path segment. The reviewer's point was that an operator reading the swept prose could invent a renamed flag that does not exist. `reconcile` and `promote` carry the caveat in their `description:` frontmatter too, which is where an agent looks first.
+
+`.github/workflows/publish.yml` gains its missing trailing newline.
+
+A third round collapsed `promote`'s middle. `coding-policy: ci-safety` routes the pre-merge review watch through `skills/release/watch-pr-reviews.sh` alone — it resolves each gating bot's latest verdict by login and owns its poll interval and give-up budget — and the rewritten Step 4 was still doing it with `gh api .../reviews`, re-inventing those as agent guesses against a snapshot where an empty array and "has not posted yet" are indistinguishable. Splitting the merge from its publish confirmation was also wrong in the other direction: `Skill(skill: "release")` is one end-to-end workflow, so directing the agent into its Step 7 separately is an invalid continuation that can duplicate release work. Steps 4 through 7 are now a single Step 4 that invokes `release` once and branches on what it returns, leaving `promote` responsible for the two things `release` cannot know — that fixes go into NAS staging rather than the plugin clone, and that the watch is never hand-rolled. Six steps, down from nine.
+
+A second review round found four more contract violations in `promote`, all of them inherited rather than introduced. The review-fetch snippets truncated every body with `.body[:200]`, which lets the workflow classify feedback it has not read — `coding-policy: reviewer-feedback-reading` requires reading each review body and inline comment in full, and a `COMMENTED` state with zero inline comments still carries a body. The queries now return complete bodies. Two steps also joined distinct actions with "and": merge-plus-confirm split into Step 6 (merge through the release skill, which captures the pre-merge registry baseline) and Step 7 (confirm the three-conjunct landing), and cleanup-plus-pickup split into Steps 8 and 9. Nothing in the repo references `promote` by step number, so the renumber has no cross-file surface.
+
+### Sweep package-sense "tile" vocabulary to "plugin" (`#53`)
+
+Deferred from the `tile.json` → `.tessl-plugin/plugin.json` migration (`jbaruch/nanoclaw-core#97`), which took only the unambiguous renames. The sweep covers package-sense prose in `README.md`, eight rules, and six skills — including every `description:` frontmatter, which is the agent's discovery surface, mirrored into the README table rows in lock-step.
+
+Three of the changes are not vocabulary at all, and are the reason this was worth more than a find-and-replace:
+
+- `extract-to-overlay` Step 3 told the agent to update `tile.json` on both sides of a migration. That file does not exist in any of the eight live plugin repos — all migrated to `.tessl-plugin/plugin.json`. `reconcile` compared versions against it too.
+- `extract-to-overlay` Step 2 audited cross-skill state readers with `rg "/workspace/state/<self>/" .tessl/tiles/`. tessl installs to `.tessl/plugins/`, so that grep matched an absent directory and returned nothing — which the step reads as "no readers found", the exact condition that clears a reader-without-writer release blocker. A silent pass on the check that exists to stop a broken ship.
+- `extract-to-overlay` Steps 3 and 6 told the agent to file CHANGELOG entries "under Unreleased". `coding-policy: context-artifacts` forbids that heading, and this repo purged its own back to 2026-05 in 0.1.55.
+
+This repo's `publish.yml` display name becomes `Review & Publish Plugin`, matching the four repos that already renamed. It is safe to move because `post-merge-publish-watch` resolves the run by workflow FILE (`publish.yml`); the display name is not a contract surface. Four repos in the fleet (`nanoclaw-admin`, `nanoclaw-trusted`, `nanoclaw-travel`, and this one before the change) still carried the old name, so #53's claim that every migrated repo had already renamed was wrong.
+
+Live contract surfaces keep the word, as #53 required: `containerConfig.additionalTiles`, `TILE_NAME`, `SOURCE_TILE` / `TARGET_TILE`, `reconcile-tiles.sh`, `tile-repo-lib.sh`, `--tiles-only`, `/verify-tiles`, and the `staging/{tile-name}/` path segments. The sweep masked each token before substituting so none of them moved.
+
+The two rule filenames stay: `rules/overlay-tile-authoring.md` and `rules/tile-content-pipeline.md`. #53 flagged the rename as needing design because these are published identifiers other repos cite by name, and the design call is to keep them. `overlay-tile-authoring` documents authoring for entries in `containerConfig.additionalTiles`, so its name tracks a live config key rather than package vocabulary; renaming it would decouple the rule's address from the thing it describes. Their H1s stay matched to the filenames per `context-artifacts`. The prose inside both is swept where it means "package".
+
+### Sync the `add-ugos-project` README row to its `description:`
+
+Pre-existing drift found while mirroring the other rows: the README omitted the closing trigger clause and paraphrased the symlink path.
+
 ## 0.1.63 — 2026-08-27
 
 ### Drop `nanoclaw-orders` from the plugin-repo set

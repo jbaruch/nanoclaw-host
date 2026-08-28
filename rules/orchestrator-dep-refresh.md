@@ -22,7 +22,7 @@ The flag (1) propagates `--no-cache --pull` through `container/build.sh` for the
 
 ## When NOT to use --no-cache
 
-The default `./scripts/deploy.sh` (no flags) is correct for every other deploy: source-code changes, tessl-tile updates, agent-runner Dockerfile changes that don't touch the GitHub-sourced npm install line. Use `--no-cache` ONLY when an npm-from-GitHub dep version is the actual change you're deploying.
+The default `./scripts/deploy.sh` (no flags) is correct for every other deploy: source-code changes, tessl-plugin updates, agent-runner Dockerfile changes that don't touch the GitHub-sourced npm install line. Use `--no-cache` ONLY when an npm-from-GitHub dep version is the actual change you're deploying.
 
 ## Verify after refresh
 
