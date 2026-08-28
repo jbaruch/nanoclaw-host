@@ -1,5 +1,25 @@
 # Changelog
 
+### Sweep package-sense "tile" vocabulary to "plugin" (`#53`)
+
+Deferred from the `tile.json` → `.tessl-plugin/plugin.json` migration (`jbaruch/nanoclaw-core#97`), which took only the unambiguous renames. The sweep covers package-sense prose in `README.md`, eight rules, and six skills — including every `description:` frontmatter, which is the agent's discovery surface, mirrored into the README table rows in lock-step.
+
+Three of the changes are not vocabulary at all, and are the reason this was worth more than a find-and-replace:
+
+- `extract-to-overlay` Step 3 told the agent to update `tile.json` on both sides of a migration. That file does not exist in any of the eight live plugin repos — all migrated to `.tessl-plugin/plugin.json`. `reconcile` compared versions against it too.
+- `extract-to-overlay` Step 2 audited cross-skill state readers with `rg "/workspace/state/<self>/" .tessl/tiles/`. tessl installs to `.tessl/plugins/`, so that grep matched an absent directory and returned nothing — which the step reads as "no readers found", the exact condition that clears a reader-without-writer release blocker. A silent pass on the check that exists to stop a broken ship.
+- `extract-to-overlay` Steps 3 and 6 told the agent to file CHANGELOG entries "under Unreleased". `coding-policy: context-artifacts` forbids that heading, and this repo purged its own back to 2026-05 in 0.1.55.
+
+This repo's `publish.yml` display name becomes `Review & Publish Plugin`, matching the four repos that already renamed. It is safe to move because `post-merge-publish-watch` resolves the run by workflow FILE (`publish.yml`); the display name is not a contract surface. Four repos in the fleet (`nanoclaw-admin`, `nanoclaw-trusted`, `nanoclaw-travel`, and this one before the change) still carried the old name, so #53's claim that every migrated repo had already renamed was wrong.
+
+Live contract surfaces keep the word, as #53 required: `containerConfig.additionalTiles`, `TILE_NAME`, `SOURCE_TILE` / `TARGET_TILE`, `reconcile-tiles.sh`, `tile-repo-lib.sh`, `--tiles-only`, `/verify-tiles`, and the `staging/{tile-name}/` path segments. The sweep masked each token before substituting so none of them moved.
+
+The two rule filenames stay: `rules/overlay-tile-authoring.md` and `rules/tile-content-pipeline.md`. #53 flagged the rename as needing design because these are published identifiers other repos cite by name, and the design call is to keep them. `overlay-tile-authoring` documents authoring for entries in `containerConfig.additionalTiles`, so its name tracks a live config key rather than package vocabulary; renaming it would decouple the rule's address from the thing it describes. Their H1s stay matched to the filenames per `context-artifacts`. The prose inside both is swept where it means "package".
+
+### Sync the `add-ugos-project` README row to its `description:`
+
+Pre-existing drift found while mirroring the other rows: the README omitted the closing trigger clause and paraphrased the symlink path.
+
 ## 0.1.63 — 2026-08-27
 
 ### Drop `nanoclaw-orders` from the plugin-repo set

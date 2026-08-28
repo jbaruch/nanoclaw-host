@@ -12,7 +12,7 @@ alwaysApply: true
 
 - Group registration in `messages.db`
 - Group folder under `/workspace/group/<name>/`
-- Per-group `.checkpoints/` (unless `skipReentry: true` is passed — see `nuke-payload-semantics` on the admin tile)
+- Per-group `.checkpoints/` (unless `skipReentry: true` is passed — see `nuke-payload-semantics` on the admin plugin)
 
 ## After the kill
 

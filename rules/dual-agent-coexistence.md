@@ -13,7 +13,7 @@ Two agents improve this system asynchronously: the container agent (AyeAye) and 
 
 ## Freshness checks
 
-- Never assume you have the latest version of a tile, a rule, or a skill
+- Never assume you have the latest version of a plugin, a rule, or a skill
 - Pull before editing; diff against the deployed NAS state before promoting
 - See `staging-diff-protocol` for the explicit content-comparison contract
 

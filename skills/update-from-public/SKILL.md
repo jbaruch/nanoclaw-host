@@ -50,7 +50,7 @@ git push origin main
 ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh"
 ```
 
-Or if only tiles changed:
+Or if only plugins changed:
 ```bash
 ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh --tiles-only"
 ```
