@@ -23,6 +23,7 @@ Shows two sections:
 
 **Rules** — from `groups/{group}/staging/{tile-name}/`:
 - Listed by plugin subdirectory (e.g., `nanoclaw-untrusted/internal-reasoning.md`)
+- The path segment is literally `{tile-name}` on the NAS even though the directory it holds is named for a plugin repo — it is a real path, not prose
 
 Empty sections mean nothing pending for that type.
 

@@ -1,5 +1,19 @@
 # Changelog
 
+### Restructure `promote` and `reconcile`, and stop gating promote on Copilot (`#57` review)
+
+Both skills were touched by the vocabulary sweep, which put them in scope for the policy reviewer. It found six blocking violations, four of them substantive rather than formatting:
+
+`promote` Step 4 made **Copilot review the pre-merge gate** — "Never merge before Copilot clears", repeated in the non-negotiables. `coding-policy: review-severity` says Copilot findings are always advisory regardless of the state Copilot posts, and Copilot never gates. The gate is now the policy reviewer's posted verdict plus the local `tessl skill review --optimize` pass.
+
+`promote` Step 6 watched the publish with `gh run list --repo jbaruch/<plugin> --limit 1` and confirmed success from "a version bump visible in the registry". That is the exact hand-rolled shape `rules/post-merge-publish-watch.md` — a rule in this same plugin — forbids: `--limit 1` watches whichever run is newest, not the run this merge started, and a visible bump is one conjunct of a three-part contract that also requires a pre-merge registry baseline and a moderation clear. It now delegates to `Skill(skill: "release")` Step 7. The skill had been contradicting its own repo's rule.
+
+Both skills gain the sequential execution-mode preamble and flat `## Step N — Title` numbering with explicit continuations, per `coding-policy: skill-authoring`. `promote`'s phases become Steps 1–7; `reconcile`'s prose sections become a run / fix / re-run loop that terminates on exit `0`.
+
+Copilot's four advisories are folded in rather than deferred, since a blocking round was already in flight: every place the prose now says "plugin" beside a protected token that still says "tile" says so explicitly — `--tiles-only`, `TILE_NAME`, `reconcile-tiles.sh`, `/verify-tiles`, and the `staging/{tile-name}/` path segment. The reviewer's point was that an operator reading the swept prose could invent a renamed flag that does not exist. `reconcile` and `promote` carry the caveat in their `description:` frontmatter too, which is where an agent looks first.
+
+`.github/workflows/publish.yml` gains its missing trailing newline.
+
 ### Sweep package-sense "tile" vocabulary to "plugin" (`#53`)
 
 Deferred from the `tile.json` → `.tessl-plugin/plugin.json` migration (`jbaruch/nanoclaw-core#97`), which took only the unambiguous renames. The sweep covers package-sense prose in `README.md`, eight rules, and six skills — including every `description:` frontmatter, which is the agent's discovery surface, mirrored into the README table rows in lock-step.
