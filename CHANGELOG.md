@@ -1,5 +1,15 @@
 # Changelog
 
+### `promote` Step 3 and Step 4 stop restating script internals (`#58`)
+
+Two advisory findings the policy reviewer raised on `#57`, deferred at the time because `coding-policy: review-severity` says a lone advisory never earns its own re-review round. Both were in the same file, so one round closes them.
+
+Step 3's walkthrough narrated `promote-from-host.sh` end to end — the placement validation, the cross-plugin duplicate check, the `tessl skill review --optimize --yes` pass, the `promote/<timestamp>-<plugin>-<hex>` branch shape, the PR creation, and the GraphQL `requestReviews` summon. `coding-policy: script-as-black-box` gives the skill the inputs, the output shape, and the exit conditions, and leaves the logic to the script. The step now carries the `TILE_NAME` + scope-argument contract, the `PR opened: <url>` / `Branch: <name>` stdout shape, and what a non-zero exit means, then points at `scripts/promote-to-tile-repo.sh`'s header in `jbaruch/nanoclaw` — the script `promote-from-host.sh` wraps, and where that logic actually lives.
+
+Step 4's "never hand-roll the review watch" paragraph explained how `watch-pr-reviews.sh` resolves each gating bot's latest verdict by login and owns its poll interval and give-up budget. That is the script's decision predicate, restated in prose that can drift from it. The directive stays and the predicate moves to a pointer at the script's header.
+
+Doc-only; no step renumbering, no behaviour change.
+
 ## 0.1.64 — 2026-08-28
 
 ### Restructure `promote` and `reconcile`, and stop gating promote on Copilot (`#57` review)
