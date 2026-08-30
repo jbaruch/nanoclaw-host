@@ -46,9 +46,11 @@ TILE_NAME=nanoclaw-admin ./scripts/promote-from-host.sh all
 TILE_NAME=nanoclaw-trusted ./scripts/promote-from-host.sh --rules-only
 ```
 
-The script clones the plugin repo, validates placement (blocks admin content from untrusted/core), checks for cross-plugin duplicates, copies the artifacts in, runs `tessl skill review --optimize --yes` on each promoted skill, creates a `promote/<timestamp>-<plugin>-<hex>` branch, pushes, opens the PR, and summons the reviewers via the GraphQL `requestReviews` mutation — REST silently drops bot reviewers, see `tile-repo-lib.sh`.
+Inputs: `TILE_NAME` selects the plugin, the argument selects the scope (`all`, one skill by name, or `--rules-only`).
 
-It prints `PR opened: <url>` and `Branch: <name>` — capture both. The `tessl skill review` pass requires `tessl` on the host machine; if unavailable the script warns and skips it, and the first quality gate then happens post-merge in `publish.yml`.
+Output: `PR opened: <url>` and `Branch: <name>` on stdout — capture both. A non-zero exit means no PR was opened; read the script's stderr for which validation refused.
+
+Placement validation, duplicate detection, the skill-review pass, branch naming, and the reviewer summon are the script's own — see the header of `scripts/promote-to-tile-repo.sh` in `jbaruch/nanoclaw`, which `promote-from-host.sh` wraps.
 
 Proceed immediately to Step 4.
 
@@ -71,7 +73,7 @@ TILE_NAME=<plugin> ./scripts/push-staged-to-branch.sh \
 
 Inside containers, the equivalent is the `push_staged_to_branch` MCP tool. Both call `scripts/push-staged-to-branch.sh`, which re-summons the reviewers after pushing.
 
-**Never hand-roll the review watch.** `coding-policy: ci-safety` routes it through `skills/release/watch-pr-reviews.sh` alone, which resolves each gating bot's latest verdict by login and owns its own poll interval and give-up budget. A `gh api .../reviews` loop here would re-invent those as agent guesses, and an empty `reviews` array is indistinguishable from "the reviewer has not posted yet" without the watcher's terminal-state contract.
+**Never hand-roll the review watch.** `coding-policy: ci-safety` routes it through `skills/release/watch-pr-reviews.sh` alone — the gate fields it resolves, its poll interval, and its give-up budget live in that script's header.
 
 Plugin repos run `publish.yml` on push to `main`, not on `pull_request`, so `gh pr checks` returns nothing at PR time. Do not wait for a green CI box that is not coming.
 
