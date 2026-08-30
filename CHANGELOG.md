@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.1.65 — 2026-08-30
+
 ### `promote` Step 3 and Step 4 stop restating script internals (`#58`)
 
 Two advisory findings the policy reviewer raised on `#57`, deferred at the time because `coding-policy: review-severity` says a lone advisory never earns its own re-review round. Both were in the same file, so one round closes them.
