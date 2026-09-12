@@ -1,5 +1,9 @@
 # Changelog
 
+### Retire the public fork workflow
+
+Remove `sync-to-public` and the public shipping phase now that the public fork no longer exists. `ship-code` ends with the private PR lifecycle and delegates its review and merge gates to `release`. Rename `update-from-public` to `update-from-upstream`, pulling `qwibitai/nanoclaw` directly into a reviewed private update branch before deployment. Update repository safety rules, the manifest, README, and overlay extraction guidance to match. Upstream contributions still require explicit authorization.
+
 ## 0.1.65 — 2026-08-30
 
 ### `promote` Step 3 and Step 4 stop restating script internals (`#58`)

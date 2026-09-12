@@ -73,7 +73,7 @@ Proceed immediately to Step 4.
 
 Worktree-isolate the target plugin's worktree if not already done in Step 3. Invoke `Skill(skill: "release")` once for the target plugin. The release skill runs the full PR lifecycle: PR creation, dual-lens automated review (gh-aw + Copilot), review iteration, merge, post-merge publish-plugin watch per `rules/post-merge-publish-watch.md`.
 
-Do NOT invoke `Skill(skill: "ship-code")` here — `ship-code` is scoped to the `jbaruch/nanoclaw` private→public fork chain per `rules/repo-chain.md`, not plugin-repo lifecycles.
+Do NOT invoke `Skill(skill: "ship-code")` here — `ship-code` is scoped to the `jbaruch/nanoclaw` private repository per `rules/repo-chain.md`, not plugin-repo lifecycles.
 
 The target plugin is shipped when `Skill(skill: "release")` Step 7 reports the release confirmed — not on a green run, and not on a registry advance. Step 5's `update_group_config` validator requires the confirmed version. The source plugin MUST NOT ship before the target: Step 6 is gated on this ordering.
 
