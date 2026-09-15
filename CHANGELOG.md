@@ -1,5 +1,9 @@
 # Changelog
 
+### Split incoming-update instructions (#61)
+
+Give remote verification, retired-target replacement, reviewed merging, and private-content preservation separate bullets. Their conditions and requirements remain unchanged.
+
 ## 0.1.66 — 2026-09-12
 
 ### Retire the public fork workflow

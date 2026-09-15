@@ -14,8 +14,10 @@ alwaysApply: true
 
 - Pull upstream updates directly from `qwibitai/nanoclaw` into a branch in private.
 - The private checkout's `origin` targets `jbaruch/nanoclaw`; its `upstream` remote targets `qwibitai/nanoclaw`.
-- Verify remote URLs before fetching. Replace retired public-fork targets when updating private.
-- Merge incoming updates through a reviewed private PR. Preserve private integrations and personal configuration during conflict resolution.
+- Verify remote URLs before fetching.
+- Replace retired public-fork targets when updating private.
+- Merge incoming updates through a reviewed private PR.
+- Preserve private integrations and personal configuration during conflict resolution.
 
 ## Upstream contributions
 
