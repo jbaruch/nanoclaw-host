@@ -7,8 +7,24 @@
   "package_change_lines": 400,
   "trust_boundary_paths": [
     ".github/workflows/*",
-    "rules/*",
-    "skills/*"
+    ".github/fleet-review-enabled",
+    "rules/persona-persist-direct-push.md",
+    "rules/repo-chain.md",
+    "rules/no-error-suppression.md",
+    "rules/tile-content-pipeline.md",
+    "rules/staging-diff-protocol.md",
+    "rules/ugos-compose-projects.md",
+    "rules/os-package-floating.md",
+    "rules/snitchmd-image-floating.md",
+    "rules/sync-cli-floating.md",
+    "rules/tessl-version-floating.md",
+    "rules/nuke-semantics.md",
+    "skills/add-ugos-project/SKILL.md",
+    "skills/add-ugos-project/scripts/register-ugos-project.sh",
+    "skills/nuke/SKILL.md",
+    "skills/promote/SKILL.md",
+    "skills/ship-code/SKILL.md",
+    "skills/update-from-upstream/SKILL.md"
   ],
   "cli_spec_paths": [
     "skills/add-ugos-project/scripts/register-ugos-project.sh"
@@ -16,7 +32,8 @@
   "cli_surface_markers": [
     "usage:",
     "die \"",
-    "[[ $#"
+    "[[ $#",
+    ";;"
   ],
   "user_doc_paths": [
     "README.md",
