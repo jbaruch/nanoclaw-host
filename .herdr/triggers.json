@@ -21,10 +21,10 @@
     "rules/nuke-semantics.md",
     "skills/add-ugos-project/SKILL.md",
     "skills/add-ugos-project/scripts/register-ugos-project.sh",
-    "skills/nuke/SKILL.md",
-    "skills/promote/SKILL.md",
-    "skills/ship-code/SKILL.md",
-    "skills/update-from-upstream/SKILL.md"
+    "skills/nuke/*",
+    "skills/promote/*",
+    "skills/ship-code/*",
+    "skills/update-from-upstream/*"
   ],
   "cli_spec_paths": [
     "skills/add-ugos-project/scripts/register-ugos-project.sh"
