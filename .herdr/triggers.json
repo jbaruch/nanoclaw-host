@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "package_roots": [
+    "skills/*",
+    "rules"
+  ],
+  "package_change_lines": 400,
+  "trust_boundary_paths": [
+    ".github/workflows/*",
+    "rules/*",
+    "skills/*"
+  ],
+  "cli_spec_paths": [
+    "skills/add-ugos-project/scripts/register-ugos-project.sh"
+  ],
+  "cli_surface_markers": [
+    "usage:",
+    "die \"",
+    "[[ $#"
+  ],
+  "user_doc_paths": [
+    "README.md",
+    "skills/*/SKILL.md"
+  ]
+}
