@@ -278,12 +278,18 @@ Core reader must be installed first; stale v1 authority cannot authorize the
 new writer. An empty current store proves only that native clean start, not
 permission to reinterpret older records elsewhere.
 
-Keep consumer cadence absent until the host operator separately registers and
-verifies the actual main cadence after enrollment. Pin its schedule timezone
-to the verified home IANA, not the scheduler's travel-following `local` token.
-Verify the next run against that home wall time and reverify the cadence if the
-native home timezone changes. No source test or publish operation performs that
-activation.
+If no charging cadence exists, the host operator registers and verifies one
+actual main cadence only after enrollment and matching reader/contract checks.
+If a cadence already exists, preserve that same task identity, history and
+recorded prior status; keep it paused during the transition. After those checks,
+reverify the same task and restore only its actual prior status: a previously
+paused task stays paused, and only a previously active task resumes. Never delete,
+replace or duplicate a cadence to satisfy the bootstrap.
+
+Pin the verified cadence to the native home IANA, not the scheduler's
+travel-following `local` token. Verify its next run against that home wall time
+and reverify the same task if native home changes. No source test or publish
+operation performs enrollment, status restoration or activation.
 
 The host operator owns native allowed/denied scope checks, current inventory/zone/Calendar and
 Maps read acceptance, preserved private masks/identities, and an expressly approved
