@@ -190,8 +190,11 @@ OneCLI policy operation is part of those fixtures.
 
 Read `skills/host-contracts/references/tessie-calendar-charge.md` in full before
 calendar charging, enrollment, polling or reusable energy estimates. It owns the
-version-3 enrollment and schema-1 charge/notice gates in the same protected Tessie
-store. It adds no callback database migration, credential, role or agent-writable
+policy3/enrollment2 and home-bound schema-2 charge/notice gates in the same protected
+Tessie store. Legacy nested enrollment1 remains basic-policy-readable but grants
+no charging authority; legacy gate1 records remain typed holds, never absence.
+The contract-only calendar-charge v2 bootstrap follows the publication order in
+that reference; all other releases retain the producer-first order above. It adds no callback database migration, credential, role or agent-writable
 authority. Existing manual Tessie requests and command-journal schema 1 retain
 all their current checks. Source publication supplies no enrollment, installed
 readiness, cadence or vehicle acceptance.

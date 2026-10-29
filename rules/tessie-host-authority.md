@@ -41,7 +41,11 @@ applyTo: "src/host-plugins/tessie/**, src/host-plugins/tessie-late/**, src/host-
 - Refuse direct private mounts and physical symlink routes that bypass a known mask.
 
 - Keep the default-disabled producer inactive until protected policy, existing gateway and installed authority are ready.
-- Merge the actual producer before publishing consumers.
+- Merge the actual producer before publishing consumers, except for the bootstrap below.
+- Narrow exception for the calendar-charge v2 contract-only authority bootstrap.
+- Applies only to matching Host/consumer-v2 contract publications with unchanged consumer Python and wire1; incumbent Core v1 contract checks hold v2.
+- Preconditions are binding: read `skills/host-contracts/references/tessie-calendar-charge.md` Source and native acceptance in full before relying on this ordering.
+- Every other producer/consumer publication retains producer-first ordering.
 - Require fresh registered scope and live admitted VIN before provider dispatch.
 - Apply the named empty-disabled opaque mount exception only with its full quiescence, retirement and retained-state preconditions.
 - Preserve accepted controls when confirmation fails.

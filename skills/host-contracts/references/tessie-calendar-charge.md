@@ -1,6 +1,6 @@
 # Calendar-aware vehicle charging
 
-Contract: tessie-calendar-charge-host-v1
+Contract: tessie-calendar-charge-host-v2
 
 ## Owners and admission
 
@@ -24,6 +24,11 @@ Install the Core reader accepting exact policies 2 and 3 before any version-3
 writer. Policy 2 remains byte-shape compatible and has no enrollment. Policy 3
 adds exactly nullable `charge_automation`. Null keeps charging inactive.
 Unsupported versions refuse; never downgrade, clear or rewrite them from an agent.
+The current enrollment is nested schema 2. A legacy nested schema-1 enrollment
+remains readable for existing basic Tessie policy compatibility. It supplies no
+charging action authority; planning and controls hold with actionable
+`charge_enrollment_version`. Do not assign it a guessed home timezone or upgrade
+it from an agent. Top-level policy remains version 3.
 
 Only the host operator provisions enrollment from an actual owner decision and grounded
 native vehicle/calendar/home evidence. No consumer enrollment or policy writer
@@ -35,15 +40,16 @@ trimmed, within the stated UTF-16 length, and excludes Unicode Cc/Cf/Cs/Zl/Zp.
 
 | Field | Serialized type and format |
 | --- | --- |
-| `schema_version` | Integer `1` |
+| `schema_version` | Integer `2` |
 | `enrollment_id` | String matching lowercase `[a-f0-9]{32}` |
+| `home_timezone` | Trimmed nonempty valid IANA string, at most 100 UTF-16 code units, exactly the current native `tz_state.home_tz` |
 | `owner_chat` | Text of at most 200 units, exactly a protected `owner_chats` member |
 | `default_vehicle` | Null or exact native alias/VIN text of at most 100 units |
 | `daily_limit_percent` | Null or integer 50–100; expected baseline, never an invented observation |
 | `home_saved_locations` | Array of 1–16 unique exact native labels, each text of at most 200 units |
 | `event_vehicles` | JSON object with at most 1000 entries: exact native Calendar ID text keys of at most 512 units to alias/VIN text values of at most 100 units; `{}` means no explicit event mappings |
 | `person_vehicles` | JSON object with at most 100 entries: exact driver-label text keys of at most 254 units to alias/VIN text values of at most 100 units; `{}` means no person mappings |
-| `evening_hour` | Integer 0–23 in the owner's current native IANA timezone |
+| `evening_hour` | Integer 0–23 in the native home IANA timezone defined below |
 | `cold_buffer_fraction`, `highway_buffer_fraction` | Finite numbers 0–2 |
 | `reserve_percent` | Finite number 0–50 |
 | `charge_rate_kw` | Null or finite number greater than zero and at most 1000 |
@@ -54,6 +60,25 @@ no hardcoded VIN allowlist, frozen inventory or guessed attendee mapping exists.
 An unknown selector or conflicting/unknown source holds the plan.
 
 ## Native sources and estimation
+
+Calendar charging uses only the nonempty IANA `home_tz` returned by the host's
+`src/db-tz.ts::readTzStateForContext()` for supported `tz_state` schema 4.
+Missing, unsupported, non-string or invalid home timezone holds. Never substitute
+travel/current timezone, agent context, container `TIMEZONE`, UTC or a caller
+value. Require enrollment2 `home_timezone` to match it at every runtime fence.
+Use this home clock for today/tomorrow, day boundaries, `evening_hour`, planning
+days and notice days. A home change or a mismatch in a retained record holds
+before effects; it does not authorize changing the bound enrollment or history.
+
+Before planning effects or looking up a new notice day, perform a bounded
+inventory of ALL `charge-notice-*` leaves, alongside the existing complete
+charge-state discovery. Reject malformed names, unsupported versions, unknown
+or invalid fields and mismatched filename/owner/day/home bindings. An old
+reservation under another day must never disappear through the new day lookup.
+Legacy schema-1 charge and notice records remain byte-exact typed holds,
+including those under an old day filename. Do not migrate, retag, rekey, erase,
+reset or guess their timezone. No automatic migration of these legacy records
+is provided here.
 
 Read the maintained drive-engine schema-1 private Calendar metadata, native IDs,
 revisions and zoned start/end times. Titles and city strings do not identify
@@ -90,8 +115,8 @@ A later observed limit change becomes a sticky owner-override hold. A native
 manual `set_charge_limit` intent also makes existing charge records for that VIN
 sticky before its POST, including an observed manual A→B→A sequence.
 
-In the enrolled evening, raise only for the measured next-day shortfall and never
-above 100. If disconnected, attempt one bounded owner notice with the shortfall.
+In the enrolled evening in the home zone, raise only for the measured shortfall
+on the next home calendar day and never above 100. If disconnected, attempt one bounded owner notice with the shortfall.
 If the round trip exceeds usable charge, report minimum energy charging stops.
 Restore the exact retained daily baseline only when the drive is actually done
 and the vehicle is back home, or its original native drive block has an exact
@@ -106,8 +131,9 @@ Both charge-state and charge-notice records are host-owned JSON gate stores
 under the Stateful Artifacts Gate Store carve-out. Exact field presence is
 mandatory; there are no omitted-field defaults or extra fields. Unsupported,
 future, malformed, unreadable or misbound state refuses rather than becoming
-absence. No retained record can replay an old command or reopen a notice slot. Only version 1
-is accepted now. An unsupported charge-state version emits safe code
+absence. No retained record can replay an old command or reopen a notice slot.
+Only home-bound version 2 is accepted for charging. Legacy version 1 is retained
+and refused, never treated as absence. An unsupported charge-state version emits safe code
 `charge_state_version`; an unsupported notice version emits
 `charge_notice_version`. The native error envelope preserves that code and this
 fixed message: "Calendar charge gate version is unsupported. Update the installed
@@ -122,11 +148,12 @@ A charge-state record has exactly:
 
 | Field | Serialized type and format |
 | --- | --- |
-| `schema_version`, `kind` | Integer `1`, literal string `calendar_charge` |
+| `schema_version`, `kind` | Integer `2`, literal string `calendar_charge` |
 | `owner_chat` | Nonempty string of at most 200 UTF-16 units; bound to the actual enrolled native owner |
 | `vin` | String matching `[A-HJ-NPR-Z0-9]{17}`; bound to current admitted inventory before control |
 | `enrollment_id` | Lowercase hex32 string matching the enrollment epoch |
-| `day` | Real calendar date string `YYYY-MM-DD` for the original owner-zone planning day |
+| `day` | Real calendar date string `YYYY-MM-DD` for the original home-zone planning day |
+| `home_timezone` | Trimmed nonempty valid IANA string of at most 100 UTF-16 code units, bound to the current native home and enrollment2 timezone |
 | `phase` | String `idle`, `active`, `held` or `owner_override` |
 | `hold_reason` | Null or string `uncertain`, `unconfirmed`, `refused`, `not_dispatched`, `manual_limit_changed` |
 | `baseline_limit` | Integer 50–100 from the original native daily observation |
@@ -147,7 +174,7 @@ nonnegative epoch milliseconds no earlier than `attempted_at`). Raise requires
 A pre-attempt checkpoint has exactly `day`, `phase`, `managed_limit`, `leg_keys`,
 `event_refs` and `last_end`, with the same types and formats as the enclosing
 record. `phase` is only `idle` or `active`, with those phase invariants. It cannot
-nest a checkpoint, change owner/VIN/enrollment/baseline, or carry an intent.
+nest a checkpoint, change owner/VIN/enrollment/`home_timezone`/baseline, or carry an intent.
 Its active `managed_limit`, otherwise the enclosing `baseline_limit`, must equal
 `pending.from_limit`. The entire serialized charge record, including checkpoint,
 must fit the existing store's 1 MiB bound before any mutation.
@@ -197,13 +224,14 @@ hold, and no source or fixture can prove the unobservable race absent.
 
 ## Notices and wire
 
-`charge-notice-<digest>.json` is the host-owned schema-1 gate for one owner/local-
-day notification. Its filename digest uses the same SHA-256/UTF-8/compact
+`charge-notice-<digest>.json` is the host-owned schema-2 gate for one notification per owner and home calendar
+day. Its filename digest uses the same SHA-256/UTF-8/compact
 `JSON.stringify` framing as charge-state, over exactly `[owner_chat, day]` in
 that order with no trailing newline. It has exactly integer
-`schema_version: 1`, literal string `kind: calendar_charge_notice`, `owner_chat`
-(the exact current native owner string), `day` (the exact real owner-local
-`YYYY-MM-DD` date), `phase` (string `reserved`, `submitted` or `uncertain`), and
+`schema_version: 2`, literal string `kind: calendar_charge_notice`, `owner_chat`
+(the exact current native owner string), `home_timezone` (a trimmed nonempty valid IANA string of at most 100 UTF-16 code
+units, matching both native home and enrollment2), `day` (the real `YYYY-MM-DD` date
+in that timezone), `phase` (string `reserved`, `submitted` or `uncertain`), and
 `plan_sha256` (lowercase hex64 SHA-256 of the complete UTF-8 notice body). All fields
 are required; no nulls, defaults or extra fields are admitted. The same gate-store
 version/malformed/read/migration/refusal contract above applies to this reservation.
@@ -212,7 +240,7 @@ Reserve before send; crash/timeout consumes that day's slot. Every valid existin
 phase prevents a second attempt. Submitted means the native send call resolved,
 not a fabricated delivery acknowledgment. A failed notice retains uncertainty.
 
-Use one bounded Russian message per enrolled evening. Keep all structured vehicle
+Use one bounded Russian message per enrolled evening in the home zone. Keep all structured vehicle
 outcomes in the native poll result; aggregate long fleets without silent text
 truncation or channel chunking. Do not send model duplicates. Confirmed raises,
 accepted-but-unconfirmed requests and unplugged shortfalls remain distinct.
@@ -231,11 +259,37 @@ not create main context. Fixed safe errors preserve holds without provider prose
 
 ## Source and native acceptance
 
-Publish this authority first; merge/install the actual producer before releasing
-the consumer. Verify installed bytes and dual-policy compatibility before the host operator
-provisions policy 3. Keep consumer cadence absent until the host operator separately registers
-and verifies the actual main cadence after enrollment. No source test or publish
-operation performs that activation.
+For this v2 contract-only bootstrap, publish and install the matching
+`tessie-calendar-charge-host-v2` and `tessie-calendar-charge-consumer-v2`
+contracts first. This predecessor consumer release changes no Python runtime or
+wire1 behavior. Incumbent Core v1 contract checks must hold v2. Do not enroll or
+activate calendar charging during bootstrap. Preserve existing policy and gates;
+keep any existing cadence paused with its prior status recorded. Then merge and
+install the compatible Core v2 reader. Every other producer/consumer release
+retains the normal producer-first order in `tessie-host-authority.md`.
+
+After installing compatible readers and verifying native identity/home/policy
+bindings, the host operator provisions a new enrollment epoch from an actual
+owner decision. Live-effect acceptance remains separately approved; the owner
+decision need not be reissued after installation. Verify the installed reader
+holds legacy enrollment1 and every legacy charge/notice gate before enabling
+any schema-2 writer. All matching Host/consumer-v2 contracts and the compatible
+Core reader must be installed first; stale v1 authority cannot authorize the
+new writer. An empty current store proves only that native clean start, not
+permission to reinterpret older records elsewhere.
+
+If no charging cadence exists, the host operator registers and verifies one
+actual main cadence only after enrollment and matching reader/contract checks.
+If a cadence already exists, preserve that same task identity, history and
+recorded prior status; keep it paused during the transition. After those checks,
+reverify the same task and restore only its actual prior status: a previously
+paused task stays paused, and only a previously active task resumes. Never delete,
+replace or duplicate a cadence to satisfy the bootstrap.
+
+Pin the verified cadence to the native home IANA, not the scheduler's
+travel-following `local` token. Verify its next run against that home wall time
+and reverify the same task if native home changes. No source test or publish
+operation performs enrollment, status restoration or activation.
 
 The host operator owns native allowed/denied scope checks, current inventory/zone/Calendar and
 Maps read acceptance, preserved private masks/identities, and an expressly approved
