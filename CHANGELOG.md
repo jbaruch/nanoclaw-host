@@ -2,7 +2,7 @@
 
 ### Use the native home clock for calendar charging (Tesla #2)
 
-Bind charging evenings, tomorrow-drive planning and notice days to the supported native home IANA timezone. Hold unknown home state without travel/server fallbacks and pin the separately enrolled cadence to that same home zone. Preserve existing gate formats, retained history and every owner/provider acceptance requirement.
+Bind charging evenings, tomorrow-drive planning and notice days to the supported native home IANA timezone. Move the Host contract to v2 and nested enrollment/charge/notice gates to schema2 with required home_timezone, while top-level policy3 and native wire1 remain unchanged. Keep legacy enrollment1 basic-policy-readable but charging-held, and discover every retained state/notice gate before effects or day lookup so legacy1 cannot reopen a notice slot. Preserve bytes without guessed migration or rekeying, install readers before new writers, and pin the separately enrolled cadence to native home. Every owner/provider acceptance and separate test requirement remains.
 
 ## 0.1.107 — 2026-10-29
 
