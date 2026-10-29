@@ -43,7 +43,7 @@ trimmed, within the stated UTF-16 length, and excludes Unicode Cc/Cf/Cs/Zl/Zp.
 | `home_saved_locations` | Array of 1–16 unique exact native labels, each text of at most 200 units |
 | `event_vehicles` | JSON object with at most 1000 entries: exact native Calendar ID text keys of at most 512 units to alias/VIN text values of at most 100 units; `{}` means no explicit event mappings |
 | `person_vehicles` | JSON object with at most 100 entries: exact driver-label text keys of at most 254 units to alias/VIN text values of at most 100 units; `{}` means no person mappings |
-| `evening_hour` | Integer 0–23 in the owner's current native IANA timezone |
+| `evening_hour` | Integer 0–23 in the native home IANA timezone defined below |
 | `cold_buffer_fraction`, `highway_buffer_fraction` | Finite numbers 0–2 |
 | `reserve_percent` | Finite number 0–50 |
 | `charge_rate_kw` | Null or finite number greater than zero and at most 1000 |
@@ -54,6 +54,18 @@ no hardcoded VIN allowlist, frozen inventory or guessed attendee mapping exists.
 An unknown selector or conflicting/unknown source holds the plan.
 
 ## Native sources and estimation
+
+Calendar charging uses only the nonempty IANA `home_tz` returned by the host's
+`src/db-tz.ts::readTzStateForContext()` for supported `tz_state` schema 4.
+Missing, unsupported, non-string or invalid home timezone holds. Never substitute
+travel/current timezone, agent context, container `TIMEZONE`, UTC or a caller
+value. Use this home clock for today/tomorrow, day boundaries, `evening_hour`,
+planning days and notice days. The existing runtime recheck must hold if home
+changes before an effect. No enrollment, gate or wire field is added.
+
+The clock correction itself does not migrate, retag or rekey retained charge
+records, notice days or digests. Preserve their bytes and uncertainty; the host
+operator inspects any existing history before native activation.
 
 Read the maintained drive-engine schema-1 private Calendar metadata, native IDs,
 revisions and zoned start/end times. Titles and city strings do not identify
@@ -90,8 +102,8 @@ A later observed limit change becomes a sticky owner-override hold. A native
 manual `set_charge_limit` intent also makes existing charge records for that VIN
 sticky before its POST, including an observed manual A→B→A sequence.
 
-In the enrolled evening, raise only for the measured next-day shortfall and never
-above 100. If disconnected, attempt one bounded owner notice with the shortfall.
+In the enrolled evening in the home zone, raise only for the measured shortfall
+on the next home calendar day and never above 100. If disconnected, attempt one bounded owner notice with the shortfall.
 If the round trip exceeds usable charge, report minimum energy charging stops.
 Restore the exact retained daily baseline only when the drive is actually done
 and the vehicle is back home, or its original native drive block has an exact
@@ -126,7 +138,7 @@ A charge-state record has exactly:
 | `owner_chat` | Nonempty string of at most 200 UTF-16 units; bound to the actual enrolled native owner |
 | `vin` | String matching `[A-HJ-NPR-Z0-9]{17}`; bound to current admitted inventory before control |
 | `enrollment_id` | Lowercase hex32 string matching the enrollment epoch |
-| `day` | Real calendar date string `YYYY-MM-DD` for the original owner-zone planning day |
+| `day` | Real calendar date string `YYYY-MM-DD` for the original home-zone planning day |
 | `phase` | String `idle`, `active`, `held` or `owner_override` |
 | `hold_reason` | Null or string `uncertain`, `unconfirmed`, `refused`, `not_dispatched`, `manual_limit_changed` |
 | `baseline_limit` | Integer 50–100 from the original native daily observation |
@@ -197,13 +209,13 @@ hold, and no source or fixture can prove the unobservable race absent.
 
 ## Notices and wire
 
-`charge-notice-<digest>.json` is the host-owned schema-1 gate for one owner/local-
-day notification. Its filename digest uses the same SHA-256/UTF-8/compact
+`charge-notice-<digest>.json` is the host-owned schema-1 gate for one notification per owner and home calendar
+day. Its filename digest uses the same SHA-256/UTF-8/compact
 `JSON.stringify` framing as charge-state, over exactly `[owner_chat, day]` in
 that order with no trailing newline. It has exactly integer
 `schema_version: 1`, literal string `kind: calendar_charge_notice`, `owner_chat`
-(the exact current native owner string), `day` (the exact real owner-local
-`YYYY-MM-DD` date), `phase` (string `reserved`, `submitted` or `uncertain`), and
+(the exact current native owner string), `day` (the real `YYYY-MM-DD` date
+in the home timezone), `phase` (string `reserved`, `submitted` or `uncertain`), and
 `plan_sha256` (lowercase hex64 SHA-256 of the complete UTF-8 notice body). All fields
 are required; no nulls, defaults or extra fields are admitted. The same gate-store
 version/malformed/read/migration/refusal contract above applies to this reservation.
@@ -212,7 +224,7 @@ Reserve before send; crash/timeout consumes that day's slot. Every valid existin
 phase prevents a second attempt. Submitted means the native send call resolved,
 not a fabricated delivery acknowledgment. A failed notice retains uncertainty.
 
-Use one bounded Russian message per enrolled evening. Keep all structured vehicle
+Use one bounded Russian message per enrolled evening in the home zone. Keep all structured vehicle
 outcomes in the native poll result; aggregate long fleets without silent text
 truncation or channel chunking. Do not send model duplicates. Confirmed raises,
 accepted-but-unconfirmed requests and unplugged shortfalls remain distinct.
@@ -234,8 +246,11 @@ not create main context. Fixed safe errors preserve holds without provider prose
 Publish this authority first; merge/install the actual producer before releasing
 the consumer. Verify installed bytes and dual-policy compatibility before the host operator
 provisions policy 3. Keep consumer cadence absent until the host operator separately registers
-and verifies the actual main cadence after enrollment. No source test or publish
-operation performs that activation.
+and verifies the actual main cadence after enrollment. Pin its schedule timezone
+to the verified home IANA, not the scheduler's travel-following `local` token.
+Verify the next run against that home wall time and reverify the cadence if the
+native home timezone changes. No source test or publish operation performs that
+activation.
 
 The host operator owns native allowed/denied scope checks, current inventory/zone/Calendar and
 Maps read acceptance, preserved private masks/identities, and an expressly approved
