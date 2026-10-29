@@ -262,8 +262,9 @@ not create main context. Fixed safe errors preserve holds without provider prose
 For this v2 contract-only bootstrap, publish and install the matching
 `tessie-calendar-charge-host-v2` and `tessie-calendar-charge-consumer-v2`
 contracts first. This predecessor consumer release changes no Python runtime or
-wire1 behavior. Incumbent Core v1 contract checks must hold v2; keep calendar
-charging unenrolled and its cadence absent during the bootstrap. Then merge and
+wire1 behavior. Incumbent Core v1 contract checks must hold v2. Do not enroll or
+activate calendar charging during bootstrap. Preserve existing policy and gates;
+keep any existing cadence paused with its prior status recorded. Then merge and
 install the compatible Core v2 reader. Every other producer/consumer release
 retains the normal producer-first order in `tessie-host-authority.md`.
 
