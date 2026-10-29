@@ -259,18 +259,26 @@ not create main context. Fixed safe errors preserve holds without provider prose
 
 ## Source and native acceptance
 
-Publish this authority first; merge/install the actual producer before releasing
-the consumer. Verify installed bytes and dual-policy compatibility before the host operator
-provisions policy3/enrollment2. Require this Host contract and the matching
-`tessie-calendar-charge-consumer-v2` reference from the complete same-provider
-consumer. The new writer must refuse stale v1 authority; a header from an older
-contract cannot authorize enrollment2 or gates2. Verify the installed reader holds legacy enrollment1
-and every legacy charge/notice gate before any schema-2 writer is enabled.
-A new enrollment epoch requires an actual owner decision after reader-first and
-native acceptance; an empty current store proves only that native clean start,
-not permission to reinterpret older records elsewhere. Keep consumer cadence
-absent until the host operator separately registers
-and verifies the actual main cadence after enrollment. Pin its schedule timezone
+For this v2 contract-only bootstrap, publish and install the matching
+`tessie-calendar-charge-host-v2` and `tessie-calendar-charge-consumer-v2`
+contracts first. This predecessor consumer release changes no Python runtime or
+wire1 behavior. Incumbent Core v1 contract checks must hold v2; keep calendar
+charging unenrolled and its cadence absent during the bootstrap. Then merge and
+install the compatible Core v2 reader. Every other producer/consumer release
+retains the normal producer-first order in `tessie-host-authority.md`.
+
+After installing compatible readers and verifying native identity/home/policy
+bindings, the host operator provisions a new enrollment epoch from an actual
+owner decision. Live-effect acceptance remains separately approved; the owner
+decision need not be reissued after installation. Verify the installed reader
+holds legacy enrollment1 and every legacy charge/notice gate before enabling
+any schema-2 writer. All matching Host/consumer-v2 contracts and the compatible
+Core reader must be installed first; stale v1 authority cannot authorize the
+new writer. An empty current store proves only that native clean start, not
+permission to reinterpret older records elsewhere.
+
+Keep consumer cadence absent until the host operator separately registers and
+verifies the actual main cadence after enrollment. Pin its schedule timezone
 to the verified home IANA, not the scheduler's travel-following `local` token.
 Verify the next run against that home wall time and reverify the cadence if the
 native home timezone changes. No source test or publish operation performs that
