@@ -1,5 +1,9 @@
 # Changelog
 
+### Preserve complete historical task inventories
+
+Distinguish retained read-only task rows from usable selected effect proof. Keep historical cancelled ids, accepted legacy schedule literals and actual stored timezone combinations visible without normalization, deletion, fabricated absence or effect authorization. Preserve strict selected creation, wake, watcher and cancellation bindings while updating readers before the task projection writer changes.
+
 ## 0.3.0 — 2026-10-30
 
 ### Declare native floating reminder adoption (#1126 / admin #629)

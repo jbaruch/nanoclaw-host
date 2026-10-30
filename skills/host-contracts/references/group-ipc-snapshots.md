@@ -12,8 +12,8 @@ Contract: group-task-snapshot-v2
 - `tasks` is a complete array of version-2 task records for that receiving view. Empty arrays remain complete; the envelope can declare feature support without inventing a task.
 - Version-2 records retain every version-1 field and add required `schedule_timezone`. Their `schema_version` is integer 2.
 - `schedule_timezone` is the actual stored null, literal `local` or valid IANA name. Do not synthesize it from current timezone, prompt, next run or missing source data.
-- Interval and offset-aware once records have null timezone. A zone-bearing once retains its strict offset-free wall time; a local cron retains its actual cron expression.
-- Every record version follows the field contract below. Unknown source values remain unknown; no field receives an invented default.
+- Current interval and offset-aware once inputs have null timezone. A zone-bearing once retains its strict offset-free wall time; a local cron retains its actual cron expression. Preserve the finite historical inventory cases below without turning them into new scheduling inputs.
+- Every record version follows the structural field contract below. The table defines usable selected-record proof; the retained historical cases below remain read-only inventory. Unknown source values remain unknown; no field receives an invented default.
 - `context_mode` is the actual `group` or `isolated` value, never a default inferred from prompt or script.
 - Legacy task records have absent `schema_version` or integer `schema_version: 0` and the same original fields below except `context_mode`; that field is absent or ignored in version 0 and supplies no context-mode proof.
 - Group snapshots carry integer `schema_version: 1`, a `groups` array and UTC ISO-8601 `lastSync`; each group record explicitly carries integer `schema_version: 1` and the field contract below.
@@ -44,6 +44,21 @@ Contract: group-task-snapshot-v2
 | `folder` | Required registered folder string when `isRegistered` is true; otherwise optional, with no default; same folder syntax as task records |
 | `containerConfig` | Optional host registration-config object; never caller-supplied role authority |
 | `requiresTrigger` | Optional host registration boolean; no synthesized default |
+
+## Retained Historical Inventory
+
+Separate a complete read-only inventory from a selected task's usable effect proof. This distinction applies to legacy arrays with record versions0/1 and version-2 envelopes. Keep every supported record's actual id and raw stored fields; never drop a historical row, rewrite its schedule or infer a missing timezone to make an inventory usable.
+
+The following complete historical records can remain in an inventory without supplying new effect proof:
+
+- Stored `status: cancelled` is a retained historical tombstone. Keep its id present; it is not authoritative native removal, active creation or permission to re-arm an effect. Current native cancellation still removes the task.
+- A once record with null timezone may retain a calendar-valid `YYYY-MM-DD`, or `YYYY-MM-DD` followed by `T` or one space and `HH:mm[:ss[.fraction]]`. Preserve the literal. Arbitrary human date strings and invalid calendar/time components are not accepted by this compatibility path.
+- A strict valid offset-aware ISO once value may retain an actual historical named IANA timezone. Preserve that name; do not replace it with null or reinterpret it as floating. The literal `local` does not qualify for this historical exception.
+- An interval may retain its actual nonempty stored string when the native `parseInt(value, 10)` result is a finite positive safe integer, including historical fractional or suffix forms. Preserve the full string; do not replace it with the parsed integer. A selected isolated watcher still requires the exact declared decimal interval contract.
+
+These cases do not relax required fields, JSON types, supported record versions, unique ids, actual scope, stable attachment or freshness. Partial records, unknown forms and malformed native declarations still hold the operation. A complete retained inventory can establish that a selected id is absent only by retaining and checking every id; a cancelled or unusable selected row is still present.
+
+Creation, native wake, watcher binding and cancellation recovery separately validate the selected task's usable status and its exact intended schedule, timezone, context, script and prompt. Historical retention does not verify creation, authorize a claim/send, re-arm an uncertain cancellation or enable a native reminder from a historical row. A capability declaration describes the installed host implementation, not those historical rows' execution or delivery.
 
 ## Native Scheduling Declaration
 
