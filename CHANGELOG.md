@@ -1,5 +1,9 @@
 # Changelog
 
+### Declare the main-only meeting chat evidence owner (#677)
+
+Bind the registered-chat reader to installed Host identity before peer-history or native member reads. Preserve current-chat history, search-input provenance, complete context/reply coverage and unknowns without grants or sends. Publish this authority before the compatible Core producer; keep deployed genuine-main acceptance separate.
+
 ## 0.2.0 — 2026-10-29
 
 ### Use the native home clock for calendar charging (Tesla #2)
