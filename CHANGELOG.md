@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.3.0 — 2026-10-30
+
 ### Declare native floating reminder adoption (#1126 / admin #629)
 
 Version the existing task projection as an explicit envelope2 with host-generated capability metadata and actual per-task timezones, including empty inventories. Keep legacy arrays readable and all scope, exact binding, cancellation and uncertainty gates intact. Require actual compatibility-reader deployment and old-session retirement before the writer switch. Forward the existing accepted task occurrence to prechecks and bind native once claims to that accepted UTC dispatch. Add separate versioned dispatch metadata for recurring logical dates, capturing the accepted zone before queueing instead of retagging a reminder after a timezone change. Keep capability metadata separate from owner identity, approval and effect proof; retain fallback/pinned entries without conversion. The 0.x minor bump records the cross-pipeline shape change. Source publication supplies no native acceptance or permission for a probe task, send, timezone change or vehicle effect.
