@@ -14,6 +14,7 @@ tessl install jbaruch/nanoclaw-host
 
 | Rule | Summary |
 |------|---------|
+| [meeting-chat-context](rules/meeting-chat-context.md) | Actual-main registered-chat evidence, current native member identity, complete bounded context and installed-provider rollout. |
 | [construction-journal-authority](rules/construction-journal-authority.md) | Exact owner-bound payment cards, protected append gates, dedicated native Sheets routing and monotone backup/recovery. |
 | [agent-container-filter](rules/agent-container-filter.md) | Line-oriented contract for the root repository's agent-container filter and deploy consumers, including infrastructure exclusions and regression coverage. |
 | [deployment-marker-windows](rules/deployment-marker-windows.md) | Private deployment window ownership, legacy/schema-1 dual readers and reader-first rollout. |
