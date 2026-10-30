@@ -27,7 +27,7 @@ tessl install jbaruch/nanoclaw-host
 | [dual-agent-coexistence](rules/dual-agent-coexistence.md) | Two agents (AyeAye and host) update this system asynchronously. Never assume the latest version; never assume the other agent's work is stale or inferior without reading it. |
 | [host-conventions](rules/host-conventions.md) | Deployment mechanics: always use `./scripts/deploy.sh`, registry is the delivery artifact, scripts source `scripts/common.sh`. |
 | [flight-assist-location](rules/flight-assist-location.md) | Host-owned per-group location schema, owner-only atomic writes, non-owner readers and fresh location use. |
-| [group-ipc-snapshots](rules/group-ipc-snapshots.md) | Host-owned group/task projections, supported versions, trust filtering, exact watcher binding proof and compatible reader rollout. |
+| [group-ipc-snapshots](rules/group-ipc-snapshots.md) | Host-owned legacy/v2 task projections, native floating declarations, accepted dispatch metadata, exact binding proof and reader-first rollout. |
 | [no-deferral](rules/no-deferral.md) | Every session is the only session — fix problems now, not "later". Forbidden-pattern bullets enumerated. |
 | [no-error-suppression](rules/no-error-suppression.md) | Never use `\|\| true`, `2>/dev/null`, empty `catch {}`, or any form of silent error swallowing in scripts. If something fails, it must fail visibly. |
 | [nuke-semantics](rules/nuke-semantics.md) | Nuke a group = kill the running container only. Never delete registrations or group folders. |
