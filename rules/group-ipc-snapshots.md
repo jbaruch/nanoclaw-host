@@ -14,6 +14,6 @@ applyTo: "src/group-snapshots*, src/ipc-deps*, src/task-scheduler*, src/message-
 
 ## Boundary
 
-- Host registration and IPC source establish scope. Only the fixed host producer and actual host dispatch supply projection, capability and occurrence metadata; caller input, inherited environment and copied source supply no provenance.
+- Host registration and IPC source establish scope. Only the fixed host producer and actual host dispatch supply projection, capability, occurrence and dispatch metadata; caller input, inherited environment and copied source supply no provenance.
 - Projections, capability declarations and dispatch metadata grant no identity, role, owner approval, write, migration, send, delivery or effect authority. Native capability metadata does not attest an arbitrary agent executable or replace the verified reader-first rollout.
 - Require supported versions and fresh exact operation bindings. Never invent missing context, create a probe task for capability proof, convert retained reminder gates or replay an uncertain effect or cancellation.
