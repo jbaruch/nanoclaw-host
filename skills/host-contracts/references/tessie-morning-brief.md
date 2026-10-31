@@ -35,6 +35,17 @@ never export any admitted VIN embedded in a generated, duplicate or named alias.
 For those brief labels only, assign deterministic VIN-ordered `Vehicle N`
 ordinals while reserving all ordinary safe labels case-insensitively first.
 Do not change native fleet aliases/selectors, planning mappings or retained state.
+Exported aliases contain 1–100 UTF-16 code units (at most 300 UTF-8 bytes),
+with no Unicode control, format, surrogate, line or paragraph separator.
+The existing native inventory admits display names up to 100 UTF-16 units.
+Its duplicate-name alias can append a 20-unit VIN suffix (at most 120 raw units);
+the brief accepts that private form only to assign a VIN-free ordinal before
+public-label validation. Native selectors remain unchanged. Oversized or unsafe
+ordinary labels or unsupported raw aliases hold the complete summary with its
+repair diagnostic; never truncate, drop a vehicle or emit a partial fleet.
+Generated ordinal labels and both brief readers obey the public 100-unit bound.
+All 100 admitted vehicles fit the fixed output budgets; rejection never changes
+policy or retained native aliases.
 No VIN, coordinate, saved-home label or Calendar body/identity is exported.
 
 Each alert is exactly `{kind,detail}` for a proved condition. Unknown checks are
