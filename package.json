@@ -11,7 +11,7 @@
     "test": "node --test skills/host-contracts/tests/sessionize-capture.test.mjs"
   },
   "devDependencies": {
-    "@types/node": "22.19.11",
+    "@types/node": "26.6.5",
     "prettier": "3.8.1",
     "typescript": "5.9.3"
   }
