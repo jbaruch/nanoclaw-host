@@ -115,6 +115,10 @@ conservative supported-style boundary, not universal pixel-rendering proof. The
 exact predicates belong to `eligibleText` and `alpha` inside `readRenderedTree`.
 Every tree requires nonempty eligible text, rechecked on the serialized result;
 visible structural or image-only trees also hold.
+After ordinary whitespace normalization, control, format or Unicode default-
+ignorable characters in direct text hold the capture, including mixed runs.
+The owner never strips such characters to manufacture visible content or a
+witness; the same `eligibleTextContent` predicate governs both read and result.
 Other visibility-hidden nodes contribute no values. Captures are private source input,
 not public fixtures or another persistent store; retain no private payload in
 logs, source or chat. The owner has no file writer or caller output-path input.

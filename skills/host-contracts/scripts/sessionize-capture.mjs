@@ -19,9 +19,19 @@ class CaptureHold extends Error {
   }
 }
 
-/** This function is serialized into a fresh isolated world. No website JS or
- * form-value, storage, profile, network or editing API is invoked. */
-function readRenderedTree() {
+/** @param {string} text */
+function eligibleTextContent(text) {
+  return (
+    text.trim().length > 0 &&
+    !/[\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/u.test(text)
+  );
+}
+
+/** This function and its fixed content predicate are serialized into a fresh
+ * isolated world. No website JS or form-value, storage, profile, network or
+ * editing API is invoked.
+ * @param {(text:string)=>boolean} eligibleContent */
+function readRenderedTree(eligibleContent) {
   if (
     location.href !== "https://sessionize.com/app/speaker/events" ||
     document.readyState !== "complete" ||
@@ -152,6 +162,7 @@ function readRenderedTree() {
             .replace(/\s+/g, " ")
             .trim()
         : "";
+    if (text && !eligibleContent(text)) throw new Error("capture_hold");
     const classes = element.getAttribute("class") ?? "";
     if (text.length > 16_000 || classes.length > 1_000)
       throw new Error("capture_hold");
@@ -481,7 +492,7 @@ export async function capture() {
     const result = await client.call(
       "Runtime.evaluate",
       {
-        expression: `(${readRenderedTree.toString()})()`,
+        expression: `(${readRenderedTree.toString()})(${eligibleTextContent.toString()})`,
         contextId: world.executionContextId,
         returnByValue: true,
         awaitPromise: false,
@@ -525,6 +536,7 @@ export async function capture() {
         !/^[A-Za-z][A-Za-z0-9-]{0,19}$/.test(item.tag) ||
         typeof item.text !== "string" ||
         item.text.length > 16_000 ||
+        (item.text !== "" && !eligibleTextContent(item.text)) ||
         typeof item.classes !== "string" ||
         item.classes.length > 1_000 ||
         (index === 0
@@ -542,7 +554,7 @@ export async function capture() {
       )
         throw new CaptureHold();
     }
-    if (!dom.nodes.some((node) => node.text.trim().length > 0))
+    if (!dom.nodes.some((node) => eligibleTextContent(node.text)))
       throw new CaptureHold();
     const identityResult = await client.call(
       "Runtime.evaluate",

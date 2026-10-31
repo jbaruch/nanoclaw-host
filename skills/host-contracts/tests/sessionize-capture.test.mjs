@@ -1102,3 +1102,33 @@ test("validates the serialized tree's nonempty text witness", async (t) => {
   });
   await assert.rejects(capture(), /Sessionize capture unavailable/);
 });
+
+for (const text of [
+  "\u200b",
+  "visible\u200btext",
+  "\ufe0f",
+  "visible\u0000text",
+]) {
+  test(`holds unsupported no-ink or control content ${JSON.stringify(text)} before exporting it`, async (t) => {
+    fixture(t, { tree: element("BODY", text) });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+  test(`holds serialized unsupported content ${JSON.stringify(text)}`, async (t) => {
+    fixture(t, {
+      resultOverride: {
+        schema_version: 1,
+        origin: "https://sessionize.com",
+        path: "/app/speaker/events",
+        title: "My events",
+        nodes: [{ tag: "BODY", parent: null, classes: "", text }],
+      },
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+test("retains ordinary text with normalized visible word spacing", async (t) => {
+  fixture(t, { tree: element("BODY", "  visible\u00a0\ttext\n") });
+  const output = await capture();
+  assert.equal(output.capture.nodes[0].text, "visible text");
+});
