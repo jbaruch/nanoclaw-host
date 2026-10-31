@@ -16,6 +16,12 @@ function element(tag, text = "", attributes = {}, children = []) {
     hasAttribute: (/** @type {string} */ name) => name in attributes,
     getAttribute: (/** @type {string} */ name) => attributes[name] ?? null,
     getClientRects: () => (attributes.rendered === false ? [] : [{}]),
+    checkVisibility: (/** @type {CheckVisibilityOptions} */ options) => {
+      assert.equal(options.contentVisibilityAuto, true);
+      return (
+        attributes.autoSkippedAncestor !== true && attributes.rendered !== false
+      );
+    },
     style: attributes.style ?? {},
   };
 }
@@ -305,6 +311,28 @@ for (const [name, options] of Object.entries({
     );
     assert.equal(f.closed(), 1);
   });
+
+test("refuses unprojected raw-CDP document URLs instead of adopting another endpoint contract", async (t) => {
+  const f = fixture(t, {
+    targets: [
+      {
+        targetId: "synthetic-target",
+        type: "page",
+        url: PAGE,
+        browserContextId: "default",
+      },
+    ],
+    beforeFrame: {
+      id: "synthetic-target",
+      url: PAGE,
+      loaderId: "synthetic-loader",
+      securityOrigin: "https://sessionize.com",
+    },
+  });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
+  assert.equal(f.evaluated(), 0);
+  assert.equal(f.closed(), 1);
+});
 
 test("omits hidden/form values and unsafe URLs without laundering query or fragment", async (t) => {
   const unsafe = [
@@ -702,4 +730,126 @@ test("retains an empty structural BODY for multiple painted children of a hidden
     { tag: "SPAN", parent: 0, classes: "", text: "second painted child" },
   ]);
   assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
+});
+
+test("holds auto-skipped contents before exporting wrapper text or descendants", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "PRIVATE_AUTO_TEXT",
+        { style: { contentVisibility: "auto" } },
+        [element("SPAN", "PRIVATE_AUTO_CHILD", { autoSkippedAncestor: true })],
+      ),
+    ]),
+  });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
+});
+
+test("captures unskipped auto contents using an existing descendant through a boxless wrapper", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "visible auto text",
+        { style: { contentVisibility: "auto" } },
+        [
+          element(
+            "DIV",
+            "visible boxless text",
+            { rendered: false, style: { display: "contents" } },
+            [element("SPAN", "painted descendant")],
+          ),
+        ],
+      ),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(
+    output.capture.nodes.map((/** @type {any} */ n) => [n.text, n.parent]),
+    [
+      ["", null],
+      ["visible auto text", 0],
+      ["visible boxless text", 1],
+      ["painted descendant", 2],
+    ],
+  );
+});
+
+test("unskipped auto witness preserves a painted visibility override", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "PRIVATE_HIDDEN_AUTO_TEXT",
+        { style: { contentVisibility: "auto", visibility: "hidden" } },
+        [
+          element("SPAN", "painted override", {
+            style: { visibility: "visible" },
+          }),
+        ],
+      ),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(output.capture.nodes, [
+    { tag: "BODY", parent: null, classes: "", text: "" },
+    { tag: "SPAN", parent: 0, classes: "", text: "painted override" },
+  ]);
+});
+
+for (const missing of ["method", "option", "descendant"]) {
+  test(`holds uncertain auto visibility without ${missing} proof`, async (t) => {
+    const child = element("SPAN", "PRIVATE_UNCERTAIN_CHILD");
+    if (missing === "method") Reflect.deleteProperty(child, "checkVisibility");
+    if (missing === "option") child.checkVisibility = () => true;
+    fixture(t, {
+      tree: element("BODY", "", {}, [
+        element(
+          "DIV",
+          "PRIVATE_UNCERTAIN_TEXT",
+          { style: { contentVisibility: "auto" } },
+          missing === "descendant" ? [] : [child],
+        ),
+      ]),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+test("does not use excluded form contents as an auto-visibility witness", async (t) => {
+  const form = element("FORM", "PRIVATE_FORM", {}, [
+    element("INPUT", "PRIVATE_VALUE"),
+  ]);
+  form.checkVisibility = () => assert.fail("private form is not a witness");
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "PRIVATE_UNCERTAIN_TEXT",
+        { style: { contentVisibility: "auto" } },
+        [form],
+      ),
+    ]),
+  });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
+});
+
+test("bounds the existing-element witness search before reading auto contents", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "PRIVATE_CAPACITY_TEXT",
+        { style: { contentVisibility: "auto" } },
+        [
+          ...Array.from({ length: 12_001 }, () =>
+            element("FORM", "PRIVATE_FORM"),
+          ),
+          element("SPAN", "late painted witness"),
+        ],
+      ),
+    ]),
+  });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
 });

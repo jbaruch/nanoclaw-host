@@ -44,6 +44,24 @@ main private browser is eligible. Missing capability requires restoring that
 installed image/service and genuine main attachment, never caller-set roles,
 `.env` injection, raw endpoints, alternate browsers or credential exports.
 
+This fixed endpoint is the NanoClaw private relay, not unredacted Chromium CDP.
+For ordinary existing targets, its Page/Target document URL metadata is projected
+to the origin, including the root-frame URL. Runtime location readback remains
+the actual document route. The maintained Core owners are `projectPageTarget` in
+`container/visible-browser/read-guard-metadata.mts` and its caller in
+`container/visible-browser/cdp-read-broker.mts`. Capture requires this projected
+protocol shape and independently verifies the exact route in Runtime. Raw-CDP
+metadata is unsupported and holds; it never selects another endpoint or relaxes
+the metadata boundary. The programmatic protocol fixtures cover both shapes.
+
+Auto-skipped rendering is checked through the native `checkVisibility` option
+on an existing descendant before reading an auto wrapper's contents. A wrapper's
+own box does not prove that its contents are painted. Missing descendant/API/option
+support or an inconclusive read holds the complete capture instead of returning
+an empty subtree. No DOM witness is created and no scroll, activation or forced-
+layout fallback is permitted. The bounded witness and tree logic belong to
+`readRenderedTree` in the script.
+
 The owner requires one unique existing Sessionize-origin page and confirms its exact
 My Events route inside the isolated runtime read. Multiple origin candidates hold;
 the owner never traverses candidates to find an account. The page may be in the

@@ -3,6 +3,8 @@ import { pathToFileURL } from "node:url";
 
 // Fixed private-browser protocol; no caller endpoint, role or path selectors.
 const ENDPOINT = "http://visible-browser:9222";
+// The fixed native relay projects ordinary Page/Target document URLs to origins.
+// Exact route identity is read separately inside the isolated Runtime context.
 const ORIGIN = "https://sessionize.com";
 const DEADLINE = 10_000;
 const MAX_CAPTURE_BYTES = 1_500_000;
@@ -29,6 +31,8 @@ function readRenderedTree() {
     throw new Error("capture_hold");
   /** @type {{tag:string,parent:number|null,classes:string,text:string,href?:string,link_omitted?:true}[]} */
   const nodes = [];
+  const MAX_NODES = 12_000;
+  let autoWitnessVisits = 0;
   const forbidden = new Set([
     "SCRIPT",
     "STYLE",
@@ -42,6 +46,29 @@ function readRenderedTree() {
     "OBJECT",
     "EMBED",
   ]);
+  /** @param {Element} element @returns {boolean} */
+  function hasUnskippedDescendant(element) {
+    for (const child of element.children) {
+      if (++autoWitnessVisits > MAX_NODES) throw new Error("capture_hold");
+      if (
+        forbidden.has(child.tagName.toUpperCase()) ||
+        child.hasAttribute("hidden")
+      )
+        continue;
+      if (typeof child.checkVisibility !== "function")
+        throw new Error("capture_hold");
+      let requested = false;
+      const visible = child.checkVisibility({
+        get contentVisibilityAuto() {
+          requested = true;
+          return true;
+        },
+      });
+      if (!requested) throw new Error("capture_hold");
+      if (visible === true || hasUnskippedDescendant(child)) return true;
+    }
+    return false;
+  }
   /** @param {Element} element @param {number|null} parent */
   function visit(element, parent) {
     const style = getComputedStyle(element);
@@ -54,6 +81,8 @@ function readRenderedTree() {
       style.opacity === "0"
     )
       return;
+    if (style.contentVisibility === "auto" && !hasUnskippedDescendant(element))
+      throw new Error("capture_hold");
     if (["hidden", "collapse"].includes(style.visibility)) {
       const projectedParent =
         element === document.body
@@ -69,7 +98,7 @@ function readRenderedTree() {
     }
     if (!element.getClientRects().length && style.display !== "contents")
       return;
-    if (nodes.length >= 12_000) throw new Error("capture_hold");
+    if (nodes.length >= MAX_NODES) throw new Error("capture_hold");
     const text = Array.from(element.childNodes)
       .filter((n) => n.nodeType === Node.TEXT_NODE)
       .map((n) => n.textContent)
