@@ -76,3 +76,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 - Every `jbaruch/*` dependency floats at `latest` (Runtime-Managed Manifest Carve-Out, `jbaruch/coding-policy: dependency-management`).
 - `jbaruch/coding-policy` also installs the carve-out's deterministic check, the `check-tessl-latest.sh` `SessionStart` hook. Removing the dependency leaves this manifest unchecked.
 - `finsi/codex-review` is third-party and pins. Renewal mechanism: `tessl update --yes` runs each session via that hook and rewrites the pin once the registry passes it. Review the resulting manifest diff and land it as its own commit.
+
+Read-only vehicle morning-summary evidence is specified by
+`skills/host-contracts/references/tessie-morning-brief.md`; source authority is not
+native deployment, complete firmware-alert coverage or vehicle-effect approval.

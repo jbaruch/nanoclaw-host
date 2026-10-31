@@ -1,5 +1,9 @@
 # Changelog
 
+### Declare cached vehicle morning-summary authority (tesla #4)
+
+Declare the fixed main-only read aggregate and evidence limits without new enrollment, stores or effects. Bound stored historical observations separately from supported current warnings; generic active firmware coverage remains unavailable and native acceptance remains separate.
+
 ## 0.4.0 — 2026-10-31
 
 ### Declare protected version-three task inventories

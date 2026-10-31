@@ -198,3 +198,10 @@ that reference; all other releases retain the producer-first order above. It add
 authority. Existing manual Tessie requests and command-journal schema 1 retain
 all their current checks. Source publication supplies no enrollment, installed
 readiness, cadence or vehicle acceptance.
+
+## Vehicle morning summary
+
+Before producing or consuming the fixed read-only summary, read the complete
+`skills/host-contracts/references/tessie-morning-brief.md`. It owns the bounded
+owner-only cached history extension, per-condition evidence/privacy and optional
+Admin gather projection. It introduces no wake/control/notice or persistent writer.
