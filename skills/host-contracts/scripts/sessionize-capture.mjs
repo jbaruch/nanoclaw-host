@@ -49,7 +49,7 @@ function readRenderedTree() {
     if (
       forbidden.has(kind) ||
       element.hasAttribute("hidden") ||
-      !element.getClientRects().length ||
+      (!element.getClientRects().length && style.display !== "contents") ||
       ["hidden", "collapse"].includes(style.visibility) ||
       style.display === "none" ||
       style.opacity === "0"
@@ -62,8 +62,7 @@ function readRenderedTree() {
       .join(" ")
       .replace(/\s+/g, " ")
       .trim();
-    const classes =
-      typeof element.className === "string" ? element.className : "";
+    const classes = element.getAttribute("class") ?? "";
     if (text.length > 16_000 || classes.length > 1_000)
       throw new Error("capture_hold");
     /** @type {{tag:string,parent:number|null,classes:string,text:string,href?:string,link_omitted?:true}} */
@@ -513,11 +512,10 @@ if (
   process.argv[1] &&
   pathToFileURL(process.argv[1]).href === import.meta.url
 ) {
-  // outer-boundary-process-contract: CLI callers require empty stdout on failure;
-  // emit fixed recovery guidance instead of leaking native protocol/page payloads.
   try {
     if (process.argv.length !== 2) throw new CaptureHold();
     console.log(JSON.stringify(await capture()));
+    // outer-boundary-process-contract: CLI callers require empty stdout/nonzero with fixed recovery stderr; emit that diagnostic here; propagation could expose native/page payloads and violate this failure contract.
   } catch {
     console.error(new CaptureHold().message);
     process.exitCode = 1;

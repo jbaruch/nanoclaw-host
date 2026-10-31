@@ -545,3 +545,55 @@ test("foreign-namespace privacy classification excludes lowercase sensitive subt
   assert.equal(anchor.link_omitted, true);
   assert.equal("href" in anchor, false);
 });
+
+test("retains boxless display-contents text and visible descendants with their DOM parents", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "visible direct text",
+        { rendered: false, style: { display: "contents" } },
+        [
+          element("SPAN", "visible descendant", { class: "session-status_0" }),
+          element("FORM", "PRIVATE_FORM", { style: { display: "contents" } }, [
+            element("SPAN", "PRIVATE_FORM_CHILD"),
+          ]),
+        ],
+      ),
+      element("DIV", "PRIVATE_NONE", { style: { display: "none" } }, [
+        element("SPAN", "PRIVATE_NONE_CHILD"),
+      ]),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(output.capture.nodes, [
+    { tag: "BODY", parent: null, classes: "", text: "" },
+    { tag: "DIV", parent: 0, classes: "", text: "visible direct text" },
+    {
+      tag: "SPAN",
+      parent: 1,
+      classes: "session-status_0",
+      text: "visible descendant",
+    },
+  ]);
+  assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
+});
+
+test("retains SVG class attributes when native className is an SVGAnimatedString", async (t) => {
+  const svg = {
+    ...element("svg", "", { class: "visible-icon" }, [
+      element("path", "", { class: "icon-path" }),
+    ]),
+    className: { baseVal: "visible-icon", animVal: "visible-icon" },
+  };
+  fixture(t, { tree: element("BODY", "", {}, [svg]) });
+  const output = await capture();
+  assert.deepEqual(
+    output.capture.nodes.map((/** @type {any} */ n) => [n.tag, n.classes]),
+    [
+      ["BODY", ""],
+      ["svg", "visible-icon"],
+      ["path", "icon-path"],
+    ],
+  );
+});
