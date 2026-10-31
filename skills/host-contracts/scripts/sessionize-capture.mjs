@@ -55,7 +55,16 @@ function readRenderedTree() {
     )
       return;
     if (["hidden", "collapse"].includes(style.visibility)) {
-      for (const child of element.children) visit(child, parent);
+      const projectedParent =
+        element === document.body
+          ? nodes.push({
+              tag: element.tagName,
+              parent: null,
+              classes: "",
+              text: "",
+            }) - 1
+          : parent;
+      for (const child of element.children) visit(child, projectedParent);
       return;
     }
     if (!element.getClientRects().length && style.display !== "contents")

@@ -86,7 +86,9 @@ Each preorder node carries its direct visible `text`, `tag`, `classes` and paren
 index (root null; otherwise an earlier index). An eligible contained reference
 may add `href`; an excluded anchor adds `link_omitted:true`. Query, fragment,
 edit/control and unrelated links never become accepted references by stripping
-parts. Forms and hidden contents are excluded. Captures are private source input,
+parts. Forms and hidden contents are excluded. A visibility-hidden BODY is retained
+only as a non-value structural root (empty text/classes, no link) for its painted
+descendants. Other visibility-hidden nodes contribute no values. Captures are private source input,
 not public fixtures or another persistent store; retain no private payload in
 logs, source or chat. The owner has no file writer or caller output-path input.
 

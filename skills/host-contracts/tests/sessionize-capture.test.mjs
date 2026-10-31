@@ -675,3 +675,31 @@ test("retains painted visibility overrides under hidden ancestors without their 
   assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
   assert.equal(JSON.stringify(output).includes("hidden-link"), false);
 });
+
+test("retains an empty structural BODY for multiple painted children of a hidden body", async (t) => {
+  fixture(t, {
+    tree: element(
+      "BODY",
+      "PRIVATE_BODY_TEXT",
+      { class: "PRIVATE_BODY_CLASS", style: { visibility: "hidden" } },
+      [
+        element("SPAN", "first painted child", {
+          style: { visibility: "visible" },
+        }),
+        element("SPAN", "PRIVATE_INHERITED_TEXT", {
+          style: { visibility: "hidden" },
+        }),
+        element("SPAN", "second painted child", {
+          style: { visibility: "visible" },
+        }),
+      ],
+    ),
+  });
+  const output = await capture();
+  assert.deepEqual(output.capture.nodes, [
+    { tag: "BODY", parent: null, classes: "", text: "" },
+    { tag: "SPAN", parent: 0, classes: "", text: "first painted child" },
+    { tag: "SPAN", parent: 0, classes: "", text: "second painted child" },
+  ]);
+  assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
+});
