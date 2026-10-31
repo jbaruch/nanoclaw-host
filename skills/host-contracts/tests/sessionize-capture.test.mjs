@@ -760,6 +760,63 @@ for (const kind of ["empty", "hidden", "private-form"]) {
   });
 }
 
+for (const kind of ["empty", "excluded", "nested", "empty-box"]) {
+  test(`holds structural-only ${kind} descendants under a hidden BODY`, async (t) => {
+    const children =
+      kind === "empty"
+        ? []
+        : kind === "excluded"
+          ? [
+              element("FORM", "PRIVATE_FORM", {}, [
+                element("SPAN", "PRIVATE_CHILD"),
+              ]),
+            ]
+          : kind === "nested"
+            ? [
+                element("DIV", "", {
+                  rendered: false,
+                  style: { display: "contents" },
+                }),
+              ]
+            : [element("SPAN")];
+    fixture(t, {
+      tree: element(
+        "BODY",
+        "PRIVATE_BODY",
+        { style: { visibility: "hidden" } },
+        [
+          element(
+            "DIV",
+            "",
+            {
+              rendered: false,
+              style: { display: "contents", visibility: "visible" },
+            },
+            children,
+          ),
+        ],
+      ),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+test("a hidden BODY can retain direct visible text in a boxless descendant", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "PRIVATE_BODY", { style: { visibility: "hidden" } }, [
+      element("DIV", "painted boxless text", {
+        rendered: false,
+        style: { display: "contents", visibility: "visible" },
+      }),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(output.capture.nodes, [
+    { tag: "BODY", parent: null, classes: "", text: "" },
+    { tag: "DIV", parent: 0, classes: "", text: "painted boxless text" },
+  ]);
+});
+
 test("holds auto-skipped contents before exporting wrapper text or descendants", async (t) => {
   fixture(t, {
     tree: element("BODY", "", {}, [

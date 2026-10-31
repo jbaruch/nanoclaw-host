@@ -105,8 +105,9 @@ index (root null; otherwise an earlier index). An eligible contained reference
 may add `href`; an excluded anchor adds `link_omitted:true`. Query, fragment,
 edit/control and unrelated links never become accepted references by stripping
 parts. Forms and hidden contents are excluded. A visibility-hidden BODY is retained
-only as a non-value structural root (empty text/classes, no link) for its painted
-descendants. Other visibility-hidden nodes contribute no values. Captures are private source input,
+only as a non-value structural root (empty text/classes, no link) when a descendant
+supplies nonempty eligible visible text. Structural or image-only ambiguity holds
+the capture. Other visibility-hidden nodes contribute no values. Captures are private source input,
 not public fixtures or another persistent store; retain no private payload in
 logs, source or chat. The owner has no file writer or caller output-path input.
 

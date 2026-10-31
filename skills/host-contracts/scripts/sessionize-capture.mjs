@@ -33,6 +33,7 @@ function readRenderedTree() {
   const nodes = [];
   const MAX_NODES = 12_000;
   let autoWitnessVisits = 0;
+  let visibleTextNodes = 0;
   const forbidden = new Set([
     "SCRIPT",
     "STYLE",
@@ -93,9 +94,9 @@ function readRenderedTree() {
               text: "",
             }) - 1
           : parent;
-      const beforeChildren = nodes.length;
+      const beforeText = visibleTextNodes;
       for (const child of element.children) visit(child, projectedParent);
-      if (element === document.body && nodes.length === beforeChildren)
+      if (element === document.body && visibleTextNodes === beforeText)
         throw new Error("capture_hold");
       return;
     }
@@ -111,6 +112,7 @@ function readRenderedTree() {
     const classes = element.getAttribute("class") ?? "";
     if (text.length > 16_000 || classes.length > 1_000)
       throw new Error("capture_hold");
+    if (text) visibleTextNodes++;
     /** @type {{tag:string,parent:number|null,classes:string,text:string,href?:string,link_omitted?:true}} */
     const node = { tag: element.tagName, parent, classes, text };
     if (kind === "A") {
