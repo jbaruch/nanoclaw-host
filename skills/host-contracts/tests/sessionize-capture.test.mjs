@@ -597,3 +597,81 @@ test("retains SVG class attributes when native className is an SVGAnimatedString
     ],
   );
 });
+
+test("excludes content-visibility hidden contents even when the wrapper has a box", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element(
+        "DIV",
+        "PRIVATE_CONTENT",
+        { style: { contentVisibility: "hidden" } },
+        [
+          element("SPAN", "PRIVATE_CHILD", {
+            style: { visibility: "visible" },
+          }),
+        ],
+      ),
+      element("SPAN", "visible sibling"),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(output.capture.nodes, [
+    { tag: "BODY", parent: null, classes: "", text: "" },
+    { tag: "SPAN", parent: 0, classes: "", text: "visible sibling" },
+  ]);
+  assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
+});
+
+test("retains painted visibility overrides under hidden ancestors without their hidden text or links", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element("SECTION", "visible section", {}, [
+        element(
+          "A",
+          "PRIVATE_WRAPPER_TEXT",
+          {
+            href: "/app/speaker/session/42?private=hidden-link",
+            style: { visibility: "hidden" },
+          },
+          [
+            element("SPAN", "PRIVATE_INHERITED_TEXT", {
+              style: { visibility: "hidden" },
+            }),
+            element("SPAN", "painted child", {
+              style: { visibility: "visible" },
+            }),
+            element(
+              "DIV",
+              "PRIVATE_NESTED_TEXT",
+              { style: { visibility: "hidden" } },
+              [
+                element("SPAN", "painted grandchild", {
+                  style: { visibility: "visible" },
+                }),
+              ],
+            ),
+            element(
+              "FORM",
+              "PRIVATE_FORM",
+              { style: { visibility: "hidden" } },
+              [
+                element("SPAN", "PRIVATE_FORM_CHILD", {
+                  style: { visibility: "visible" },
+                }),
+              ],
+            ),
+          ],
+        ),
+      ]),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(output.capture.nodes, [
+    { tag: "BODY", parent: null, classes: "", text: "" },
+    { tag: "SECTION", parent: 0, classes: "", text: "visible section" },
+    { tag: "SPAN", parent: 1, classes: "", text: "painted child" },
+    { tag: "SPAN", parent: 1, classes: "", text: "painted grandchild" },
+  ]);
+  assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
+  assert.equal(JSON.stringify(output).includes("hidden-link"), false);
+});

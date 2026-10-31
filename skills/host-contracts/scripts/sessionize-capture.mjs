@@ -49,11 +49,16 @@ function readRenderedTree() {
     if (
       forbidden.has(kind) ||
       element.hasAttribute("hidden") ||
-      (!element.getClientRects().length && style.display !== "contents") ||
-      ["hidden", "collapse"].includes(style.visibility) ||
       style.display === "none" ||
+      style.contentVisibility === "hidden" ||
       style.opacity === "0"
     )
+      return;
+    if (["hidden", "collapse"].includes(style.visibility)) {
+      for (const child of element.children) visit(child, parent);
+      return;
+    }
+    if (!element.getClientRects().length && style.display !== "contents")
       return;
     if (nodes.length >= 12_000) throw new Error("capture_hold");
     const text = Array.from(element.childNodes)
