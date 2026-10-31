@@ -732,6 +732,34 @@ test("retains an empty structural BODY for multiple painted children of a hidden
   assert.equal(JSON.stringify(output).includes("PRIVATE"), false);
 });
 
+for (const kind of ["empty", "hidden", "private-form"]) {
+  test(`holds a hidden BODY with only ${kind} contents`, async (t) => {
+    const children =
+      kind === "empty"
+        ? []
+        : kind === "hidden"
+          ? [
+              element("SPAN", "PRIVATE_HIDDEN", {
+                style: { visibility: "hidden" },
+              }),
+            ]
+          : [
+              element("FORM", "PRIVATE_FORM", {}, [
+                element("INPUT", "PRIVATE_VALUE"),
+              ]),
+            ];
+    fixture(t, {
+      tree: element(
+        "BODY",
+        "PRIVATE_BODY_TEXT",
+        { style: { visibility: "hidden" } },
+        children,
+      ),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
 test("holds auto-skipped contents before exporting wrapper text or descendants", async (t) => {
   fixture(t, {
     tree: element("BODY", "", {}, [

@@ -93,7 +93,10 @@ function readRenderedTree() {
               text: "",
             }) - 1
           : parent;
+      const beforeChildren = nodes.length;
       for (const child of element.children) visit(child, projectedParent);
+      if (element === document.body && nodes.length === beforeChildren)
+        throw new Error("capture_hold");
       return;
     }
     if (!element.getClientRects().length && style.display !== "contents")
