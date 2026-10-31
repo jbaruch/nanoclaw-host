@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import childProcess from "node:child_process";
 import vm from "node:vm";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { capture } from "../scripts/sessionize-capture.mjs";
 
 const PAGE = "https://sessionize.com/app/speaker/events";
@@ -155,6 +157,7 @@ function fixture(t, options = {}) {
                 fontSize: "16px",
                 color: "rgb(0, 0, 0)",
                 fill: "rgb(0, 0, 0)",
+                fillOpacity: "1",
                 stroke: "none",
                 textShadow: "none",
                 webkitTextStrokeWidth: "0px",
@@ -545,9 +548,30 @@ test("CLI selector arguments refuse before native validator execution", () => {
   assert.equal(result.stderr.includes("other.invalid"), false);
 });
 
+test("symlinked CLI invocation refuses selectors instead of silently exiting successfully", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "sessionize-cli-"));
+  t.after(() => rm(directory, { recursive: true }));
+  const alias = join(directory, "capture.mjs");
+  await symlink(
+    new URL("../scripts/sessionize-capture.mjs", import.meta.url),
+    alias,
+  );
+  const result = childProcess.spawnSync(
+    process.execPath,
+    [alias, "--endpoint=http://other.invalid"],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /Sessionize capture unavailable/);
+  assert.equal(result.stderr.includes("other.invalid"), false);
+});
+
 test("retains rendered foreign-namespace SVG tag casing without refusing HTML capture", async (t) => {
   fixture(t, {
-    tree: element("BODY", "", {}, [element("svg", "", {}, [element("path")])]),
+    tree: element("BODY", "visible page", {}, [
+      element("svg", "", {}, [element("path")]),
+    ]),
   });
   const output = await capture();
   assert.deepEqual(
@@ -627,7 +651,7 @@ test("retains SVG class attributes when native className is an SVGAnimatedString
     ]),
     className: { baseVal: "visible-icon", animVal: "visible-icon" },
   };
-  fixture(t, { tree: element("BODY", "", {}, [svg]) });
+  fixture(t, { tree: element("BODY", "visible page", {}, [svg]) });
   const output = await capture();
   assert.deepEqual(
     output.capture.nodes.map((/** @type {any} */ n) => [n.tag, n.classes]),
@@ -1022,4 +1046,59 @@ test("uses the actual native text fill override and SVG fill instead of assuming
     output.capture.nodes.map((/** @type {any} */ n) => n.text),
     ["", "", "", "painted override"],
   );
+});
+
+test("omits SVG text with zero fill opacity without discarding visible page text", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "visible page", {}, [
+      element("text", "PRIVATE_ZERO_FILL", { style: { fillOpacity: "0" } }),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(
+    output.capture.nodes.map((/** @type {any} */ n) => n.text),
+    ["visible page", ""],
+  );
+  assert.equal(JSON.stringify(output).includes("PRIVATE_ZERO_FILL"), false);
+});
+
+for (const style of [
+  { fillOpacity: "unknown" },
+  { fillOpacity: "0", stroke: "rgb(0, 0, 0)" },
+]) {
+  test(`holds uncertain SVG fill or alternate stroke ${JSON.stringify(style)}`, async (t) => {
+    fixture(t, {
+      tree: element("BODY", "visible page", {}, [
+        element("text", "PRIVATE_SVG", { style }),
+      ]),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+for (const kind of ["empty", "image-only", "whitespace"]) {
+  test(`holds a visible ${kind} tree without eligible text`, async (t) => {
+    fixture(t, {
+      tree: element(
+        "BODY",
+        kind === "whitespace" ? "   " : "",
+        {},
+        kind === "image-only" ? [element("IMG")] : [],
+      ),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+test("validates the serialized tree's nonempty text witness", async (t) => {
+  fixture(t, {
+    resultOverride: {
+      schema_version: 1,
+      origin: "https://sessionize.com",
+      path: "/app/speaker/events",
+      title: "My events",
+      nodes: [{ tag: "BODY", parent: null, classes: "", text: "" }],
+    },
+  });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
 });

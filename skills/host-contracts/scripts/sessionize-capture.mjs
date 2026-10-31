@@ -1,4 +1,5 @@
 import childProcess from "node:child_process";
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 // Fixed private-browser protocol; no caller endpoint, role or path selectors.
@@ -69,7 +70,11 @@ function readRenderedTree() {
     if (!Number.isFinite(size)) throw new Error("capture_hold");
     if (size === 0) return false;
     const svg = element.namespaceURI === "http://www.w3.org/2000/svg";
-    const ink = alpha(svg ? style.fill : style.webkitTextFillColor);
+    const fillOpacity = svg ? style.fillOpacity : "1";
+    if (!/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(fillOpacity))
+      throw new Error("capture_hold");
+    const ink =
+      alpha(svg ? style.fill : style.webkitTextFillColor) * Number(fillOpacity);
     if (ink > 0) return true;
     // Transparent fill can still paint through a shadow or stroke. An uncertain
     // alternate paint source holds rather than exporting or assuming emptiness.
@@ -180,7 +185,7 @@ function readRenderedTree() {
     for (const child of element.children) visit(child, index);
   }
   visit(document.body, null);
-  if (!nodes.length) throw new Error("capture_hold");
+  if (!nodes.length || !visibleTextNodes) throw new Error("capture_hold");
   if (!Number.isFinite(performance.timeOrigin) || performance.timeOrigin <= 0)
     throw new Error("capture_hold");
   return {
@@ -537,6 +542,8 @@ export async function capture() {
       )
         throw new CaptureHold();
     }
+    if (!dom.nodes.some((node) => node.text.trim().length > 0))
+      throw new CaptureHold();
     const identityResult = await client.call(
       "Runtime.evaluate",
       {
@@ -595,8 +602,9 @@ export async function capture() {
 }
 
 if (
+  import.meta.url.startsWith("file:") &&
   process.argv[1] &&
-  pathToFileURL(process.argv[1]).href === import.meta.url
+  pathToFileURL(realpathSync(process.argv[1])).href === import.meta.url
 ) {
   try {
     if (process.argv.length !== 2) throw new CaptureHold();
