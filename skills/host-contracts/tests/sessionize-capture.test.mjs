@@ -1132,3 +1132,22 @@ test("retains ordinary text with normalized visible word spacing", async (t) => 
   const output = await capture();
   assert.equal(output.capture.nodes[0].text, "visible text");
 });
+
+for (const [tag, style] of /** @type {[string,Record<string,string>][]} */ ([
+  ["DIV", { color: "color(display-p3 1 0 0)" }],
+  ["text", { fill: 'url("#synthetic-gradient")' }],
+  ["DIV", { color: "transparent", textShadow: "1px 1px black" }],
+])) {
+  test(`ignores indentation-only direct text with unsupported paint ${JSON.stringify(style)}`, async (t) => {
+    fixture(t, {
+      tree: element("BODY", "", {}, [
+        element(tag, "\n \t", { style }, [element("SPAN", "painted child")]),
+      ]),
+    });
+    const output = await capture();
+    assert.deepEqual(
+      output.capture.nodes.map((/** @type {any} */ n) => n.text),
+      ["", "", "painted child"],
+    );
+  });
+}

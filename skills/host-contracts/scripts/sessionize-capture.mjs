@@ -154,14 +154,12 @@ function readRenderedTree(eligibleContent) {
     const directText = Array.from(element.childNodes).filter(
       (n) => n.nodeType === Node.TEXT_NODE,
     );
-    const text =
-      directText.length && eligibleText(element, style)
-        ? directText
-            .map((n) => n.textContent)
-            .join(" ")
-            .replace(/\s+/g, " ")
-            .trim()
-        : "";
+    let text = directText
+      .map((n) => n.textContent)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (text && !eligibleText(element, style)) text = "";
     if (text && !eligibleContent(text)) throw new Error("capture_hold");
     const classes = element.getAttribute("class") ?? "";
     if (text.length > 16_000 || classes.length > 1_000)
