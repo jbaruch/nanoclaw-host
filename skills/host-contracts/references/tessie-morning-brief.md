@@ -30,8 +30,12 @@ Data has exactly integer `schema_version:1`, paired `day` and `home_timezone`,
 canonical UTC-millisecond `observed_at`, integer
 `checked_vehicles` (0–100), `coverage` (`complete` or `partial`),
 `uncovered_sources`, and `vehicles`. Every current admitted vehicle contributes
-one `{alias,alerts,unknown_checks}` row. Aliases are bounded unique native text;
-no VIN, coordinate, saved-home label or Calendar body/identity is exported.
+one `{alias,alerts,unknown_checks}` row. Keep ordinary safe native aliases, but
+never export any admitted VIN embedded in a generated, duplicate or named alias.
+For those brief labels only, assign deterministic VIN-ordered `Vehicle N`
+ordinals while reserving all ordinary safe labels case-insensitively first.
+Do not change native fleet aliases/selectors, planning mappings or retained state.
+No VIN, coordinate, saved-home label or Calendar body/identity is exported.
 
 Each alert is exactly `{kind,detail}` for a proved condition. Unknown checks are
 separate finite condition names; they are never fabricated healthy results.
@@ -80,7 +84,11 @@ other broker route retains its existing 1 MiB cap. The documented API offers no
 field filter. At most 1200 complete rows are admitted, accommodating the full
 18-hour/two-minute window and its boundary samples. Histories are processed one
 vehicle at a time and released; no full-fleet history collection is retained.
-Oversize, malformed, missing endpoints or gaps over 15 minutes stay unknown.
+Oversize, unusable admitted records, missing endpoints or gaps over 15 minutes
+stay unknown. An exact native `TessieAuthorityError` with `provider_shape` from
+this history read also makes that dependent check unknown, after rechecking
+current native authority. Other authority, revision, storage and implementation
+failures abort the entire snapshot; they are never reclassified as coverage.
 Realistic full-record source fixtures cover the complete window.
 
 Require a recent current disconnected/below-baseline home observation and real
