@@ -86,9 +86,12 @@ field filter. At most 1200 complete rows are admitted, accommodating the full
 vehicle at a time and released; no full-fleet history collection is retained.
 Oversize, unusable admitted records, missing endpoints or gaps over 15 minutes
 stay unknown. An exact native `TessieAuthorityError` with `provider_shape` from
-this history read also makes that dependent check unknown, after rechecking
-current native authority. Other authority, revision, storage and implementation
-failures abort the entire snapshot; they are never reclassified as coverage.
+a per-vehicle cached state, location, tire or history read makes only its dependent
+checks unknown. Recheck current native identity, policy and home after fulfilled
+AND rejected I/O before retaining independent observations. A malformed fleet
+inventory aborts rather than becoming a partial vehicle set. Other authority,
+revision, storage and implementation failures abort the entire snapshot; they
+are never reclassified as coverage.
 Realistic full-record source fixtures cover the complete window.
 
 Require a recent current disconnected/below-baseline home observation and real
