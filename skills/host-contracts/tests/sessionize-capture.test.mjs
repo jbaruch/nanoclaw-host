@@ -1108,6 +1108,10 @@ for (const text of [
   "visible\u200btext",
   "\ufe0f",
   "visible\u0000text",
+  "\ufeff",
+  "visible\ufefftext",
+  "\ufeffvisible",
+  "visible\ufeff",
 ]) {
   test(`holds unsupported no-ink or control content ${JSON.stringify(text)} before exporting it`, async (t) => {
     fixture(t, { tree: element("BODY", text) });

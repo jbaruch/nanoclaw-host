@@ -8,8 +8,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["node"],
-    "skipLibCheck": true
+    "types": ["node"]
   },
   "include": [
     "skills/host-contracts/scripts/sessionize-capture.mjs",

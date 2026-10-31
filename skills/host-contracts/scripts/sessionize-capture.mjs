@@ -157,8 +157,11 @@ function readRenderedTree(eligibleContent) {
     let text = directText
       .map((n) => n.textContent)
       .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+      .replace(
+        /[\t\n\v\f\r \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+/g,
+        " ",
+      )
+      .replace(/^ +| +$/g, "");
     if (text && !eligibleText(element, style)) text = "";
     if (text && !eligibleContent(text)) throw new Error("capture_hold");
     const classes = element.getAttribute("class") ?? "";
