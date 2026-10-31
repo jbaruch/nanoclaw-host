@@ -1,5 +1,13 @@
 # Changelog
 
+### Declare protected version-three task inventories
+
+Declare envelope3/row3 for retained read-only task rows, while preserving published envelope2/row2 unchanged. Require container-read-only projection data through every alias before native capability selection, with existing outgoing and own-session inputs remaining writable. Distinguish retained inventory from usable selected effect proof. Keep historical cancelled ids, accepted legacy schedule literals and actual stored timezone combinations visible without normalization, deletion, fabricated absence or effect authorization. Preserve strict selected creation, wake, watcher and cancellation bindings while updating readers before the task projection writer changes.
+
+Complete the reader-first rollout with explicit retirement of old projection formats after every live writer produces version 3 and the compatible cohort is verified. Keep historical rows in the current envelope and independent retained reminder entries; retiring an old projection format never deletes their history or supplies absence proof.
+
+Scope the expanded historical admission grammar to new version-3 records. Published legacy0/1 and version-2 grammars stay unchanged during compatibility; unsupported retained rows hold effect readback until the current host projection is available, without rewriting or deleting those rows.
+
 ## 0.3.0 — 2026-10-30
 
 ### Declare native floating reminder adoption (#1126 / admin #629)
