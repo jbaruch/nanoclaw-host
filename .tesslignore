@@ -6,3 +6,10 @@ skills/**/tests/
 
 # Internal Herdr orchestration metadata is repo-only.
 .herdr/
+
+# Repo-only JavaScript verification tooling; runtime uses only Node stdlib.
+/node_modules/
+/package.json
+/package-lock.json
+/tsconfig.json
+/.github/

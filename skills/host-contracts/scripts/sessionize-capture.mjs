@@ -1,0 +1,524 @@
+import childProcess from "node:child_process";
+import { pathToFileURL } from "node:url";
+
+// Fixed private-browser protocol; no caller endpoint, role or path selectors.
+const ENDPOINT = "http://visible-browser:9222";
+const ORIGIN = "https://sessionize.com";
+const DEADLINE = 10_000;
+const MAX_CAPTURE_BYTES = 1_500_000;
+const SCOPE =
+  "Complete rendered node tree of the observed My Events view; forms, hidden content, credential/storage values and unsafe links excluded. Account/filter/history completeness remains unknown until consumer validation.";
+class CaptureHold extends Error {
+  constructor() {
+    super(
+      "Sessionize capture unavailable: preserve the page; verify the existing signed-in My Events view and private browser service before a new explicit read. No source completeness established.",
+    );
+  }
+}
+
+/** This function is serialized into a fresh isolated world. No website JS or
+ * form-value, storage, profile, network or editing API is invoked. */
+function readRenderedTree() {
+  if (
+    location.href !== "https://sessionize.com/app/speaker/events" ||
+    document.readyState !== "complete" ||
+    !document.body ||
+    !document.title ||
+    document.title.length > 300
+  )
+    throw new Error("capture_hold");
+  /** @type {{tag:string,parent:number|null,classes:string,text:string,href?:string,link_omitted?:true}[]} */
+  const nodes = [];
+  const forbidden = new Set([
+    "SCRIPT",
+    "STYLE",
+    "NOSCRIPT",
+    "FORM",
+    "INPUT",
+    "TEXTAREA",
+    "SELECT",
+    "OPTION",
+    "IFRAME",
+    "OBJECT",
+    "EMBED",
+  ]);
+  /** @param {Element} element @param {number|null} parent */
+  function visit(element, parent) {
+    const style = getComputedStyle(element);
+    if (
+      forbidden.has(element.tagName) ||
+      element.hasAttribute("hidden") ||
+      !element.getClientRects().length ||
+      ["hidden", "collapse"].includes(style.visibility) ||
+      style.display === "none" ||
+      style.opacity === "0"
+    )
+      return;
+    if (nodes.length >= 12_000) throw new Error("capture_hold");
+    const text = Array.from(element.childNodes)
+      .filter((n) => n.nodeType === Node.TEXT_NODE)
+      .map((n) => n.textContent)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const classes =
+      typeof element.className === "string" ? element.className : "";
+    if (text.length > 16_000 || classes.length > 1_000)
+      throw new Error("capture_hold");
+    /** @type {{tag:string,parent:number|null,classes:string,text:string,href?:string,link_omitted?:true}} */
+    const node = { tag: element.tagName, parent, classes, text };
+    if (element.tagName === "A") {
+      const raw = element.getAttribute("href");
+      let url;
+      if (raw !== null) {
+        try {
+          url = new URL(raw, location.href);
+        } catch (error) {
+          if (!(error instanceof TypeError)) throw error;
+        }
+      }
+      if (
+        url &&
+        url.origin === "https://sessionize.com" &&
+        !url.search &&
+        !url.hash &&
+        !url.username &&
+        !url.password &&
+        (/^\/app\/speaker\/event\/details\/\d+$/.test(url.pathname) ||
+          /^\/app\/speaker\/session\/[A-Za-z0-9_-]{1,100}$/.test(url.pathname))
+      )
+        node.href = url.href;
+      else node.link_omitted = true;
+    }
+    const index = nodes.push(node) - 1;
+    for (const child of element.children) visit(child, index);
+  }
+  visit(document.body, null);
+  if (!nodes.length) throw new Error("capture_hold");
+  if (!Number.isFinite(performance.timeOrigin) || performance.timeOrigin <= 0)
+    throw new Error("capture_hold");
+  return {
+    capture: {
+      schema_version: 1,
+      origin: location.origin,
+      path: location.pathname,
+      title: document.title,
+      nodes,
+    },
+    timeOrigin: performance.timeOrigin,
+  };
+}
+
+/** Same isolated execution context; no content or private URL is returned. */
+function readDocumentIdentity() {
+  return {
+    exactPage: location.href === "https://sessionize.com/app/speaker/events",
+    ready: document.readyState === "complete",
+    timeOrigin: performance.timeOrigin,
+  };
+}
+
+/** @param {unknown} value @returns {Record<string, any>} */
+function record(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new CaptureHold();
+  return value;
+}
+/** @param {string} text */
+function parse(text) {
+  try {
+    return record(JSON.parse(text));
+  } catch (error) {
+    if (error instanceof SyntaxError) throw new CaptureHold();
+    throw error;
+  }
+}
+
+async function discovery() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DEADLINE);
+  try {
+    const response = await fetch(`${ENDPOINT}/json/version`, {
+      method: "GET",
+      redirect: "error",
+      credentials: "omit",
+      signal: controller.signal,
+    });
+    if (response.status !== 200 || !response.body) throw new CaptureHold();
+    const reader = response.body.getReader();
+    const chunks = [];
+    let bytes = 0;
+    try {
+      for (;;) {
+        const next = await reader.read();
+        if (next.done) break;
+        bytes += next.value.byteLength;
+        if (bytes > 65_536) throw new CaptureHold();
+        chunks.push(next.value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    const value = parse(Buffer.concat(chunks).toString("utf8"));
+    if (
+      typeof value.webSocketDebuggerUrl !== "string" ||
+      !/^ws:\/\/visible-browser:9222\/devtools\/browser\/[A-Za-z0-9-]+$/.test(
+        value.webSocketDebuggerUrl,
+      )
+    )
+      throw new CaptureHold();
+    return value.webSocketDebuggerUrl;
+  } finally {
+    clearTimeout(timer);
+    controller.abort();
+  }
+}
+
+/** @param {string} endpoint */
+async function connect(endpoint) {
+  const socket = new WebSocket(endpoint);
+  let sequence = 0;
+  /** @type {Map<number,{resolve:(v:Record<string,any>)=>void,reject:(e:Error)=>void,timer:ReturnType<typeof setTimeout>,sessionId?:string}>} */
+  const pending = new Map();
+  /** @param {Error} error */
+  function fail(error) {
+    for (const entry of pending.values()) {
+      clearTimeout(entry.timer);
+      entry.reject(error);
+    }
+    pending.clear();
+  }
+  socket.addEventListener("message", (event) => {
+    if (
+      typeof event.data !== "string" ||
+      Buffer.byteLength(event.data) > MAX_CAPTURE_BYTES
+    ) {
+      fail(new CaptureHold());
+      return;
+    }
+    let reply;
+    try {
+      reply = parse(event.data);
+    } catch (error) {
+      if (!(error instanceof CaptureHold)) throw error;
+      fail(error);
+      return;
+    }
+    const entry = pending.get(reply.id);
+    if (!entry) return;
+    pending.delete(reply.id);
+    clearTimeout(entry.timer);
+    if (
+      reply.sessionId !== entry.sessionId ||
+      reply.error ||
+      !reply.result ||
+      typeof reply.result !== "object" ||
+      Array.isArray(reply.result)
+    )
+      entry.reject(new CaptureHold());
+    else entry.resolve(reply.result);
+  });
+  socket.addEventListener("close", () => fail(new CaptureHold()));
+  socket.addEventListener("error", () => fail(new CaptureHold()));
+  let connected = false;
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new CaptureHold()), DEADLINE);
+      socket.addEventListener(
+        "open",
+        () => {
+          clearTimeout(timer);
+          resolve(undefined);
+        },
+        { once: true },
+      );
+      socket.addEventListener(
+        "error",
+        () => {
+          clearTimeout(timer);
+          reject(new CaptureHold());
+        },
+        { once: true },
+      );
+      socket.addEventListener(
+        "close",
+        () => {
+          clearTimeout(timer);
+          reject(new CaptureHold());
+        },
+        { once: true },
+      );
+    });
+    connected = true;
+  } finally {
+    if (!connected) socket.close();
+  }
+  return {
+    /** @param {string} method @param {Record<string,unknown>} [params] @param {string} [sessionId] */
+    call(method, params = {}, sessionId) {
+      return new Promise((resolve, reject) => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          reject(new CaptureHold());
+          return;
+        }
+        const id = ++sequence;
+        const timer = setTimeout(() => {
+          pending.delete(id);
+          reject(new CaptureHold());
+        }, DEADLINE);
+        pending.set(id, { resolve, reject, timer, sessionId });
+        socket.send(
+          JSON.stringify({
+            id,
+            method,
+            params,
+            ...(sessionId ? { sessionId } : {}),
+          }),
+        );
+      });
+    },
+    async close() {
+      if (socket.readyState === WebSocket.CLOSED) return;
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new CaptureHold()), DEADLINE);
+        socket.addEventListener(
+          "close",
+          () => {
+            clearTimeout(timer);
+            resolve(undefined);
+          },
+          { once: true },
+        );
+        socket.close();
+      });
+    },
+  };
+}
+
+/** @returns {Promise<{schema_version:number,source:string,observed_at:string,capture:Record<string,any>}>}
+ * No inputs. Uses only the installed native validator and its fixed private
+ * browser. A successful return is observation, not account/history authority. */
+export async function capture() {
+  if (arguments.length) throw new CaptureHold();
+  let validation;
+  try {
+    validation = childProcess.execFileSync(
+      "node",
+      ["/usr/local/lib/nanoclaw/validate-visible-browser.mts"],
+      {
+        encoding: "utf8",
+        timeout: 20_000,
+        maxBuffer: 4096,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      ("status" in error || "code" in error || "signal" in error)
+    )
+      throw new CaptureHold();
+    throw error;
+  }
+  if (validation !== '{"available":true}\n') throw new CaptureHold();
+  const client = await connect(await discovery());
+  let session;
+  try {
+    const inventory = await client.call("Target.getTargets");
+    if (!Array.isArray(inventory.targetInfos)) throw new CaptureHold();
+    const matches = inventory.targetInfos.filter(
+      /** @param {Record<string, any>} t */ (t) =>
+        t?.type === "page" && t.url === `${ORIGIN}/`,
+    );
+    if (
+      matches.length !== 1 ||
+      typeof matches[0].targetId !== "string" ||
+      !matches[0].targetId
+    )
+      throw new CaptureHold();
+    const before = record(
+      (
+        await client.call("Target.getTargetInfo", {
+          targetId: matches[0].targetId,
+        })
+      ).targetInfo,
+    );
+    if (
+      before.type !== "page" ||
+      before.url !== `${ORIGIN}/` ||
+      before.targetId !== matches[0].targetId ||
+      typeof before.browserContextId !== "string" ||
+      !before.browserContextId
+    )
+      throw new CaptureHold();
+    const attached = await client.call("Target.attachToTarget", {
+      targetId: before.targetId,
+      flatten: true,
+    });
+    if (typeof attached.sessionId !== "string" || !attached.sessionId)
+      throw new CaptureHold();
+    session = attached.sessionId;
+    const frame = record(
+      record((await client.call("Page.getFrameTree", {}, session)).frameTree)
+        .frame,
+    );
+    if (
+      typeof frame.id !== "string" ||
+      !frame.id ||
+      frame.parentId ||
+      frame.url !== `${ORIGIN}/` ||
+      typeof frame.loaderId !== "string" ||
+      !frame.loaderId ||
+      frame.securityOrigin !== ORIGIN ||
+      frame.unreachableUrl
+    )
+      throw new CaptureHold();
+    const world = await client.call(
+      "Page.createIsolatedWorld",
+      {
+        frameId: frame.id,
+        worldName: "nanoclaw-sessionize-read",
+        grantUniveralAccess: false,
+      },
+      session,
+    );
+    if (
+      !Number.isSafeInteger(world.executionContextId) ||
+      world.executionContextId <= 0
+    )
+      throw new CaptureHold();
+    const result = await client.call(
+      "Runtime.evaluate",
+      {
+        expression: `(${readRenderedTree.toString()})()`,
+        contextId: world.executionContextId,
+        returnByValue: true,
+        awaitPromise: false,
+        throwOnSideEffect: true,
+        timeout: DEADLINE,
+      },
+      session,
+    );
+    if (result.exceptionDetails) throw new CaptureHold();
+    const observed = record(record(result.result).value);
+    const dom = record(observed.capture);
+    if (!Number.isFinite(observed.timeOrigin) || observed.timeOrigin <= 0)
+      throw new CaptureHold();
+    if (
+      Buffer.byteLength(JSON.stringify(dom)) > MAX_CAPTURE_BYTES ||
+      dom.schema_version !== 1 ||
+      dom.origin !== ORIGIN ||
+      dom.path !== "/app/speaker/events" ||
+      typeof dom.title !== "string" ||
+      !dom.title ||
+      dom.title.length > 300 ||
+      !Array.isArray(dom.nodes) ||
+      !dom.nodes.length
+    )
+      throw new CaptureHold();
+    if (
+      Object.keys(dom).sort().join(",") !==
+        "nodes,origin,path,schema_version,title" ||
+      dom.nodes.length > 12_000
+    )
+      throw new CaptureHold();
+    for (const [index, node] of dom.nodes.entries()) {
+      const item = record(node);
+      if (
+        !Object.keys(item).every((key) =>
+          ["tag", "parent", "classes", "text", "href", "link_omitted"].includes(
+            key,
+          ),
+        ) ||
+        typeof item.tag !== "string" ||
+        !/^[A-Z][A-Z0-9-]{0,19}$/.test(item.tag) ||
+        typeof item.text !== "string" ||
+        item.text.length > 16_000 ||
+        typeof item.classes !== "string" ||
+        item.classes.length > 1_000 ||
+        (index === 0
+          ? item.parent !== null
+          : !Number.isInteger(item.parent) ||
+            item.parent < 0 ||
+            item.parent >= index) ||
+        (item.link_omitted !== undefined && item.link_omitted !== true) ||
+        (item.href !== undefined &&
+          (typeof item.href !== "string" ||
+            !/^https:\/\/sessionize\.com\/app\/speaker\/(?:event\/details\/\d+|session\/[A-Za-z0-9_-]{1,100})$/.test(
+              item.href,
+            ))) ||
+        (item.href !== undefined && item.link_omitted !== undefined)
+      )
+        throw new CaptureHold();
+    }
+    const identityResult = await client.call(
+      "Runtime.evaluate",
+      {
+        expression: `(${readDocumentIdentity.toString()})()`,
+        contextId: world.executionContextId,
+        returnByValue: true,
+        awaitPromise: false,
+        throwOnSideEffect: true,
+        timeout: DEADLINE,
+      },
+      session,
+    );
+    if (identityResult.exceptionDetails) throw new CaptureHold();
+    const identity = record(record(identityResult.result).value);
+    if (
+      identity.exactPage !== true ||
+      identity.ready !== true ||
+      identity.timeOrigin !== observed.timeOrigin
+    )
+      throw new CaptureHold();
+    const afterFrame = record(
+      record((await client.call("Page.getFrameTree", {}, session)).frameTree)
+        .frame,
+    );
+    const after = record(
+      (await client.call("Target.getTargetInfo", { targetId: before.targetId }))
+        .targetInfo,
+    );
+    if (
+      after.targetId !== before.targetId ||
+      after.type !== before.type ||
+      after.url !== before.url ||
+      after.browserContextId !== before.browserContextId ||
+      afterFrame.id !== frame.id ||
+      afterFrame.loaderId !== frame.loaderId ||
+      afterFrame.url !== frame.url ||
+      afterFrame.securityOrigin !== ORIGIN ||
+      afterFrame.parentId ||
+      afterFrame.unreachableUrl
+    )
+      throw new CaptureHold();
+    return {
+      schema_version: 1,
+      source: "sessionize",
+      observed_at: new Date().toISOString(),
+      capture: { ...dom, scope: SCOPE },
+    };
+  } finally {
+    try {
+      if (session)
+        await client.call("Target.detachFromTarget", { sessionId: session });
+    } finally {
+      await client.close();
+    }
+  }
+}
+
+if (
+  process.argv[1] &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+) {
+  // outer-boundary-process-contract: CLI callers require empty stdout on failure;
+  // emit fixed recovery guidance instead of leaking native protocol/page payloads.
+  try {
+    if (process.argv.length !== 2) throw new CaptureHold();
+    console.log(JSON.stringify(await capture()));
+  } catch {
+    console.error(new CaptureHold().message);
+    process.exitCode = 1;
+  }
+}

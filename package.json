@@ -1,0 +1,18 @@
+{
+  "name": "nanoclaw-host-checks",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "format:check": "prettier --check skills/host-contracts/scripts/sessionize-capture.mjs skills/host-contracts/tests/sessionize-capture.test.mjs tsconfig.json package.json .github/workflows/sessionize-capture.yml",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test skills/host-contracts/tests/sessionize-capture.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.11",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  }
+}

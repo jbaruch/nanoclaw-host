@@ -4,7 +4,7 @@ description: >
   Resolve required NanoClaw host contracts, load operation constraints and identify
   exception checks before host work. Use for "deploy NanoClaw", "publish a plugin",
   "update image packages", "extract an overlay", "restore browser login", "enroll the private browser viewer", "relink
-  WhatsApp", "recover a task", "check memory budgets", "read meeting chat evidence" or "enable learning evidence"
+  WhatsApp", "recover a task", "check memory budgets", "read meeting chat evidence", "capture Sessionize My Events" or "enable learning evidence"
   when a nanoclaw-host rule requires its full procedure. This skill reads the applicable policy;
   it does not deploy, operate services or grant approval.
 user-invocable: false
@@ -39,6 +39,13 @@ For main-only meeting chat evidence, read the complete reference required by
 
 ```text
 skills/host-contracts/references/meeting-chat-context.md
+```
+
+For read-only Sessionize rendered capture and its consumer lookup, read the full
+reference required by `rules/sessionize-rendered-capture.md`:
+
+```text
+skills/host-contracts/references/sessionize-rendered-capture.md
 ```
 
 This read grants no runtime authority, approval or exemption. Resume the
