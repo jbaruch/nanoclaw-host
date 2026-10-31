@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-applyTo: "src/host-plugins/tessie/**, src/host-plugins/tessie-late/**, src/host-plugins/tessie-charge/**, src/volume-mounts.ts, skills/tessie-*/**, tests/test_native.py, docs/tessie-host-authority.md — when implementing or using native Tessie vehicle authorization, routing, receipts, location projection or private mount/mask handling, or producing, consuming or enabling running-late proposals, callbacks, polling or mail, or calendar-charging enrollment, polling, status or estimates"
+applyTo: "src/host-plugins/tessie/**, src/host-plugins/tessie-late/**, src/host-plugins/tessie-charge/**, src/host-plugins/tessie-brief/**, src/volume-mounts.ts, skills/tessie-*/**, tests/test_native.py, docs/tessie-host-authority.md — when implementing or using native Tessie vehicle authorization, routing, receipts, location projection or private mount/mask handling, or producing, consuming or enabling running-late proposals, callbacks, polling or mail, or calendar-charging enrollment, polling, status or estimates, or read-only vehicle morning summaries"
 ---
 
 # Tessie Host Authority
@@ -20,9 +20,13 @@ applyTo: "src/host-plugins/tessie/**, src/host-plugins/tessie-late/**, src/host-
 - Its full text binds.
 - Missing or unreadable content stops that action.
 
+- Before producing or interpreting the read-only vehicle morning summary, also read `skills/host-contracts/references/tessie-morning-brief.md` in full.
+- Its full text binds; missing or unreadable content stops the action.
+
 ## Native Ownership
 
 - Host `jbaruch/nanoclaw` owns schema-1 `tessie_request`/journals and schema-2/3 protected VIN/chat policy.
+- The host owns fixed main-only read-only `tessie_brief_request`; it grants no wake, control, notice, policy or journal writer.
 - The host owns main-only `tessie_charge_request` and private charging gates inside the existing Tessie store.
 - Only host-operator provisioning from an actual owner decision enrolls automatic charging; consumer payloads and files grant no enrollment or control.
 - The host owns `tessie_late_request`, private running-late callbacks and retained proposal/budget/attempt state.
