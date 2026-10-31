@@ -347,15 +347,25 @@ for (const [name, options] of Object.entries({
   missing: { targets: [] },
   ambiguous: {
     targets: [
-      { type: "page", url: PAGE },
-      { type: "page", url: PAGE },
+      {
+        targetId: "synthetic-one",
+        type: "page",
+        url: "https://sessionize.com/",
+        browserContextId: "default",
+      },
+      {
+        targetId: "synthetic-two",
+        type: "page",
+        url: "https://sessionize.com/",
+        browserContextId: "default",
+      },
     ],
   },
   changedTarget: {
     afterTarget: {
       targetId: "other",
       type: "page",
-      url: PAGE,
+      url: "https://sessionize.com/",
       browserContextId: "default",
     },
   },
@@ -363,14 +373,14 @@ for (const [name, options] of Object.entries({
     afterTarget: {
       targetId: "synthetic-target",
       type: "page",
-      url: PAGE,
+      url: "https://sessionize.com/",
       browserContextId: "other",
     },
   },
   changedDocument: {
     afterFrame: {
       id: "synthetic-target",
-      url: PAGE,
+      url: "https://sessionize.com/",
       loaderId: "changed",
       securityOrigin: "https://sessionize.com",
     },
@@ -386,7 +396,7 @@ for (const [name, options] of Object.entries({
   errorFrame: {
     beforeFrame: {
       id: "synthetic-target",
-      url: PAGE,
+      url: "https://sessionize.com/",
       loaderId: "synthetic-loader",
       securityOrigin: "https://sessionize.com",
       unreachableUrl: PAGE,
@@ -395,7 +405,7 @@ for (const [name, options] of Object.entries({
   foreignOrigin: {
     beforeFrame: {
       id: "synthetic-target",
-      url: PAGE,
+      url: "https://sessionize.com/",
       loaderId: "synthetic-loader",
       securityOrigin: "https://other.invalid",
     },
@@ -492,4 +502,46 @@ test("CLI selector arguments refuse before native validator execution", () => {
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /Sessionize capture unavailable/);
   assert.equal(result.stderr.includes("other.invalid"), false);
+});
+
+test("retains rendered foreign-namespace SVG tag casing without refusing HTML capture", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [element("svg", "", {}, [element("path")])]),
+  });
+  const output = await capture();
+  assert.deepEqual(
+    output.capture.nodes.map((/** @type {any} */ n) => n.tag),
+    ["BODY", "svg", "path"],
+  );
+});
+
+test("foreign-namespace privacy classification excludes lowercase sensitive subtrees and unsafe anchors", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element("svg", "", {}, [
+        ...["script", "style", "input", "form"].map((tag) =>
+          element(tag, "PRIVATE_FOREIGN_WITNESS", {}, [
+            element("tspan", "PRIVATE_FOREIGN_CHILD"),
+          ]),
+        ),
+        element("tspan", "visible-svg"),
+        element("a", "unsafe", {
+          href: "/app/speaker/session/42?private=bearer",
+        }),
+      ]),
+    ]),
+  });
+  const output = await capture();
+  assert.equal(JSON.stringify(output).includes("PRIVATE_FOREIGN"), false);
+  assert.equal(JSON.stringify(output).includes("private=bearer"), false);
+  assert.ok(
+    output.capture.nodes.some(
+      (/** @type {any} */ n) => n.tag === "tspan" && n.text === "visible-svg",
+    ),
+  );
+  const anchor = output.capture.nodes.find(
+    (/** @type {any} */ n) => n.tag === "a",
+  );
+  assert.equal(anchor.link_omitted, true);
+  assert.equal("href" in anchor, false);
 });

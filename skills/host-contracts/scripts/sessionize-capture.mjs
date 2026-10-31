@@ -45,8 +45,9 @@ function readRenderedTree() {
   /** @param {Element} element @param {number|null} parent */
   function visit(element, parent) {
     const style = getComputedStyle(element);
+    const kind = element.tagName.toUpperCase();
     if (
-      forbidden.has(element.tagName) ||
+      forbidden.has(kind) ||
       element.hasAttribute("hidden") ||
       !element.getClientRects().length ||
       ["hidden", "collapse"].includes(style.visibility) ||
@@ -67,7 +68,7 @@ function readRenderedTree() {
       throw new Error("capture_hold");
     /** @type {{tag:string,parent:number|null,classes:string,text:string,href?:string,link_omitted?:true}} */
     const node = { tag: element.tagName, parent, classes, text };
-    if (element.tagName === "A") {
+    if (kind === "A") {
       const raw = element.getAttribute("href");
       let url;
       if (raw !== null) {
@@ -431,7 +432,7 @@ export async function capture() {
           ),
         ) ||
         typeof item.tag !== "string" ||
-        !/^[A-Z][A-Z0-9-]{0,19}$/.test(item.tag) ||
+        !/^[A-Za-z][A-Za-z0-9-]{0,19}$/.test(item.tag) ||
         typeof item.text !== "string" ||
         item.text.length > 16_000 ||
         typeof item.classes !== "string" ||
