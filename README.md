@@ -14,6 +14,7 @@ tessl install jbaruch/nanoclaw-host
 
 | Rule | Summary |
 |------|---------|
+| [sessionize-rendered-capture](rules/sessionize-rendered-capture.md) | Fixed no-argument, read-only My Events capture through the validated existing private browser; installed-provider lookup and bounded output contract. |
 | [meeting-chat-context](rules/meeting-chat-context.md) | Actual-main registered-chat evidence, current native member identity, complete bounded context and installed-provider rollout. |
 | [construction-journal-authority](rules/construction-journal-authority.md) | Exact owner-bound payment cards, protected append gates, dedicated native Sheets routing and monotone backup/recovery. |
 | [agent-container-filter](rules/agent-container-filter.md) | Line-oriented contract for the root repository's agent-container filter and deploy consumers, including infrastructure exclusions and regression coverage. |
@@ -80,3 +81,11 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 Read-only vehicle morning-summary evidence is specified by
 `skills/host-contracts/references/tessie-morning-brief.md`; source authority is not
 native deployment, complete firmware-alert coverage or vehicle-effect approval.
+
+## Sessionize capture development
+
+The capture runtime uses only Node standard libraries. Its scoped verification
+uses `npm ci`, `npm run format:check`, `npm run typecheck` and `npm test`. The
+formatter touches only the newly introduced capture/tooling files; existing prose
+is outside this adoption. Weekly npm Dependabot renews the pinned development
+tools. Node runtime pins in the scoped workflow carry a monthly renewal note.

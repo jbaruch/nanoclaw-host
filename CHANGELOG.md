@@ -1,5 +1,15 @@
 # Changelog
 
+### Added
+
+- Host-owned no-argument Sessionize My Events rendered capture, installed-provider
+  authority and consumer lookup contract. Capture reuses one existing validated
+  private browser target, reads in an isolated world and confirms target/document
+  identity before returning; no navigation, account or profile operations.
+- Scoped JavaScript type, format and programmatic DOM/protocol tests with weekly
+  development dependency renewal. Source fixtures prove contracts; native signed-in
+  capture and Conferences acceptance remain separate deployment evidence.
+
 ## 0.5.0 — 2026-10-31
 
 ### Declare cached vehicle morning-summary authority (tesla #4)
