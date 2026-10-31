@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.4.0 — 2026-10-31
+
 ### Declare protected version-three task inventories
 
 Declare envelope3/row3 for retained read-only task rows, while preserving published envelope2/row2 unchanged. Require container-read-only projection data through every alias before native capability selection, with existing outgoing and own-session inputs remaining writable. Distinguish retained inventory from usable selected effect proof. Keep historical cancelled ids, accepted legacy schedule literals and actual stored timezone combinations visible without normalization, deletion, fabricated absence or effect authorization. Preserve strict selected creation, wake, watcher and cancellation bindings while updating readers before the task projection writer changes.
