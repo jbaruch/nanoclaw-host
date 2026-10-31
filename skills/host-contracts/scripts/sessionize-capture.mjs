@@ -130,6 +130,7 @@ function readRenderedTree(eligibleContent) {
       style.opacity === "0"
     )
       return;
+    if (style.filter !== "none") throw new Error("capture_hold");
     if (style.contentVisibility === "auto" && !hasUnskippedDescendant(element))
       throw new Error("capture_hold");
     if (["hidden", "collapse"].includes(style.visibility)) {
@@ -195,6 +196,15 @@ function readRenderedTree(eligibleContent) {
     }
     const index = nodes.push(node) - 1;
     for (const child of element.children) visit(child, index);
+  }
+  for (
+    let ancestor = document.body.parentElement;
+    ancestor;
+    ancestor = ancestor.parentElement
+  ) {
+    const style = getComputedStyle(ancestor);
+    if (style.filter !== "none" || style.opacity === "0")
+      throw new Error("capture_hold");
   }
   visit(document.body, null);
   if (!nodes.length || !visibleTextNodes) throw new Error("capture_hold");

@@ -112,7 +112,11 @@ size and nontransparent native text fill (SVG fill and fill opacity for SVG text
 or transparent text contributes no text, while child overrides remain eligible.
 Unsupported paint values or ambiguous shadow/stroke alternatives hold; this is a
 conservative supported-style boundary, not universal pixel-rendering proof. The
-exact predicates belong to `eligibleText` and `alpha` inside `readRenderedTree`.
+owner also refuses any non-`none` computed filter on a retained element before
+reading its text or descendants; a filtered ancestor cannot supply a witness.
+The BODY's outer ancestors are checked for filters and zero opacity too.
+The exact predicates belong to `eligibleText`, `alpha` and `visit` inside
+`readRenderedTree`.
 Every tree requires nonempty eligible text, rechecked on the serialized result;
 visible structural or image-only trees also hold.
 After ordinary whitespace normalization, control, format or Unicode default-

@@ -154,6 +154,7 @@ function fixture(t, options = {}) {
                 visibility: "visible",
                 display: "block",
                 opacity: "1",
+                filter: "none",
                 fontSize: "16px",
                 color: "rgb(0, 0, 0)",
                 fill: "rgb(0, 0, 0)",
@@ -1155,3 +1156,35 @@ for (const [tag, style] of /** @type {[string,Record<string,string>][]} */ ([
     );
   });
 }
+
+for (const filter of ["opacity(0)", "blur(2px)"]) {
+  for (const ancestor of [false, true]) {
+    test(`holds unsupported filter ${filter} on ${ancestor ? "ancestor" : "direct text"} before exporting descendants`, async (t) => {
+      const subject = ancestor
+        ? element("DIV", "", { style: { filter } }, [
+            element("SPAN", "PRIVATE_FILTERED"),
+          ])
+        : element("SPAN", "PRIVATE_FILTERED", { style: { filter } });
+      fixture(t, { tree: element("BODY", "visible page", {}, [subject]) });
+      await assert.rejects(capture(), /Sessionize capture unavailable/);
+    });
+  }
+}
+
+test("holds a filtered root ancestor outside the captured BODY", async (t) => {
+  const body = {
+    ...element("BODY", "PRIVATE_ROOT_FILTERED"),
+    parentElement: element("HTML", "", { style: { filter: "opacity(0)" } }),
+  };
+  fixture(t, { tree: body });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
+});
+
+test("holds a transparent root ancestor outside the captured BODY", async (t) => {
+  const body = {
+    ...element("BODY", "PRIVATE_ROOT_TRANSPARENT"),
+    parentElement: element("HTML", "", { style: { opacity: "0" } }),
+  };
+  fixture(t, { tree: body });
+  await assert.rejects(capture(), /Sessionize capture unavailable/);
+});
