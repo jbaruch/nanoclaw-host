@@ -48,9 +48,9 @@ Contract: group-task-snapshot-v3
 
 ## Retained Historical Inventory
 
-Separate a complete read-only inventory from a selected task's usable effect proof. This distinction applies to legacy arrays with record versions 0/1 and current version-3 envelopes. Keep every supported record's actual id and raw stored fields; never drop a historical row, rewrite its schedule or infer a missing timezone to make an inventory usable.
+Separate a complete read-only inventory from a selected task's usable effect proof. The expanded historical grammar below applies only to current version-3 envelopes and records. Legacy arrays with record versions 0/1 and published version-2 envelopes retain their original grammar during compatibility; these newly accepted historical forms never become usable old-version effect or absence proof. Preserve unsupported old rows unchanged and hold that readback until the host supplies the current projection. Never drop a historical row, rewrite its schedule or infer a missing timezone to make an inventory usable.
 
-The following complete historical records can remain in an inventory without supplying new effect proof:
+The following complete version-3 historical records can remain in an inventory without supplying new effect proof:
 
 - Stored `status: cancelled` is a retained historical tombstone. Keep its id present; it is not authoritative native removal, active creation or permission to re-arm an effect. Current native cancellation still removes the task.
 - A once record with null timezone may retain a calendar-valid `YYYY-MM-DD`, or `YYYY-MM-DD` followed by `T` or one space and `HH:mm[:ss[.fraction]]`. Preserve the literal. Arbitrary human date strings and invalid calendar/time components are not accepted by this compatibility path.
