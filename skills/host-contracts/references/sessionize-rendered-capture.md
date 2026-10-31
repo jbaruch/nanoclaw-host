@@ -107,7 +107,13 @@ edit/control and unrelated links never become accepted references by stripping
 parts. Forms and hidden contents are excluded. A visibility-hidden BODY is retained
 only as a non-value structural root (empty text/classes, no link) when a descendant
 supplies nonempty eligible visible text. Structural or image-only ambiguity holds
-the capture. Other visibility-hidden nodes contribute no values. Captures are private source input,
+the capture. Direct text is eligible only with a supported positive computed font
+size and nontransparent native text fill (SVG fill for SVG text). Known zero-size
+or transparent text contributes no text, while child overrides remain eligible.
+Unsupported paint values or ambiguous shadow/stroke alternatives hold; this is a
+conservative supported-style boundary, not universal pixel-rendering proof. The
+exact predicates belong to `eligibleText` and `alpha` inside `readRenderedTree`.
+Other visibility-hidden nodes contribute no values. Captures are private source input,
 not public fixtures or another persistent store; retain no private payload in
 logs, source or chat. The owner has no file writer or caller output-path input.
 

@@ -47,6 +47,39 @@ function readRenderedTree() {
     "OBJECT",
     "EMBED",
   ]);
+  /** @param {string} value */
+  function alpha(value) {
+    if (value === "transparent" || value === "none") return 0;
+    const match =
+      /^rgba?\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)(?:,\s*(\d+(?:\.\d+)?))?\)$/.exec(
+        value,
+      );
+    if (!match || match.slice(1, 4).some((v) => Number(v) > 255))
+      throw new Error("capture_hold");
+    const opacity = match[4] === undefined ? 1 : Number(match[4]);
+    if (!Number.isFinite(opacity) || opacity > 1)
+      throw new Error("capture_hold");
+    return opacity;
+  }
+  /** @param {Element} element @param {CSSStyleDeclaration} style */
+  function eligibleText(element, style) {
+    if (!/^\d+(?:\.\d+)?px$/.test(style.fontSize))
+      throw new Error("capture_hold");
+    const size = Number(style.fontSize.slice(0, -2));
+    if (!Number.isFinite(size)) throw new Error("capture_hold");
+    if (size === 0) return false;
+    const svg = element.namespaceURI === "http://www.w3.org/2000/svg";
+    const ink = alpha(svg ? style.fill : style.webkitTextFillColor);
+    if (ink > 0) return true;
+    // Transparent fill can still paint through a shadow or stroke. An uncertain
+    // alternate paint source holds rather than exporting or assuming emptiness.
+    if (
+      style.textShadow !== "none" ||
+      (svg ? style.stroke !== "none" : style.webkitTextStrokeWidth !== "0px")
+    )
+      throw new Error("capture_hold");
+    return false;
+  }
   /** @param {Element} element @returns {boolean} */
   function hasUnskippedDescendant(element) {
     for (const child of element.children) {
@@ -103,12 +136,17 @@ function readRenderedTree() {
     if (!element.getClientRects().length && style.display !== "contents")
       return;
     if (nodes.length >= MAX_NODES) throw new Error("capture_hold");
-    const text = Array.from(element.childNodes)
-      .filter((n) => n.nodeType === Node.TEXT_NODE)
-      .map((n) => n.textContent)
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+    const directText = Array.from(element.childNodes).filter(
+      (n) => n.nodeType === Node.TEXT_NODE,
+    );
+    const text =
+      directText.length && eligibleText(element, style)
+        ? directText
+            .map((n) => n.textContent)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            .trim()
+        : "";
     const classes = element.getAttribute("class") ?? "";
     if (text.length > 16_000 || classes.length > 1_000)
       throw new Error("capture_hold");

@@ -10,8 +10,12 @@ const PAGE = "https://sessionize.com/app/speaker/events";
 function element(tag, text = "", attributes = {}, children = []) {
   return {
     tagName: tag,
+    namespaceURI:
+      tag === tag.toUpperCase()
+        ? "http://www.w3.org/1999/xhtml"
+        : "http://www.w3.org/2000/svg",
     className: attributes.class ?? "",
-    childNodes: [{ nodeType: 3, textContent: text }],
+    childNodes: text ? [{ nodeType: 3, textContent: text }] : [],
     children,
     hasAttribute: (/** @type {string} */ name) => name in attributes,
     getAttribute: (/** @type {string} */ name) => attributes[name] ?? null,
@@ -143,12 +147,21 @@ function fixture(t, options = {}) {
             },
             Node: { TEXT_NODE: 3 },
             URL,
-            getComputedStyle: (/** @type {any} */ e) => ({
-              visibility: "visible",
-              display: "block",
-              opacity: "1",
-              ...e.style,
-            }),
+            getComputedStyle: (/** @type {any} */ e) => {
+              const style = {
+                visibility: "visible",
+                display: "block",
+                opacity: "1",
+                fontSize: "16px",
+                color: "rgb(0, 0, 0)",
+                fill: "rgb(0, 0, 0)",
+                stroke: "none",
+                textShadow: "none",
+                webkitTextStrokeWidth: "0px",
+                ...e.style,
+              };
+              return { webkitTextFillColor: style.color, ...style };
+            },
           });
           result = {
             result: {
@@ -937,4 +950,76 @@ test("bounds the existing-element witness search before reading auto contents", 
     ]),
   });
   await assert.rejects(capture(), /Sessionize capture unavailable/);
+});
+
+for (const style of [
+  { color: "transparent" },
+  { color: "rgba(0, 0, 0, 0)" },
+  { fontSize: "0px" },
+]) {
+  test(`omits unpainted own text with ${JSON.stringify(style)} while preserving a child override`, async (t) => {
+    fixture(t, {
+      tree: element("BODY", "", {}, [
+        element("DIV", "PRIVATE_GLYPHS", { style }, [
+          element("SPAN", "painted child"),
+        ]),
+      ]),
+    });
+    const output = await capture();
+    assert.deepEqual(
+      output.capture.nodes.map((/** @type {any} */ n) => n.text),
+      ["", "", "painted child"],
+    );
+    assert.equal(JSON.stringify(output).includes("PRIVATE_GLYPHS"), false);
+  });
+
+  test(`unpainted ${JSON.stringify(style)} text cannot retain a hidden BODY`, async (t) => {
+    fixture(t, {
+      tree: element(
+        "BODY",
+        "PRIVATE_BODY",
+        { style: { visibility: "hidden" } },
+        [
+          element("SPAN", "PRIVATE_GLYPHS", {
+            style: { visibility: "visible", ...style },
+          }),
+        ],
+      ),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+for (const style of [
+  { color: "color(display-p3 1 0 0)" },
+  { fontSize: "unknown" },
+  { color: "transparent", textShadow: "1px 1px black" },
+]) {
+  test(`holds uncertain text paint with ${JSON.stringify(style)}`, async (t) => {
+    fixture(t, {
+      tree: element("BODY", "", {}, [
+        element("SPAN", "PRIVATE_UNCERTAIN", { style }),
+      ]),
+    });
+    await assert.rejects(capture(), /Sessionize capture unavailable/);
+  });
+}
+
+test("uses the actual native text fill override and SVG fill instead of assuming color paints glyphs", async (t) => {
+  fixture(t, {
+    tree: element("BODY", "", {}, [
+      element("SPAN", "PRIVATE_FILL", {
+        style: { webkitTextFillColor: "transparent" },
+      }),
+      element("tspan", "PRIVATE_SVG_FILL", { style: { fill: "none" } }),
+      element("SPAN", "painted override", {
+        style: { color: "transparent", webkitTextFillColor: "rgb(0, 0, 0)" },
+      }),
+    ]),
+  });
+  const output = await capture();
+  assert.deepEqual(
+    output.capture.nodes.map((/** @type {any} */ n) => n.text),
+    ["", "", "", "painted override"],
+  );
 });
