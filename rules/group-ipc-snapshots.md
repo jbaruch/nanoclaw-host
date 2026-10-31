@@ -15,6 +15,8 @@ applyTo: "src/group-snapshots*, src/volume-mounts.ts, src/host-notice-ipc.ts, sr
 ## Boundary
 
 - Host registration and IPC source establish scope. Only the fixed host producer and actual host dispatch supply projection, capability, occurrence and dispatch metadata; caller input, inherited environment and copied source supply no provenance.
-- Protect projection data against consuming-container writes through every alias before capability selection or effect readback. Keep only existing canonical outgoing and own-session input surfaces writable; preserve visibility and repair isolation.
+- Protect projection data against consuming-container writes through every alias before capability selection or effect readback.
+- Keep only existing canonical outgoing and own-session input surfaces writable.
+- Preserve visibility and repair isolation.
 - Projections, capability declarations and dispatch metadata grant no identity, role, owner approval, write, migration, send, delivery or effect authority. Native capability metadata does not attest an arbitrary agent executable or replace the verified reader-first rollout.
 - Require supported versions and fresh exact operation bindings. Never invent missing context, create a probe task for capability proof, convert retained reminder gates or replay an uncertain effect or cancellation.

@@ -5,7 +5,7 @@ Contract: group-task-snapshot-v3
 ## Owner and Versions
 
 - Host `jbaruch/nanoclaw` owns `/workspace/ipc/current_tasks.json` and `/workspace/ipc/available_groups.json`; `src/group-snapshots.ts` writes both projections.
-- Task projection protocol `group-task-snapshot-v3` accepts legacy top-level arrays with record versions 0/1, unchanged published version-2 envelopes and the current version-3 envelope below.
+- During the compatibility rollout, task projection protocol `group-task-snapshot-v3` accepts legacy top-level arrays with record versions 0/1, unchanged published version-2 envelopes and the current version-3 envelope below. After the verified writer cutover, retire legacy arrays and version-2 envelopes from projection readers' accepted set as required below.
 - A version-3 envelope has exactly `schema_version`, `group_folder`, `generated_at`, `capabilities` and `tasks`.
 - `schema_version` is integer 3; `group_folder` is the actual registered receiving folder, using the folder syntax below; `generated_at` is the host's canonical UTC ISO-8601 timestamp with milliseconds.
 - `capabilities` has exactly boolean `floating_once` and `floating_cron`. The compatible host produces these declarations from its implementation, never caller input or a mutable readiness flag.
@@ -83,7 +83,7 @@ The declaration supplies no owner identity, approval, task creation, execution o
 
 ## Reader and Effect Proof
 
-- Accept legacy task arrays with record versions 0/1, unchanged version-2 envelopes and complete version-3 envelopes read-only; refuse unsupported versions and malformed, partial, linked or concurrently changed gate input.
+- During the compatibility rollout, accept legacy task arrays with record versions 0/1, unchanged version-2 envelopes and complete version-3 envelopes read-only; refuse unsupported versions and malformed, partial, linked or concurrently changed gate input. Legacy-array and version-2 effect reads end with the verified retirement step below.
 - Match an envelope's receiving `group_folder` to actual host-derived context; preserve Main-all, trusted-own and untrusted-none filtering.
 - Require actual version-2/3 `schedule_timezone` for zone proof; legacy records never establish it.
 - Require both `generated_at` and stable file freshness at least as new as the scheduling operation before accepting version-2/3 effect readback.
@@ -131,6 +131,7 @@ This metadata does not prove a live owner request, historical timezone transitio
 - Ship Core's compatible agent reader and existing dispatch-metadata forwarding while the host still writes legacy arrays. Canonically deploy this compatibility cohort and retire old SDK sessions before activating envelope 3.
 - Then ship and deploy the host envelope-3 writer and actual zone projections. Verify actual installed reader/writer bytes, scope, fresh empty/nonempty version-3 envelopes and matching MCP support before native selection.
 - Publishing a reader or merely building an image does not retire an old live reader. Preserve old-version support through the rollout window.
+- After verifying that every live writer produces envelope 3 and every receiving reader supports it, ship and deploy projection readers that remove legacy arrays and version-2 envelopes from their accepted set. Verify the installed readers and retire the compatibility SDK sessions before closing the rollout window. Unsupported old projections then hold effect reads and require a current host refresh; they never establish absence or authorize fallback effects. This retirement does not remove retained historical rows inside envelope 3 or change the separate legacy reminder-entry store.
 - New native reminder entry versions activate only with the supported native declaration. Compatibility fallback and pinned writers keep their existing versions; preserve every retained entry and uncertainty gate.
 - Do not use a probe task, forged role/environment, live timezone change or manufactured owner decision to satisfy rollout proof. Real task effects and owner interaction require their own authorized acceptance.
 - Keep a new producer inactive when its required proof is unavailable; never invent missing context or versions.
