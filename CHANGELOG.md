@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.0 — 2026-10-31
+
 ### Added
 
 - Host-owned no-argument Sessionize My Events rendered capture, installed-provider
