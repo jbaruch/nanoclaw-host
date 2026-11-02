@@ -329,6 +329,14 @@ for (const [name, options] of Object.entries({
     assert.equal(f.closed(), 1);
   });
 
+test("the rendered read runs where Chromium allows checkVisibility", async (t) => {
+  const f = fixture(t);
+  await capture();
+  const read = f.calls.find((r) => r.method === "Runtime.evaluate");
+  assert.equal(read?.params.throwOnSideEffect, undefined);
+  assert.match(read?.params.expression, /checkVisibility/);
+});
+
 test("refuses a page on another origin", async (t) => {
   const f = fixture(t, {
     targets: [
