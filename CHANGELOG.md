@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.4 — 2026-11-02
+
 ### Changed
 
 - Browser profile storage is a plain private folder. The owner retired the encrypted archives, seal/restore lifecycle and profile key: nothing on the single-owner NAS needed protecting from anyone who could read the mode-0700 folder, and that machinery caused the 2026-11-01 browser outage it was meant to guard against. A lost profile now means signing in again.
