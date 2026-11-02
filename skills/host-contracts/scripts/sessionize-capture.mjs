@@ -4,13 +4,21 @@ import { pathToFileURL } from "node:url";
 
 // Fixed private-browser protocol; no caller endpoint, role or path selectors.
 const ENDPOINT = "http://visible-browser:9222";
-// The fixed native relay projects ordinary Page/Target document URLs to origins.
-// Exact route identity is read separately inside the isolated Runtime context.
+// Target and frame metadata select by origin. Exact route identity is read
+// separately inside the isolated Runtime context.
 const ORIGIN = "https://sessionize.com";
 const DEADLINE = 10_000;
 const MAX_CAPTURE_BYTES = 1_500_000;
 const SCOPE =
   "Complete rendered node tree of the observed My Events view; forms, hidden content, credential/storage values and unsafe links excluded. Account/filter/history completeness remains unknown until consumer validation.";
+/** @param {unknown} url */
+function atOrigin(url) {
+  return (
+    typeof url === "string" &&
+    URL.canParse(url) &&
+    new URL(url).origin === ORIGIN
+  );
+}
 class CaptureHold extends Error {
   constructor() {
     super(
@@ -441,7 +449,7 @@ export async function capture() {
     if (!Array.isArray(inventory.targetInfos)) throw new CaptureHold();
     const matches = inventory.targetInfos.filter(
       /** @param {Record<string, any>} t */ (t) =>
-        t?.type === "page" && t.url === `${ORIGIN}/`,
+        t?.type === "page" && atOrigin(t.url),
     );
     if (
       matches.length !== 1 ||
@@ -458,7 +466,7 @@ export async function capture() {
     );
     if (
       before.type !== "page" ||
-      before.url !== `${ORIGIN}/` ||
+      !atOrigin(before.url) ||
       before.targetId !== matches[0].targetId ||
       typeof before.browserContextId !== "string" ||
       !before.browserContextId
@@ -479,7 +487,7 @@ export async function capture() {
       typeof frame.id !== "string" ||
       !frame.id ||
       frame.parentId ||
-      frame.url !== `${ORIGIN}/` ||
+      !atOrigin(frame.url) ||
       typeof frame.loaderId !== "string" ||
       !frame.loaderId ||
       frame.securityOrigin !== ORIGIN ||

@@ -13,4 +13,4 @@ applyTo: "container/visible-browser/**, container/skills/visible-browser/**, src
 
 ## Boundary
 
-- Only literal main may control the private browser bridge. Require encrypted authenticated storage; keep keys and decrypted profiles out of agent mounts, logs and backups. Never expose CDP, export credentials or clear authentication on routine deployment; MFA stays with the operator.
+- Only literal main may control the private browser bridge. Keep the plain private profile folder out of agent mounts, logs and backups. Never expose CDP, export credentials or clear authentication on routine deployment; MFA stays with the operator.
