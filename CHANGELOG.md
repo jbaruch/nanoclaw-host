@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.5 — 2026-11-02
+
 ### Fixed
 
 - Sessionize capture no longer asks Chromium to refuse side effects on its rendered read. Chromium classes `checkVisibility` as a side effect, so every capture of a real page held with `EvalError: Possible side-effect in debug-evaluate`. The protocol fixtures could not see it because they fake the browser. Live capture of My Events now returns the complete tree. The expression stays this script's fixed read-only source, and the identity readback keeps the check.
