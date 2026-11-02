@@ -515,7 +515,8 @@ export async function capture() {
         contextId: world.executionContextId,
         returnByValue: true,
         awaitPromise: false,
-        throwOnSideEffect: true,
+        // Chromium flags checkVisibility as a side effect, so this read cannot
+        // use throwOnSideEffect. The expression is this fixed read-only source.
         timeout: DEADLINE,
       },
       session,
