@@ -44,15 +44,9 @@ main private browser is eligible. Missing capability requires restoring that
 installed image/service and genuine main attachment, never caller-set roles,
 `.env` injection, raw endpoints, alternate browsers or credential exports.
 
-This fixed endpoint is the NanoClaw private relay, not unredacted Chromium CDP.
-For ordinary existing targets, its Page/Target document URL metadata is projected
-to the origin, including the root-frame URL. Runtime location readback remains
-the actual document route. The maintained Core owners are `projectPageTarget` in
-`container/visible-browser/read-guard-metadata.mts` and its caller in
-`container/visible-browser/cdp-read-broker.mts`. Capture requires this projected
-protocol shape and independently verifies the exact route in Runtime. Raw-CDP
-metadata is unsupported and holds; it never selects another endpoint or relaxes
-the metadata boundary. The programmatic protocol fixtures cover both shapes.
+Capture selects the one page target at the Sessionize origin by its Page/Target
+document URL, then independently verifies the exact route in Runtime. The
+programmatic protocol fixtures cover the plain Chromium metadata shape.
 
 Auto-skipped rendering is checked through the native `checkVisibility` option
 on an existing descendant before reading an auto wrapper's contents. A wrapper's

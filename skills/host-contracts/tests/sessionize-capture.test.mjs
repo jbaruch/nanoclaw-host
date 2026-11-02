@@ -50,13 +50,13 @@ function fixture(t, options = {}) {
     {
       targetId: "synthetic-target",
       type: "page",
-      url: "https://sessionize.com/",
+      url: PAGE,
       browserContextId: "default",
     },
   ];
   const frame = options.beforeFrame ?? {
     id: options.distinctFrame ? "synthetic-frame" : "synthetic-target",
-    url: "https://sessionize.com/",
+    url: PAGE,
     loaderId: "synthetic-loader",
     securityOrigin: "https://sessionize.com",
   };
@@ -313,11 +313,11 @@ test("exact no-argument validator, fixed bridge, isolated read and own-session c
 });
 
 for (const [name, options] of Object.entries({
-  projected: { projected: true },
-  distinctRootFrame: { projected: true, distinctFrame: true },
-  backgroundDocument: { projected: true, background: true },
+  plain: {},
+  distinctRootFrame: { distinctFrame: true },
+  backgroundDocument: { background: true },
 }))
-  test(`captures ${name} through projected metadata without activation`, async (t) => {
+  test(`captures ${name} without activation`, async (t) => {
     const f = fixture(t, options);
     const output = await capture();
     assert.equal(output.capture.nodes.length, 5);
@@ -329,22 +329,16 @@ for (const [name, options] of Object.entries({
     assert.equal(f.closed(), 1);
   });
 
-test("refuses unprojected raw-CDP document URLs instead of adopting another endpoint contract", async (t) => {
+test("refuses a page on another origin", async (t) => {
   const f = fixture(t, {
     targets: [
       {
         targetId: "synthetic-target",
         type: "page",
-        url: PAGE,
+        url: "https://sessionize.example/app/speaker/events",
         browserContextId: "default",
       },
     ],
-    beforeFrame: {
-      id: "synthetic-target",
-      url: PAGE,
-      loaderId: "synthetic-loader",
-      securityOrigin: "https://sessionize.com",
-    },
   });
   await assert.rejects(capture(), /Sessionize capture unavailable/);
   assert.equal(f.evaluated(), 0);
