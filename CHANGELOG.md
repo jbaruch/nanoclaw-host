@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.8 — 2026-11-03
+
 ### Place reminders read the location snapshot (jbaruch/nanoclaw-admin#739)
 
 `flight-assist-location` now names admin's place reminders as a second reader of `current-location.json`, so a schema change has to account for both readers. The schema and the writer stay the same.
