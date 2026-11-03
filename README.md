@@ -18,7 +18,7 @@ tessl install jbaruch/nanoclaw-host
 | [meeting-chat-context](rules/meeting-chat-context.md) | Actual-main registered-chat evidence, current native member identity, complete bounded context and installed-provider rollout. |
 | [construction-journal-authority](rules/construction-journal-authority.md) | Exact owner-bound payment cards, protected append gates, dedicated native Sheets routing and monotone backup/recovery. |
 | [agent-container-filter](rules/agent-container-filter.md) | Line-oriented contract for the root repository's agent-container filter and deploy consumers, including infrastructure exclusions and regression coverage. |
-| [deployment-marker-windows](rules/deployment-marker-windows.md) | Private deployment window ownership, legacy/schema-1 dual readers and reader-first rollout. |
+| [deployment-marker-windows](rules/deployment-marker-windows.md) | Deploy window logs: line format, append-only writer, read-only heartbeat readers. |
 | [agent-file-permissions](rules/agent-file-permissions.md) | Agent identity, private modes, descriptor-safe privileged repairs, atomic replacement, recovery archives and verification as the agent. |
 | [whatsapp-channel-control](rules/whatsapp-channel-control.md) | Fixed-account owner-only channel relinking, private codes, saved-registration confirmation and the bounded live-phone testing authority. |
 | [browser-profile-storage](rules/browser-profile-storage.md) | Persistent website sessions and browser password autofill for approved autonomous access, with a plain private profile folder, private main-tier control, approved CAPTCHA solving and operator MFA. |
