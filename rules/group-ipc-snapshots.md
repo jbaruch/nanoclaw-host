@@ -1,14 +1,14 @@
 ---
 alwaysApply: false
 taskSnapshotContract: group-task-snapshot-v3
-applyTo: "src/group-snapshots*, src/volume-mounts.ts, src/host-notice-ipc.ts, src/ipc-deps*, src/task-scheduler*, src/message-pipeline*, src/container-runner*, container/agent-runner/src/index.ts, container/agent-runner/src/format-task-row*, container/agent-runner/src/native-context-env*, container/agent-runner/src/run-script*, container/agent-runner/src/ipc-mcp-stdio.ts, container/agent-runner/src/task-cancel-result*, src/task-cancel-result*, src/ipc-handlers/tasks*, docs/task-cancellation-results.md, skills/**, rules/learning-evidence-runtime.md — when protecting projection mounts, selecting native floating scheduling or writing or consuming host group/task projections, accepted native dispatch metadata or terminal task-cancellation results, including learning evidence, reminder prechecks and watcher readers"
+applyTo: "src/group-snapshots*, src/volume-mounts.ts, src/host-notice-ipc.ts, src/ipc-deps*, src/task-scheduler*, src/message-pipeline*, src/container-runner*, container/agent-runner/src/index.ts, container/agent-runner/src/format-task-row*, container/agent-runner/src/native-context-env*, container/agent-runner/src/run-script*, container/agent-runner/src/ipc-mcp-stdio.ts, container/agent-runner/src/task-cancel-result*, src/task-cancel-result*, src/ipc-handlers/tasks*, docs/task-cancellation-results.md, skills/** — when protecting projection mounts, selecting native floating scheduling or writing or consuming host group/task projections, accepted native dispatch metadata or terminal task-cancellation results, including reminder prechecks and watcher readers"
 ---
 
 # Group IPC Snapshots
 
 ## Required Read
 
-- Before protecting projection mounts, selecting native floating scheduling or writing or consuming group/task projections, accepted native dispatch metadata or cancellation results, including reminder prechecks, watcher and learning readers, read `skills/host-contracts/references/group-ipc-snapshots.md` in full.
+- Before protecting projection mounts, selecting native floating scheduling or writing or consuming group/task projections, accepted native dispatch metadata or cancellation results, including reminder prechecks and watcher readers, read `skills/host-contracts/references/group-ipc-snapshots.md` in full.
 - Its full text and named sections bind as rule content. Missing or unreadable content stops the affected action until the plugin is repaired.
 - Read explicitly when triggered; never `@`-import the reference.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+### Removed
+
+- The learning runtime authority: the `learning-evidence-runtime`, `learning-usage-runtime` and `learning-hints-contract` rules, their references and the `learning-evidence-runtime` skill. The learning pass is now one nanoclaw-admin script that reads messages.db and task_run_logs (jbaruch/nanoclaw-admin#709), and nanoclaw core drops the capture, views and transcript projection these rules governed (jbaruch/nanoclaw#1264).
+
 ## 0.6.5 — 2026-11-02
 
 ### Fixed
