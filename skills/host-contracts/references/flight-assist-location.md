@@ -24,6 +24,7 @@
 ## Readers
 
 - `jbaruch/nanoclaw-travel` reads through `skills/flight-assist/state.py`; readers never migrate or write this host artifact.
+- `jbaruch/nanoclaw-admin` reads through `skills/place-reminders/scripts/places.py` with a 10-minute freshness window, for reminders tied to arriving at or leaving a place.
 - Treat missing, unreadable, malformed, unsupported-version or invalid-field records as no usable snapshot.
 - Apply the caller's freshness window and reject future capture times before using coordinates for routing or airport-presence suppression.
 - Absence of a usable fresh fix proves neither airport presence nor absence.
