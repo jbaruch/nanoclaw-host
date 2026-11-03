@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.6 — 2026-11-03
+
 ### Deployment markers are plain appends (jbaruch/nanoclaw#1256)
 
 `deployment-marker-windows` now states the contract directly: `deploy.sh` appends one schema-1 JSON line per window as the agent identity, and readers stay read-only. The 96-line reference described a private-state owner with held descriptors, legacy-history migration and archives, which jbaruch/nanoclaw#1266 replaces with plain shell; the reference is gone.
