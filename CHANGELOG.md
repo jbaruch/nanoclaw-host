@@ -4,6 +4,12 @@
 
 `memory-budget-policy` now lets the main agent edit its own MEMORY.md for a memory diet on an explicit main-group request, keeping moved incident text verbatim in linked reference files and never touching exempt sections. The host's plan/result/journal extraction contract is retired with its job tools. The shared budget analyzer contract is unchanged.
 
+## 0.6.6 — 2026-11-03
+
+### Deployment markers are plain appends (jbaruch/nanoclaw#1256)
+
+`deployment-marker-windows` now states the contract directly: `deploy.sh` appends one schema-1 JSON line per window as the agent identity, and readers stay read-only. The 96-line reference described a private-state owner with held descriptors, legacy-history migration and archives, which jbaruch/nanoclaw#1266 replaces with plain shell; the reference is gone.
+
 ## 0.6.5 — 2026-11-02
 
 ### Fixed
