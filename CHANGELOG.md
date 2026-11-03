@@ -4,6 +4,18 @@
 
 - The learning runtime authority: the `learning-evidence-runtime`, `learning-usage-runtime` and `learning-hints-contract` rules, their references and the `learning-evidence-runtime` skill. The learning pass is now one nanoclaw-admin script that reads messages.db and task_run_logs (jbaruch/nanoclaw-admin#709), and nanoclaw core drops the capture, views and transcript projection these rules governed (jbaruch/nanoclaw#1264).
 
+## 0.6.8 — 2026-11-03
+
+### Place reminders read the location snapshot (jbaruch/nanoclaw-admin#739)
+
+`flight-assist-location` now names admin's place reminders as a second reader of `current-location.json`, so a schema change has to account for both readers. The schema and the writer stay the same.
+
+## 0.6.7 — 2026-11-03
+
+### Memory diet is a direct edit (jbaruch/nanoclaw#1256)
+
+`memory-budget-policy` now lets the main agent edit its own MEMORY.md for a memory diet on an explicit main-group request, keeping moved incident text verbatim in linked reference files and never touching exempt sections. The host's plan/result/journal extraction contract is retired with its job tools. The shared budget analyzer contract is unchanged.
+
 ## 0.6.6 — 2026-11-03
 
 ### Deployment markers are plain appends (jbaruch/nanoclaw#1256)
