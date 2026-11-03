@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.7 — 2026-11-03
+
 ### Memory diet is a direct edit (jbaruch/nanoclaw#1256)
 
 `memory-budget-policy` now lets the main agent edit its own MEMORY.md for a memory diet on an explicit main-group request, keeping moved incident text verbatim in linked reference files and never touching exempt sections. The host's plan/result/journal extraction contract is retired with its job tools. The shared budget analyzer contract is unchanged.
