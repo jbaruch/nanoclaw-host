@@ -14,3 +14,9 @@ applyTo: "container/visible-browser/**, container/skills/visible-browser/**, src
 ## Boundary
 
 - Only literal main may control the private browser bridge. Keep the plain private profile folder out of agent mounts, logs and backups. Never expose CDP, export credentials or clear authentication on routine deployment; MFA stays with the operator.
+
+## Tab cleanup
+
+- Whenever browser work shows open tabs, close those outside the pinned services listed in the native `visible-browser` skill. Keep one tab per pin and reuse it.
+- Close temporary task tabs when finished, including on failure. Apply the same cleanup to leftovers from earlier work.
+- Preserve the marked browser health tab. This is ordinary browser work, not a scheduled sweeper.

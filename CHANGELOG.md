@@ -1,3 +1,7 @@
+### Clean browser tabs during ordinary browser work
+
+The existing scoped browser rule now requires closing tabs outside the native visible-browser skill’s pinned services whenever an agent sees them, reusing one tab per pin, and closing temporary tabs after work. Later browser visits clean up leftovers. The marked health tab stays open. No sweeper, timer or cleanup state is introduced (jbaruch/nanoclaw#1280).
+
 # Changelog
 
 ## 0.6.9 — 2026-11-03
