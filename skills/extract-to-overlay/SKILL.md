@@ -41,7 +41,8 @@ Audit fires conditionally on artifact type. Skills get cadence + state-plane + i
 If any read points at a writer that won't be loaded for the affected chats, halt — `rules/overlay-tile-authoring.md` reader-without-writer clause forbids shipping.
 
 **Skill artifact — cross-skill imports** — grep `<SOURCE_PATH>` for `import` statements referencing sibling skills:
-- Same-plugin sibling imports survive when the sibling moves with the skill
+- Retain a same-plugin sibling import only after reading `skills/host-contracts/references/overlay-tile-authoring.md` Cross-skill subprocess composition and verifying every shared-library precondition holds after the move
+- Other sibling workflow or precheck calls require subprocess composition under that contract
 - Cross-plugin sibling imports require subprocess composition per `rules/overlay-tile-authoring.md`
 - Capture the import contract for the move
 

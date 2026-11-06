@@ -1,5 +1,11 @@
 # Changelog
 
+### Clarify shared libraries versus workflow composition
+
+Ordinary imports of stateless, co-shipped helper libraries are allowed within one plugin. The subprocess contract still applies to calling another skill's workflow or precheck. Shared helpers keep source workflows' existing authority and state ownership.
+
+The shared inbox classifier in nanoclaw-admin#786 exposed an overly broad reading of "share data": it required a new JSON command interface around a library, then generated validation and documentation work for an interface no caller needed. This clarification covers the existing shared Jev and Gmail helper pattern without adding an execution or action privilege.
+
 ## 0.6.9 — 2026-11-03
 
 ### Removed
