@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-applyTo: "src/ipc-handlers/messages.ts, src/channels/telegram*, src/conference-followup-ledger.ts, src/protected-delivery-capacity*, src/state-migrations/callback-005-outbound-deliveries.ts, skills/email-surface/**, skills/morning-brief/** — when interpreting outbound send results, recording delivery progress or maintaining shared protected delivery capacity"
+applyTo: "src/ipc-handlers/messages.ts, src/channels/telegram*, src/conference-followup-ledger.ts, src/protected-delivery-capacity*, src/callback-store*, src/state-migrations/callback-*, skills/email-surface/**, skills/morning-brief/** — when interpreting outbound send results, recording delivery progress, maintaining the retained callback migration chain or maintaining shared protected delivery capacity"
 ---
 
 # Outbound Delivery Receipts
@@ -8,8 +8,11 @@ applyTo: "src/ipc-handlers/messages.ts, src/channels/telegram*, src/conference-f
 ## Required Read
 
 - Read `skills/host-contracts/references/outbound-delivery-receipts.md` in full before the affected action.
-- Resolve it within this installed plugin; missing or unreadable content stops the action.
-- Its full text binds. Read explicitly; never load it through an `@` import.
+- Resolve it within this installed plugin.
+- Missing or unreadable content stops the action.
+- Its full text binds.
+- Read explicitly.
+- Never load it through an `@` import.
 
 ## Current Send Contract
 
