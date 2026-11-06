@@ -1,5 +1,9 @@
 # Changelog
 
+### Permit morning-brief lock recovery from a supported interruption (#772)
+
+Admin's morning-brief retry can reclaim its own timestamp lock when a supported canonical-task restart interval covers it, after checking the existing delivery marker and confirmed-date cursor. The host's record still means unknown completion, not worker death or successful delivery. This narrow retry policy accepts a surviving worker's late duplicate risk instead of treating every interrupted lock as live for the full stale window. The scheduler's adopted-maintenance admission stays in force; unsupported or foreign evidence supplies no takeover condition. No new state, liveness service, host cursor writer or resend permission. Authority publishes before the admin consumer; see jbaruch/nanoclaw-admin#772.
+
 ## 0.6.10 — 2026-11-06
 
 ### Clarify shared libraries versus workflow composition

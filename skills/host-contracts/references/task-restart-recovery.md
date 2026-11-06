@@ -32,7 +32,30 @@
 - A malformed supported row or query failure reports recovery uncertainty and releases no claims from that row.
 - Repeating recovery is safe: an emission inserted after the old interval cannot match that interval's ownership proof.
 
+## Canonical task identity (read-only legacy table)
+
+- Artifact: `scheduled_tasks` in `/workspace/store/messages.db`, owned by the `jbaruch/nanoclaw` host scheduler.
+- Schema of record: `src/db.ts` `createSchema`, called by `initDatabase`; it creates the table and applies inline upgrades, including the `source` column's `addColumnIfMissing` equivalent guarded by `PRAGMA table_info`.
+- Required fields: `id TEXT PRIMARY KEY`, `group_folder TEXT NOT NULL`, `chat_jid TEXT NOT NULL`, and `source TEXT NOT NULL DEFAULT 'schedule-task'`. This legacy table has no per-record `schema_version`; use coding-policy's Read-Only Legacy Runtime Tables exception, without inventing a versioned migration.
+- The canonical cadence writer is `src/cadence-registry.ts` `rebuildCadenceRegistry`; ordinary task CRUD lives in `src/db-tasks.ts`. Canonical identities have `source = 'cadence-registry'` and `id = 'cadence-registry::<group_folder>::tessl__<skill>'`.
+- Email and morning-brief recovery readers may select only the fields above to resolve the exact canonical task/group for the host-supplied `NANOCLAW_CHAT_JID`. Missing, ambiguous or malformed identity supplies no recovery permission.
+- Readers never initialize, migrate, backfill, update or delete this table. Missing required schema or query failures emit actionable unavailable diagnostics and preserve existing claims/locks; they never establish an empty successful read.
+
 ## Rollout and verification
+
+### Morning-brief lock reader
+
+- `jbaruch/nanoclaw-admin` `skills/morning-brief/scripts/acquire-pending-lock.py` may read version-1 intervals to reclaim its own pending lock in the existing `BEGIN IMMEDIATE` transaction.
+- Resolve the canonical `cadence-registry::<group_folder>::tessl__morning-brief` task from `scheduled_tasks` with `source = 'cadence-registry'` and the host-supplied `NANOCLAW_CHAT_JID`. Require the interval's task and group to match.
+- Accept only canonical ordered timestamps, positive integer attempts, and `started_at <= pending_run_at <= interrupted_at <= now`.
+- Check the brief's delivery marker and confirmed-date cursor before reclaiming. An already delivered or confirmed brief remains complete.
+- A matching interval permits replacing the pending lock; it proves no worker termination, delivery, or exact lock-owner identity. The existing pending lock records only a timestamp. A surviving worker may finish late; this recovery policy accepts that duplicate risk.
+- The scheduler defers recovery while an adopted maintenance worker owns the group slot (`src/task-scheduler.ts`, `startSchedulerLoop`). Do not bypass that host admission.
+- A missing table retains ordinary stale-lock behavior. Unsupported versions, malformed rows, missing canonical identity and read failures emit actionable diagnostics and supply no takeover condition.
+- The skill alone writes its own `follow_me_tasks` cursors; it never writes or migrates restart intervals. Publish/install this reader authority before the consumer.
+- Verify matching intervals, interval boundaries, fresh locks outside the interval, foreign task/group records, malformed/unsupported records and the already-delivered guard with fixed-clock SQLite fixtures.
+
+### Email reader rollout
 
 - Publish/install this authority first.
 - Publish and deploy the email reader that accepts both the pre-table host and version-1 interval records.

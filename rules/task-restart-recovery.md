@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-applyTo: "src/db-task-occurrences.ts, src/task-occurrence-writes.ts, src/task-scheduler.ts, src/state-migrations/**, skills/email-surface/** — when writing or reading interrupted scheduled-attempt recovery intervals"
+applyTo: "src/db-task-occurrences.ts, src/task-occurrence-writes.ts, src/task-scheduler.ts, src/state-migrations/**, skills/email-surface/**, skills/morning-brief/** — when writing or reading interrupted scheduled-attempt recovery intervals"
 ---
 
 # Task Restart Recovery
@@ -13,4 +13,4 @@ applyTo: "src/db-task-occurrences.ts, src/task-occurrence-writes.ts, src/task-sc
 
 ## Boundary
 
-- Only the host owns interval writes/migrations. A lost terminal result is no success or worker-termination proof. Readers require exact supported ownership evidence and never authorize automatic resend.
+- Only the host owns interval writes/migrations. A lost terminal result is no success or worker-termination proof. Readers follow their declared recovery conditions; an interval never authorizes resending an already delivered message.
