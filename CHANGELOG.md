@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.12 — 2026-11-06
+
 ### Retire policy for the removed generic outbound receipt framework
 
 Core's df47c29afea03d89f09d0583354c7bfbba3c15bc removed the unused receipt store, query tool, activation flag and origin carrier. The old host authority still required that framework, blocking ordinary post-brief mail filing and encouraging its reconstruction. Replace those stale requirements with the current native send-result contract: successful sends permit the workflow's declared progress bookkeeping; uncertain sends require inspection and no automatic replay. Delivery still grants no owner approval. Retain the real shared capacity contract, callback migration chain and active domains' permanent gates. The existing domain backup contracts are unchanged; this policy change defines no backup-format retirement or migration. No runtime, database or grant changes.
