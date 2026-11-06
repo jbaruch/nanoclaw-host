@@ -32,6 +32,15 @@
 - A malformed supported row or query failure reports recovery uncertainty and releases no claims from that row.
 - Repeating recovery is safe: an emission inserted after the old interval cannot match that interval's ownership proof.
 
+## Canonical task identity (read-only legacy table)
+
+- Artifact: `scheduled_tasks` in `/workspace/store/messages.db`, owned by the `jbaruch/nanoclaw` host scheduler.
+- Schema of record: `src/db.ts` `createSchema`, called by `initDatabase`; it creates the table and applies inline upgrades, including the `source` column's `addColumnIfMissing` equivalent guarded by `PRAGMA table_info`.
+- Required fields: `id TEXT PRIMARY KEY`, `group_folder TEXT NOT NULL`, `chat_jid TEXT NOT NULL`, and `source TEXT NOT NULL DEFAULT 'schedule-task'`. This legacy table has no per-record `schema_version`; use coding-policy's Read-Only Legacy Runtime Tables exception, without inventing a versioned migration.
+- The canonical cadence writer is `src/cadence-registry.ts` `rebuildCadenceRegistry`; ordinary task CRUD lives in `src/db-tasks.ts`. Canonical identities have `source = 'cadence-registry'` and `id = 'cadence-registry::<group_folder>::tessl__<skill>'`.
+- Email and morning-brief recovery readers may select only the fields above to resolve the exact canonical task/group for the host-supplied `NANOCLAW_CHAT_JID`. Missing, ambiguous or malformed identity supplies no recovery permission.
+- Readers never initialize, migrate, backfill, update or delete this table. Missing required schema or query failures emit actionable unavailable diagnostics and preserve existing claims/locks; they never establish an empty successful read.
+
 ## Rollout and verification
 
 ### Morning-brief lock reader
