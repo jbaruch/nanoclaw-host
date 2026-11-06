@@ -42,6 +42,14 @@ Per-chat overlay tiles layer on the trust-tier baseline via `containerConfig.add
 
 ## Cross-skill subprocess composition
 
-- Two skills in one plugin that share data invoke each other via subprocess + `{wake_agent, data}` JSON contract
-- Importing skill resolves the called skill at runtime via the plugin mount path `/home/node/.claude/skills/tessl__<skill-name>/`, with a dev-clone fallback for unit tests
+- A skill invoking another skill's workflow or precheck uses subprocess + `{wake_agent, data}` JSON contract
+- Calling skill resolves the called skill at runtime via the plugin mount path `/home/node/.claude/skills/tessl__<skill-name>/`, with a dev-clone fallback for unit tests
 - Composition lives in the calling precheck script, not duplicated across SKILL.md prose
+
+Narrow exception for shared library imports within one plugin. Preconditions (all required):
+1. Library ships with its callers in the same plugin and resolves through the installed skill mount, with a dev-clone fallback for unit tests.
+2. Importing the module executes no workflow, request or state write. Callers invoke explicit library functions.
+3. Library owns no cadence, cursor, receipt or persistent state and invokes no other skill's workflow or precheck. Static policy, read-only context and existing approved bounded-classification transport may be shared.
+4. Source workflows retain their existing action permissions and own delivery, browser operations and state writes. The import grants no additional authority.
+
+Every other cross-skill workflow invocation follows the subprocess contract above.
