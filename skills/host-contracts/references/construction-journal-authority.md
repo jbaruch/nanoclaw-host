@@ -120,7 +120,7 @@ but never resend. A confirmed payment is not reopened after manual deletion.
 
 The core-owned `host/conference-followup-ledger.json` artifact retains its fixed
 historical name/kind and now uses schema 5: conference, Task and Tessie gates,
-a retired `outbound: null` field and a construction schema-1 permanent-attempt projection. An older outbound projection is normalized to null by the core owner. The same core pipeline
+outbound facts and a construction schema-1 permanent-attempt projection. The same core pipeline
 ships its reader/writer. It accepts canonical artifact versions 1–5 and private database
 versions 1–6; older artifacts retain current construction gates. Whole-domain
 restore is atomic and monotone. Preserve uncertainty/confirmation and ACK facts;

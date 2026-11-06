@@ -35,10 +35,9 @@ send-result bookkeeping.
 Migration `src/state-migrations/callback-005-outbound-deliveries.ts` remains in
 its contiguous private callback migration chain. Preserve those tables through
 `src/callback-store.ts`; consumers never open, migrate, reset or repurpose the
-private database. The current shared backup owner
-`src/conference-followup-ledger.ts` projects `outbound: null` and normalizes an
-older outbound projection to null. This retirement changes no active conference,
-Task, Tessie or Construction gate and restores no active callback choices.
+private database. Existing domain backup contracts remain with their native
+owners. This policy update authorizes no persisted shape change, migration,
+backup rewrite or restoration of active callback choices.
 
 ## Shared protected capacity
 
