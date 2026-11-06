@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.10 — 2026-11-06
+
 ### Clarify shared libraries versus workflow composition
 
 Ordinary imports of stateless, co-shipped helper libraries are allowed within one plugin. The subprocess contract still applies to calling another skill's workflow or precheck. Shared helpers keep source workflows' existing authority and state ownership.
