@@ -15,6 +15,7 @@ applyTo: "scripts/deploy.sh, skills/heartbeat/scripts/heartbeat-checks.py — wh
 ## Readers
 
 - Heartbeat readers never write, repair or migrate marker history.
-- The admin heartbeat suppresses only exit-137 failures inside a kill window and registry-missing failures inside an update window.
+- The admin heartbeat suppresses exit-137 failures only when `task_run_logs.run_at` falls inside a kill window or at most 60 seconds after its end.
+- It suppresses registry-missing failures only inside an update window.
 - An unreadable file or malformed line is actionable unknown coverage, never a window or a healthy result.
 - Markers grant no effect, approval, delivery or completion authority.
