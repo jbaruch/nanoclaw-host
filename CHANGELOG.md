@@ -1,5 +1,9 @@
 # Changelog
 
+### Permit delayed deployment-kill log rows
+
+Task-run rows can be inserted after the shell closes a force-kill interval; two observed entries trailed by about one second. Permit the heartbeat's exit-137 reader to allow at most 60 seconds after that interval. Keep the recorded kill/update intervals, marker schema and strict registry-missing check intact. Name the existing unversioned task-log owner, inline schema and Main read-only reader contract under the legacy-table exception. This authority precedes the consumer fix in jbaruch/nanoclaw-admin#806.
+
 ## 0.6.12 — 2026-11-06
 
 ### Retire policy for the removed generic outbound receipt framework
