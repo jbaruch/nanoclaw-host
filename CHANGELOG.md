@@ -1,5 +1,9 @@
 # Changelog
 
+### Permit controlled facts instead of private browser error prose
+
+NanoClaw admin's browser prechecks need useful failure history without copying driver output that may contain credentials or page content (nanoclaw-admin#773 and #821; NanoClaw#812). Requiring the original prose after every redaction correction drove an expanding credential parser. Permit the native browser boundary to retain caller-owned operation, exit and validated public error facts instead. Keep terminal failures visible/nonzero, existing aggregate-read failure payloads, fixed repair instructions and entrypoint privacy regressions. This changes no secret-handling floor, state, recovery privilege, browser actor or script authority. Other commands still retain safely redacted error output.
+
 ## 0.6.13 — 2026-11-07
 
 ### Permit delayed deployment-kill log rows
