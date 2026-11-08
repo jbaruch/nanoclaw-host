@@ -1,5 +1,9 @@
 # Changelog
 
+### Retire the construction journal authority rule (nanoclaw#1039)
+
+The host construction journal is removed (jbaruch/nanoclaw#1308); the construction skill appends approved rows itself (jbaruch/nanoclaw-construction#10). The always-loaded `construction-journal-authority` rule and its reference described machinery that no longer exists.
+
 ## 0.6.14 — 2026-11-08
 
 ### Permit controlled facts instead of private browser error prose
