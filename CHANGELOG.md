@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.16 — 2026-11-09
+
 ### Run the supply-chain pin checks in CI, not on every deploy
 
 `snitchmd-image-floating`, `sync-cli-floating`, `os-package-floating` and `tessl-version-floating` now name CI checks in `jbaruch/nanoclaw` (`scripts/checks/`, `scripts/supply-chain-pins.test.ts`) instead of `scripts/deploy.sh` gates. They inspect tracked files, and a deploy ships only a commit that already passed CI. Rebuild-on-every-deploy requirements are unchanged.
