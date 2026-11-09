@@ -12,4 +12,4 @@ alwaysApply: true
 
 ## Boundary
 
-- Only the named images and approved package inventories qualify. Publish/install authority first; retain pinned bases, rebuilds and the deploy-time inventory gate.
+- Only the named images and approved package inventories qualify. Publish/install authority first; retain pinned bases, rebuilds and the CI inventory check.

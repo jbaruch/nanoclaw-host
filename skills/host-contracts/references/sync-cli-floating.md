@@ -19,15 +19,15 @@ The `reclaim-tripit-timezones-sync` install in `jbaruch/nanoclaw` `container/Doc
 - A cached layer under a bare install resolves to whatever the last rebuild fetched
 - `./scripts/deploy.sh --no-cache` is a manual override, never the refetch mechanism
 
-## Verify on every deploy
+## Verify in CI
 
-`scripts/deploy.sh` MUST read the install line out of `container/Dockerfile` and fail the deploy when:
+`jbaruch/nanoclaw` `scripts/checks/sync_cli_floating.py`, run by the test suite on every pull request, MUST read the install line out of `container/Dockerfile` and fail when:
 
 - The reference carries any `#<ref>` specifier
 - The `ADD` refetch trigger is absent, sits anywhere other than the line directly above the `RUN`, or names a different repo than the install line
 - The install line cannot be located at all — a moved or renamed target fails loudly, never passes vacuously
 
-Run this in `scripts/deploy.sh`, not only in CI.
+A deploy ships only a commit that passed CI, so the deploy does not repeat the check.
 
 ## Scope
 
@@ -36,4 +36,4 @@ Run this in `scripts/deploy.sh`, not only in CI.
 
 ## Surface sync
 
-When this reference moves or the covered path changes, update in lock-step: this rule's Approved-exception paragraph, the `verify_sync_cli_floating` check in `jbaruch/nanoclaw` `scripts/deploy.sh`, the `ADD` + `RUN` pair and its comment in `container/Dockerfile`, `.github/renovate.json`, and `jbaruch/nanoclaw`'s CHANGELOG. See `coding-policy: context-artifacts` Surface Sync.
+When this reference moves or the covered path changes, update in lock-step: this rule's Approved-exception paragraph, the `scripts/checks/sync_cli_floating.py` check in `jbaruch/nanoclaw`, the `ADD` + `RUN` pair and its comment in `container/Dockerfile`, `.github/renovate.json`, and `jbaruch/nanoclaw`'s CHANGELOG. See `coding-policy: context-artifacts` Surface Sync.

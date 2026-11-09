@@ -12,4 +12,4 @@ alwaysApply: true
 
 ## Boundary
 
-- Preserve the bare first-party install and adjacent refetch trigger; the deploy gate rejects missing or pinned references.
+- Preserve the bare first-party install and adjacent refetch trigger; the CI check rejects missing or pinned references.
