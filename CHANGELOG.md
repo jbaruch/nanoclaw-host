@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.18 — 2026-11-09
+
 ### Retire the deployment window marker rule
 
 `rules/deployment-marker-windows.md` becomes `rules/task-run-log-reader.md` and keeps only its Task Run Log Reader section. The deploy-window logs it described are no longer read (nanoclaw-admin#840) or written (jbaruch/nanoclaw#1329): deploy-interrupted runs are logged `killed`, and the heartbeat's exit-137 and registry-missing suppressions had nothing left to suppress.
