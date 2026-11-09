@@ -46,7 +46,7 @@
     "rules/memory-budget-policy.md",
     "rules/tessie-host-authority.md",
     "rules/outbound-delivery-receipts.md",
-    "rules/deployment-marker-windows.md",
+    "rules/task-run-log-reader.md",
     "rules/meeting-chat-context.md",
     "rules/sessionize-rendered-capture.md"
   ]
