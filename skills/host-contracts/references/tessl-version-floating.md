@@ -23,7 +23,7 @@ Every covered manifest is named explicitly, never matched by glob. Adding one me
 Requirements:
 
 - Every dependency floats at `"latest"`, third-party included.
-- Deterministic check: `scripts/deploy.sh` step 3b. It fails the deploy on a non-`managed` mode, on any dependency not at `latest`, and on an unreadable manifest.
+- Deterministic check: `scripts/checks/tessl_manifests.py`, run by the `jbaruch/nanoclaw` test suite on every pull request. It fails on a non-`managed` mode, on any dependency not at `latest`, and on an unreadable manifest.
 
 ### Plugin-repo set
 

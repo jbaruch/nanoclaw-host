@@ -22,13 +22,13 @@ alwaysApply: true
 
 ## Deployment and Operator Configuration
 
-- The canonical `scripts/deploy.sh` source gate requires one supported immutable committed default.
-- Missing, unreadable, moved, ambiguous, floating or malformed declarations refuse deployment.
-- The gate does not read or change explicit `SNITCHMD_IMAGE` operator configuration.
+- CI (`jbaruch/nanoclaw` `scripts/supply-chain-pins.test.ts`) requires exactly one immutable committed default.
+- A missing, duplicated or non-digest default fails CI; a deploy ships only a commit that passed CI.
+- The check does not read or change explicit `SNITCHMD_IMAGE` operator configuration.
 - Keep that existing override separate from the source default; an IPC caller cannot select an image.
 - Do not pull, retag, recreate a service or change operator configuration to satisfy a source check.
 
 ## Surface Sync
 
-- Update this rule, the source default and renewal comment, the canonical deploy gate, `docs/fetch-tools.md` and CHANGELOG together when the dependency contract changes.
+- Update this rule, the source default and renewal comment, the CI check, `docs/fetch-tools.md` and CHANGELOG together when the dependency contract changes.
 - Keep `rules/snitchmd-image-floating.md` as the stable authority lookup path; its historical filename grants no floating exception.
