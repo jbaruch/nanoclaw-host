@@ -29,6 +29,7 @@ Proceed immediately to Step 2.
 Audit fires conditionally on artifact type. Skills get cadence + state-plane + import checks. Rules get scope + link checks. Run the applicable section, then proceed.
 
 **Skill artifact — cadence axis** — read `<SOURCE_PATH>/SKILL.md` frontmatter:
+- Apply `rules/scheduled-task-gate.md` before approving a cadence-driven migration.
 - `cadence:` present? `script:` present? Both required for cadence-driven; both absent for user-driven-only
 - Mismatch (one present, other absent) blocks the migration — fix in source before extracting
 - Two cadence claims (docstring + frontmatter, or two scripts sharing one SKILL.md) signal a split candidate — extract as two separate skills
