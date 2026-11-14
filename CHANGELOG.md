@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.19 — 2026-11-14
+
+- docs(rules): require agent_model and a pre-gate on new tasks (#132)
+
 ## 0.6.18 — 2026-11-09
 
 ### Retire the deployment window marker rule
