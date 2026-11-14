@@ -4,6 +4,7 @@ Per-chat overlay tiles layer on the trust-tier baseline via `containerConfig.add
 
 ## Cadence frontmatter is mandatory
 
+- Apply `rules/scheduled-task-gate.md` for model declarations and pre-gate review.
 - Cadence-driven skills declare `cadence:` + `script:` in `SKILL.md` frontmatter
 - Both fields required — partial declaration silently produces no `scheduled_tasks` row
 - Validator surface lives in `jbaruch/nanoclaw` at `src/cadence-registry.ts`

@@ -1,0 +1,25 @@
+---
+alwaysApply: false
+applyTo: "**/* — when creating or reviewing scheduled tasks, including cadence skills, scheduled_tasks rows and one-shots"
+---
+
+# Scheduled Task Model and Pre-Gate
+
+## Task Declarations
+
+- Apply when creating or reviewing scheduled tasks, including cadence skills, `scheduled_tasks` rows and one-shots.
+- Require an explicit, non-empty model for every task; never rely on the tier's default model.
+- Cadence `SKILL.md` frontmatter declares `agentModel` and a skill-relative precheck `script` alongside `cadence`.
+- Scheduling requests and `scheduled_tasks` rows declare `agent_model` and a precheck `script`.
+
+## Wake Decision
+
+- Follow `coding-policy: script-delegation`'s Precheck Gating contract for the precheck output and wake decision.
+- Consult Jev wherever the wake decision needs judgment.
+- An unconditional wake does not qualify as a pre-gate.
+
+## Policy Review
+
+- Flag a task missing either the explicit model or the precheck as a blocking policy violation, including PRs adding cadence skills.
+- Do not merge or insert a task until both requirements are met.
+- Verify the declared script exists and implements the wake decision before approving the task.
