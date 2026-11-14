@@ -1,5 +1,6 @@
 ---
-alwaysApply: true
+alwaysApply: false
+applyTo: "**/* — when creating or reviewing scheduled tasks, including cadence skills, scheduled_tasks rows and one-shots"
 ---
 
 # Scheduled Task Model and Pre-Gate
@@ -13,10 +14,8 @@ alwaysApply: true
 
 ## Wake Decision
 
-- Run the precheck script before waking Claude.
-- Use deterministic checks to decide whether work is due.
+- Follow `coding-policy: script-delegation`'s Precheck Gating contract for the precheck output and wake decision.
 - Consult Jev wherever the wake decision needs judgment.
-- Return the existing `{wake_agent, data}` JSON contract; wake Claude only when the gate finds work.
 - An unconditional wake does not qualify as a pre-gate.
 
 ## Policy Review
