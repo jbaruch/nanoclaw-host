@@ -24,4 +24,3 @@ alwaysApply: true
 - Flag a task missing either the explicit model or the precheck as a blocking policy violation, including PRs adding cadence skills.
 - Do not merge or insert a task until both requirements are met.
 - Verify the declared script exists and implements the wake decision before approving the task.
-- Authority: [owner decision, 2026-11-12](https://github.com/jbaruch/nanoclaw/issues/1367); [fleet backfill](https://github.com/jbaruch/nanoclaw/issues/1374).
