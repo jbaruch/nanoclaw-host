@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.20 — 2026-11-15
+
+- chore: refresh the Tessl-generated ignore block (#134)
+
 ## 0.6.19 — 2026-11-14
 
 - docs(rules): require agent_model and a pre-gate on new tasks (#132)
