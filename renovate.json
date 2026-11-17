@@ -8,6 +8,10 @@
   "prConcurrentLimit": 5,
   "packageRules": [
     {
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "non-major dependencies"
+    },
+    {
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     }
