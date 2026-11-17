@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.21 — 2026-11-17
+
+- chore(deps): bump prettier from 3.9.10 to 3.10.0 (#133)
+
 ## 0.6.20 — 2026-11-15
 
 - chore: refresh the Tessl-generated ignore block (#134)
