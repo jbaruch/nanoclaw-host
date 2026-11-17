@@ -13,3 +13,4 @@ skills/**/tests/
 /package-lock.json
 /tsconfig.json
 /.github/
+/renovate.json
