@@ -12,6 +12,7 @@
   },
   "include": [
     "skills/host-contracts/scripts/sessionize-capture.mjs",
-    "skills/host-contracts/tests/sessionize-capture.test.mjs"
+    "skills/host-contracts/tests/sessionize-capture.test.mjs",
+    "tests/renovate.test.mjs"
   ]
 }

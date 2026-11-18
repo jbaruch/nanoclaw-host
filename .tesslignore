@@ -1,4 +1,5 @@
 skills/**/tests/
+/tests/
 
 # Tessl consumer-side install state. `tessl.json` is committed (it is the
 # manifest, not install state) but has no place in a consumer's checkout.
@@ -13,3 +14,4 @@ skills/**/tests/
 /package-lock.json
 /tsconfig.json
 /.github/
+/renovate.json

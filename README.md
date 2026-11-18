@@ -83,5 +83,11 @@ native deployment, complete firmware-alert coverage or vehicle-effect approval.
 The capture runtime uses only Node standard libraries. Its scoped verification
 uses `npm ci`, `npm run format:check`, `npm run typecheck` and `npm test`. The
 formatter touches only the newly introduced capture/tooling files; existing prose
-is outside this adoption. Weekly npm Dependabot renews the pinned development
-tools. Node runtime pins in the scoped workflow carry a monthly renewal note.
+is outside this adoption. [Renovate](renovate.json) is this repo's only dependency
+scanner. Its native [npm](https://docs.renovatebot.com/modules/manager/npm/) and
+[GitHub Actions](https://docs.renovatebot.com/modules/manager/github-actions/)
+managers cover the development tools and workflow pins. Updates run before 6am
+on Mondays with `chore(deps)` commits and at most five concurrent PRs. Minor,
+patch and digest updates [share one PR](https://docs.renovatebot.com/configuration-options/#groupname),
+as required by [the owner's Renovate policy](https://github.com/jbaruch/nanoclaw/issues/1433).
+Major updates require Dependency Dashboard approval.

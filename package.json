@@ -6,9 +6,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "format:check": "prettier --check skills/host-contracts/scripts/sessionize-capture.mjs skills/host-contracts/tests/sessionize-capture.test.mjs tsconfig.json package.json .github/workflows/sessionize-capture.yml",
+    "format:check": "prettier --check skills/host-contracts/scripts/sessionize-capture.mjs skills/host-contracts/tests/sessionize-capture.test.mjs tests/renovate.test.mjs tsconfig.json package.json .github/workflows/sessionize-capture.yml",
     "typecheck": "tsc --noEmit",
-    "test": "node --test skills/host-contracts/tests/sessionize-capture.test.mjs"
+    "test": "node --test skills/host-contracts/tests/sessionize-capture.test.mjs tests/renovate.test.mjs"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
