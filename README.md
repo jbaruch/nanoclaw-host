@@ -88,5 +88,9 @@ scanner. Its native [npm](https://docs.renovatebot.com/modules/manager/npm/) and
 [GitHub Actions](https://docs.renovatebot.com/modules/manager/github-actions/)
 managers cover the development tools and workflow pins. Updates run before 6am
 on Mondays with `chore(deps)` commits and at most five concurrent PRs. Minor,
-patch and digest updates [share one PR](https://docs.renovatebot.com/configuration-options/#groupname);
-major updates require Dependency Dashboard approval.
+patch and digest updates [share one PR](https://docs.renovatebot.com/configuration-options/#groupname),
+as required by [the owner's Renovate policy](https://github.com/jbaruch/nanoclaw/issues/1433).
+Major updates require Dependency Dashboard approval.
+
+Validate configuration changes with
+`npx --yes --package renovate -- renovate-config-validator`.
