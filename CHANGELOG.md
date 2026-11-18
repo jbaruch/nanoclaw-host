@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.22 — 2026-11-18
+
+- chore(deps): make Renovate the only dependency scanner (#136)
+
 ## 0.6.21 — 2026-11-17
 
 - chore(deps): bump prettier from 3.9.10 to 3.10.0 (#133)
