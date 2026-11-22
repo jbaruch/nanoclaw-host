@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.25 — 2026-11-22
+
 ### Define the rack Mini browser handoff
 
 The rack Mini uses native macOS Screen Sharing over the operator's Tailnet for Chrome steps that require the owner (jbaruch/nanoclaw#1474). Record the selected device, verify the existing Mac account path and observe the handoff before directing the owner to it. An approved iPhone client must prove the same account authentication. The private noVNC contract continues to govern its own deployments.
