@@ -9,8 +9,8 @@
 
 ## Storage preconditions
 
-- Keep the profile in the plain private folder `~/.local/state/nanoclaw-browser/profile`, mode 0700, outside the project tree.
-- Mount it only into the dedicated non-agent browser service.
+- Keep the profile in the plain private folder `~/.local/state/nanoclaw-browser/profile`, mode 0700, outside the project tree. The rack Mini's dedicated native Chrome profile uses `~/Library/Application Support/AyeAye/Chrome` with the same mode and ownership by the operator account.
+- Mount a containerized profile only into the dedicated non-agent browser service. Keep the rack Mini profile on macOS and outside all container mounts.
 - Never mount it into an agent container or copy it into the project, a group folder, an image or a log.
 
 ## Access and retention
@@ -24,6 +24,67 @@
 - MFA requires operator handoff.
 - Retain approved sessions and saved passwords until the operator removes them or the website expires or revokes them.
 - Never clear authentication on a recurring schedule or routine deployment.
+
+## Rack Mini Operator Handoff
+
+This approval applies to the operator-owned rack Mac mini hosting
+`jbaruch/nanoclaw` through `mini-services`. The owner operates the existing
+macOS account and NanoClaw's dedicated Chrome profile on the Mac.
+
+1. Use the Mini's built-in macOS Screen Sharing server over the operator's
+   existing private Tailnet. Connect directly from an existing approved device
+   under the owner's control. The owner may use the macOS client or a client on
+   an approved iPhone that supports direct authentication to the native server
+   with the same macOS account. Choose a Standard session when the macOS client
+   offers a session type. A client that needs a separate VNC password or a
+   remote-access relay is ineligible.
+2. The Mac account and device checks both apply. Use macOS account
+   authentication with Screen Sharing restricted to the existing account.
+   Leave the shared VNC password and unsolicited control requests disabled.
+   Follow Storage Preconditions and Backup in this reference.
+3. The handoff is for the human operator. Pass the site and the required step
+   without account secrets. Pause browser control before the owner enters any
+   credential, MFA code, passkey or payment details. The owner performs any
+   irreversible confirmation only under its existing action approval. Resume
+   on the owner's report and verify the visible account and requested result
+   through the existing main-only bridge. Keep credential values, passkey
+   dialogs, MFA material and payment details out of agent inputs and logs.
+4. This approval supplies no agent or guest access to the Mac session, account,
+   profile or Screen Sharing service. Keep CDP private under the existing
+   bridge contract. Keep Screen Sharing off the public internet. Leave Funnel
+   and general remote-access enrollment disabled.
+
+### Current-State Acceptance
+
+Verify the applicable published Host contract and deployed NanoClaw path. Use
+current native configuration and the owner's approved devices as evidence.
+
+- Bind the actual Mini and each selected source device to their native Tailnet
+  identities. Verify the native Screen Sharing listener on TCP 5900. Read the
+  complete effective ACL and grants for that port, including overlapping
+  allows. Confirm only the selected devices can use this path. Confirm the
+  service has no internet publication or router
+  forwarding and that agent and guest networks have no path to it.
+- Read the native Screen Sharing settings and evaluate effective account
+  access, expanding groups. Confirm the existing owner is the only interactive
+  account admitted. Verify the shared VNC password and unsolicited control
+  requests are disabled. Confirm the approved device reaches the expected
+  existing Chrome session through the Tailnet with
+  macOS account authentication. An iPhone client needs its own observed pass
+  before the handoff uses it.
+- Observe one real operator takeover and follow-up verification. Verify that
+  effective Tailnet access, publication settings, and guest/agent network
+  policy exclude those paths. Verify that the browser profile and CDP exposure still
+  meet their private boundaries. No source branch, fixture, endpoint label, or
+  caller role can stand in for a live result.
+- Record the published contract version, deployed commit, date, and acceptance
+  outcomes. Keep native identities and addresses in private operator evidence.
+  Keep credential input, browser contents and unredacted configuration out of
+  shared evidence. Recheck after a change to the approved source device,
+  Tailnet policy, macOS account or screen-sharing settings, or browser exposure.
+  Pause the handoff when the current evidence is missing or any check fails.
+
+Every other deployment uses its existing approved device and identity path.
 
 ## Backup
 

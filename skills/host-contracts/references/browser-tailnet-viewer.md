@@ -4,6 +4,8 @@
 
 This contract covers only NanoClaw's dedicated noVNC Tailscale viewer node.
 It grants no website, payment, messaging, Google, vehicle or agent role authority.
+The rack Mini native Screen Sharing handoff follows the Rack Mini Operator
+Handoff section of `skills/host-contracts/references/browser-profile-storage.md`.
 Only the actual host operator may enroll the node. A source branch, test fixture,
 TTY, copied JSON or caller `isMain` value never proves native acceptance.
 
