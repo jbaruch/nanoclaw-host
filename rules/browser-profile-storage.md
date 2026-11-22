@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-applyTo: "container/visible-browser/**, container/skills/visible-browser/**, src/visible-browser*, docker-compose.yml, scripts/deploy.sh, skills/watchers/** — when implementing, operating or using authenticated persistence for the dedicated browser"
+applyTo: "** — when implementing, operating or using authenticated persistence for the dedicated browser, or directing or using the rack Mini Screen Sharing handoff"
 ---
 
 # Browser Profile Storage
@@ -14,3 +14,9 @@ applyTo: "container/visible-browser/**, container/skills/visible-browser/**, src
 ## Boundary
 
 - Only literal main may control the private browser bridge. Keep the plain private profile folder out of agent mounts, logs and backups. Never expose CDP, export credentials or clear authentication on routine deployment; MFA stays with the operator.
+
+## Rack Mini Operator Handoff
+
+- Apply the Rack Mini Operator Handoff section of the binding reference when the owner uses native macOS Screen Sharing on the rack Mini.
+- Require its current-state acceptance before directing an operator to that path.
+- Every other deployment uses its existing approved device and identity path.
