@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.24 — 2026-11-22
+
 ### docs(rules): declare host authority for social's chat table reads
 
 ## 0.6.23 — 2026-11-18
