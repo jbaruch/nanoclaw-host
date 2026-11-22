@@ -18,6 +18,7 @@ tessl install jbaruch/nanoclaw-host
 | [meeting-chat-context](rules/meeting-chat-context.md) | Actual-main registered-chat evidence, current native member identity, complete bounded context and installed-provider rollout. |
 | [agent-container-filter](rules/agent-container-filter.md) | Line-oriented contract for the root repository's agent-container filter and deploy consumers, including infrastructure exclusions and regression coverage. |
 | [task-run-log-reader](rules/task-run-log-reader.md) | Read-only contract for the admin heartbeat's `task_run_logs` reader: owner, required columns, no initialize/migrate, missing DB is an actionable issue |
+| [social-chat-table-reader](rules/social-chat-table-reader.md) | Read-only contract for the admin social skill's `messages` and `registered_groups` reads: owner, required columns, Main and owner checks, no initialize/migrate, missing data is actionable unavailable, never approval |
 | [scheduled-task-gate](rules/scheduled-task-gate.md) | Explicit model and precheck for every scheduled task, including cadence skills and one-shots; missing either blocks policy review and insertion. |
 | [agent-file-permissions](rules/agent-file-permissions.md) | Agent identity, private modes, descriptor-safe privileged repairs, atomic replacement, recovery archives and verification as the agent. |
 | [whatsapp-channel-control](rules/whatsapp-channel-control.md) | Fixed-account owner-only channel relinking, private codes, saved-registration confirmation and the bounded live-phone testing authority. |
