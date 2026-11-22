@@ -1,5 +1,7 @@
 # Changelog
 
+### docs(rules): declare host authority for social's chat table reads
+
 ## 0.6.23 — 2026-11-18
 
 - chore(renovate): drop the major update approval gate (#140)
