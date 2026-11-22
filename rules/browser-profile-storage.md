@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-applyTo: "container/visible-browser/**, container/skills/visible-browser/**, src/visible-browser*, docker-compose.yml, scripts/deploy.sh, skills/watchers/** — when implementing, operating or using authenticated persistence for the dedicated browser"
+applyTo: "** — when implementing, operating or using authenticated persistence for the dedicated browser, or directing or using the rack Mini Screen Sharing handoff"
 ---
 
 # Browser Profile Storage
