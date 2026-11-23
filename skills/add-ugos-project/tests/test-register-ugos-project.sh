@@ -180,12 +180,26 @@ else
   fail_test "expected symlink mismatch diagnostic (rc=$RC)"
 fi
 
-echo "[5] private upload and verified operator handoff"
-run_script nanoclaw-litellm container/litellm "$reviewed"
-if python3 -I "$SCRIPT_DIR/check-handoff.py" "$WORK" "$SCRIPT_DIR/../scripts/insert-ugos-project.py"; then
-  pass_test "verified helper registers the fixture and refuses invalid stages"
+echo "[5] packaged Step 2 command and verified operator handoff"
+reviewed_host="$WORK/reviewed Host"
+mkdir "$reviewed_host"
+tessl plugin pack --output "$WORK/host.tgz" "$SCRIPT_DIR/../../.."
+tar -xzf "$WORK/host.tgz" -C "$reviewed_host"
+packaged_skill="$reviewed_host/skills/add-ugos-project"
+awk '
+  /^## / { step = ($0 ~ /^## Step 2 /) }
+  step && /^```bash$/ { code = 1; next }
+  code && /^```$/ { exit }
+  code { print }
+' "$packaged_skill/SKILL.md" > "$WORK/step-2.sh"
+if SSH="$WORK/ssh-stub" reviewed_host="$reviewed_host" project_name=nanoclaw-litellm \
+   in_repo_dir=container/litellm reviewed_commit="$reviewed" \
+   bash -eu "$WORK/step-2.sh" > "$WORK/stdout" 2> "$WORK/stderr"; then
+  python3 -I "$SCRIPT_DIR/check-handoff.py" "$WORK" "$packaged_skill/scripts/insert-ugos-project.py"
+  pass_test "packaged Step 2 stages reviewed bytes and returns the verified operator handoff"
 else
-  fail_test "operator handoff verification"
+  fail_test "packaged Step 2 command exited $?"
+  cat "$WORK/stderr" >&2
 fi
 
 echo "[6] missing Compose file and directory at Compose path"

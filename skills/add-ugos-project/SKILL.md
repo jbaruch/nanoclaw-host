@@ -27,10 +27,10 @@ Proceed immediately to Step 2.
 
 ## Step 2 — Plumb the symlinks
 
-After Step 1, run from the local consumer checkout. Invoke the registration script in the reviewed Host package with its adjacent `insert-ugos-project.py`. Direct callers must complete the same preflight.
+From the local consumer checkout, set `reviewed_host` to the absolute path of the reviewed Host package root. Set `project_name`, `in_repo_dir` and `reviewed_commit` to the project name, exact relative directory and full commit ID confirmed in Step 1. Run the packaged script with its adjacent `insert-ugos-project.py`. Direct callers must complete the same preflight.
 
 ```bash
-<reviewed-host>/skills/add-ugos-project/scripts/register-ugos-project.sh <project-name> <in-repo-dir> <reviewed-commit>
+bash "$reviewed_host/skills/add-ugos-project/scripts/register-ugos-project.sh" "$project_name" "$in_repo_dir" "$reviewed_commit"
 ```
 
 See `skills/add-ugos-project/scripts/register-ugos-project.sh` — argument contract, idempotency behaviour, and stdout JSON shape are in the top-of-file docstring.
