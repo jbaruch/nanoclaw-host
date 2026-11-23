@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.27 — 2026-11-23
+
 ### Declare nightly backup outcome reads
 
 The Main heartbeat may read the scheduled nightly backup's own typed terminal result. Use the registered group folder and keep legacy, skipped and unknown outcomes out of recovery decisions.
