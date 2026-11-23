@@ -1,13 +1,13 @@
 ---
 name: promote
-description: Promote agent-created skills and rules from NAS staging to plugin GitHub repos — opens a PR from staging, then hands the review, merge, and publish-confirmation lifecycle to the release skill. Use when there are new items on staging, after check-staging shows pending items, or when asked to deploy skills, push to production, or publish rules to a plugin repo. The promote scripts keep the historical `TILE_NAME` env var.
+description: Promote agent-created skills and rules from deployment staging to plugin GitHub repos — opens a PR from staging, then hands the review, merge, and publish-confirmation lifecycle to the release skill. Use when there are new items on staging, after check-staging shows pending items, or when asked to deploy skills, push to production, or publish rules to a plugin repo. The promote scripts keep the historical `TILE_NAME` env var.
 ---
 
 # Promote from Staging
 
 Process steps in order. Do not skip ahead.
 
-Runs the plugin-repo PR lifecycle on content in the agent's NAS staging area. End state is a merged PR whose registry publish has been confirmed through the `coding-policy` release contract — not merely a merged PR. Same review discipline as source-code PRs: no direct pushes to `main`.
+Runs the plugin-repo PR lifecycle on content in the agent's deployment staging area. End state is a merged PR whose registry publish has been confirmed through the `coding-policy` release contract — not merely a merged PR. Same review discipline as source-code PRs: no direct pushes to `main`.
 
 ## Step 1 — Review what is pending
 
@@ -64,7 +64,7 @@ One typed call, and it runs to completion: it watches the PR to a terminal revie
 
 Two things this skill owns that `release` cannot know:
 
-**Fix in staging, not in the plugin clone.** When the review asks for a change, edit the NAS staging copy and push the fixup onto the same branch. A fix applied in the clone is regressed by the next re-promote of that skill.
+**Fix in staging, not in the plugin clone.** When the review asks for a change, edit the deployment staging copy and push the fixup onto the same branch. A fix applied in the clone is regressed by the next re-promote of that skill.
 
 ```bash
 TILE_NAME=<plugin> ./scripts/push-staged-to-branch.sh \
@@ -95,6 +95,6 @@ Finish here.
 
 - **Always `--repo`** in every `gh` call. Defaults leak to upstream.
 - **Never push directly to `main`** on any plugin repo — always PR.
-- **Never edit plugin repos directly** — all content flows through NAS staging → promote / push-staged pipeline.
+- **Never edit plugin repos directly** — all content flows through deployment staging → promote / push-staged pipeline.
 - **Never report a plugin shipped** on a merge alone — only on the release contract's confirmation.
 - **Never hand-roll a review watch or a publish watch** — `Skill(skill: "release")` owns both.

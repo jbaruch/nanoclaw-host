@@ -1,11 +1,11 @@
 ---
 name: check-staging
-description: List pending skills and rules on the NAS staging area. Shows what the agent has created or updated that hasn't been promoted to plugins yet. Use before running promote, or when the user asks what's on staging.
+description: List pending skills and rules on the deployment staging area. Shows what the agent has created or updated that hasn't been promoted to plugins yet. Use before running promote, or when the user asks what's on staging.
 ---
 
 # Check Staging
 
-Lists what's pending on the NAS staging area.
+Lists what's pending on the deployment staging area.
 
 ## Usage
 
@@ -23,7 +23,7 @@ Shows two sections:
 
 **Rules** — from `groups/{group}/staging/{tile-name}/`:
 - Listed by plugin subdirectory (e.g., `nanoclaw-untrusted/internal-reasoning.md`)
-- The path segment is literally `{tile-name}` on the NAS even though the directory it holds is named for a plugin repo — it is a real path, not prose
+- The path segment is literally `{tile-name}` in staging even though the directory it holds is named for a plugin repo — it is a real path, not prose
 
 Empty sections mean nothing pending for that type.
 

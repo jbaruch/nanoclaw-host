@@ -85,7 +85,7 @@ Proceed immediately to Step 5.
 
 The target plugin is now in the registry, so the `update_group_config` write-time validator will accept `<TARGET_TILE>` as a valid additionalTiles entry per `jbaruch/nanoclaw#305`. For each affected chat group JID:
 
-- Read current `containerConfig.additionalTiles` from `messages.db` on the NAS
+- Read current `containerConfig.additionalTiles` from the deployed `store/messages.db`
 - Add bare plugin name `<TARGET_TILE>` to the list if absent — bare name only (`nanoclaw-flight-assist`), never workspace-qualified (`jbaruch/nanoclaw-flight-assist`). The workspace-qualified form trips the spawn validator and the circuit breaker
 - Write via `update_group_config` IPC
 
@@ -103,10 +103,10 @@ Proceed immediately to Step 7.
 
 ## Step 7 — Post-deploy live verification
 
-Deploy on the NAS:
+Run in the deployment checkout verified under [Host Agent Conventions](../../rules/host-conventions.md).
 
 ```bash
-ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh"
+./scripts/deploy.sh
 ```
 
 Probes fire conditionally on artifact type and cadence presence per `rules/overlay-tile-authoring.md`.

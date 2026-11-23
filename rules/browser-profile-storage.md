@@ -1,19 +1,21 @@
 ---
 alwaysApply: false
-applyTo: "** — when implementing, operating or using authenticated persistence for the dedicated browser, or directing or using the rack Mini Screen Sharing handoff"
+applyTo: "** — when implementing, operating or using authenticated browser persistence, changing or testing the dedicated browser, its agent validator or private CDP relay, or directing or using the rack Mini Screen Sharing handoff"
 ---
 
 # Browser Profile Storage
 
 ## Required Read
 
-- Before implementing, operating or using authenticated persistence or the dedicated browser, read `skills/host-contracts/references/browser-profile-storage.md` in full.
+- Before changing, testing or using the dedicated browser, its authenticated profile, agent validator or relay, read `skills/host-contracts/references/browser-profile-storage.md` in full.
 - Its full text and named sections bind as rule content. Missing or unreadable content stops the affected action until the plugin is repaired.
 - Read explicitly when triggered; never `@`-import the reference.
 
 ## Boundary
 
-- Only literal main may control the private browser bridge. Keep the plain private profile folder out of agent mounts, logs and backups. Never expose CDP, export credentials or clear authentication on routine deployment; MFA stays with the operator.
+- Only literal main may control the private browser bridge. Keep the plain private profile folder out of agent mounts, logs, every Git repository and all backups, including Time Machine. Never expose CDP, export credentials or clear authentication on routine deployment. Hand MFA to the operator.
+- Keep the native agent validator and main-only access checks on every consumer PR. Keep the Chromium smoke test until the reviewed Mini cutover.
+- At cutover the consumer must validate the unmodified shipped config with `nginx -t` in the Compose-pinned nginx image. Prefer starting it unchanged. The binding reference permits only one strictly checked upstream change to synthetic loopback in a disposable test copy. In either case require real unprivileged, read-only startup in the same image and isolated HTTP discovery rewrite and WebSocket upgrade and echo checks.
 
 ## Rack Mini Operator Handoff
 

@@ -2,14 +2,14 @@
 
 ## Scope
 
-- `jbaruch/nanoclaw` may persist website cookies, session storage and saved website passwords for its dedicated `visible-browser` service.
+- `jbaruch/nanoclaw` may persist website cookies, session storage and saved website passwords in its dedicated browser. On the rack Mini, native signed-in Chrome runs on macOS and `visible-browser` is its private nginx relay.
 - Reuse approved website access autonomously across turns and restarts.
 - API credentials remain in OneCLI.
 - Website access grants no authority for unrelated actions on that website.
 
 ## Storage preconditions
 
-- Keep the profile in the plain private folder `~/.local/state/nanoclaw-browser/profile`, mode 0700, outside the project tree. The rack Mini's dedicated native Chrome profile uses `~/Library/Application Support/AyeAye/Chrome` with the same mode and ownership by the operator account.
+- On a legacy containerized deployment, keep the profile in the plain private folder `~/.local/state/nanoclaw-browser/profile`, mode 0700, outside the project tree. On the Mini, keep the dedicated Chrome user-data directory local to the operator account, mode 0700 and outside every checkout.
 - Mount a containerized profile only into the dedicated non-agent browser service. Keep the rack Mini profile on macOS and outside all container mounts.
 - Never mount it into an agent container or copy it into the project, a group folder, an image or a log.
 
@@ -28,7 +28,7 @@
 ## Rack Mini Operator Handoff
 
 This approval applies to the operator-owned rack Mac mini hosting
-`jbaruch/nanoclaw` through `mini-services`. The owner operates the existing
+`jbaruch/nanoclaw` in its Lima VM. The owner operates the existing
 macOS account and NanoClaw's dedicated Chrome profile on the Mac.
 
 1. Use the Mini's built-in macOS Screen Sharing server over the operator's
@@ -88,8 +88,9 @@ Every other deployment uses its existing approved device and identity path.
 
 ## Backup
 
-- Exclude the profile from the ordinary group and git backup.
-- A lost profile means signing in again; no recovery format exists.
+- Exclude the entire profile from every backup, including ordinary Time Machine, encrypted backups and group archives. Keep it out of every Git repository, including private ones.
+- Verify the Time Machine exclusion on the Mini before relying on authenticated persistence. Keep the local path in private operator evidence.
+- After profile loss the operator signs in again. Never back up or export credentials, cookies or session material for recovery.
 
 ## Native visible-browser lookup
 
@@ -99,4 +100,13 @@ Every other deployment uses its existing approved device and identity path.
 - Exit 0 emits only JSON `{"available":true}` and a newline; unavailable, substituted, malformed or headless results exit nonzero with empty stdout and an actionable redacted diagnostic.
 - Preserve every access and retention constraint after this lookup; availability grants no owner identity or website action authority.
 - Missing target or incompatible output requires repairing the installed image, never local-browser fallback or credential export.
-- Regression coverage: `jbaruch/nanoclaw` `src/visible-browser-guard.test.ts`; native browser coverage also runs `container/visible-browser/smoke-test.sh`.
+
+## Browser CI
+
+- On every consumer PR, retain the native agent validator checks in `src/visible-browser-guard.test.ts`, including fixed-endpoint discovery, success output and redacted refusal. Keep the main-only network and capability injection checks in `src/visible-browser.test.ts`.
+- Until the reviewed Mini cutover, also build the dedicated Chromium image and run `container/visible-browser/smoke-test.sh`. Require sandboxed visible startup, private CDP isolation, noVNC health and synthetic profile persistence across restart.
+- At cutover the consumer replaces the image smoke test with a deterministic relay test on every PR. First run `nginx -t` on the unmodified `container/visible-browser/nginx.conf` in the nginx image pinned by digest in `docker-compose.yml`. Require it to pass before any substitution.
+- Run the test in an isolated disposable network. Prefer placing the synthetic endpoint at the configured upstream so nginx starts with the shipped config unchanged. If isolation requires loopback, change only the upstream endpoint of the expected `proxy_pass` directive in a test copy. Require exactly one active directive matching the full expected line, replace its endpoint once with the synthetic loopback endpoint, and fail if the production upstream address remains or any other byte differs.
+- Start nginx with the selected config in the same pinned image under the service's unprivileged, read-only settings. Have the synthetic endpoint advertise Chrome’s local authority, `127.0.0.1:9222`, in its debugger URLs. Request `/json/version` through the relay and require HTTP 200. Every returned debugger URL, including `webSocketDebuggerUrl`, must name `visible-browser:9222` and preserve its path. This rewrite applies to the discovery response. The `proxy_pass` endpoint selects where nginx sends the request.
+- Connect to the returned URL. Require a successful WebSocket upgrade (HTTP 101), send a known payload and verify the echoed frame. Fail CI on startup, rewrite, upgrade or round-trip failure. Config-string assertions alone cannot pass this gate.
+- Use no signed-in profile, live browser, real CDP endpoint, host LAN or credentials in the relay test. Keep the real-device Screen Sharing acceptance separate.
