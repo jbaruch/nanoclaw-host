@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.26 — 2026-11-23
+
 ### Define the rack Mini deployment contract
 
 Publish and install this Host authority before the reviewed NanoClaw cutover. The Mini uses one deployment helper and retains three covered image inventories. Its private Chrome profile stays local and outside every backup and Git repository. Consumer CI must exercise the agent validator and the digest-pinned relay’s discovery rewrite and WebSocket round-trip. Legacy checkouts retain their existing helper, fourth inventory and browser smoke gate until cutover.
