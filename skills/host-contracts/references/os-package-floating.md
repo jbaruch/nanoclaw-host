@@ -33,7 +33,7 @@ The consumer records its allowed sets in `COVERED_IMAGES` in `scripts/checks/os_
 
 - A covered image's `FROM` carries no tag, or carries the floating `:latest`
 - An `apt-get install` in a covered image names a package outside that image's recorded set
-- A covered Dockerfile is missing, unreadable or unparseable, including a missing recognizable `FROM` or `apt-get install`. Never infer retirement from file absence
+- A covered Dockerfile is missing, unreadable or lacks a parseable `FROM` or an actual `apt-get install` command in an active `RUN` instruction. Ignore comments when checking for instructions and installed packages. Never infer retirement from file absence
 
 Adding a package to a covered image is a reviewed edit to `COVERED_IMAGES`, never a one-line addition to the Dockerfile alone.
 
@@ -46,5 +46,5 @@ Adding a package to a covered image is a reviewed edit to `COVERED_IMAGES`, neve
 ## Surface sync
 
 1. Publish the versioned Host inventory and verify that the consumer has installed it before changing the consumer checker or relying on a new allowance. The existing checkout keeps its current inventory and gates until its reviewed change lands.
-2. For the reviewed Mini cutover, remove the dedicated Chromium Dockerfile and its checker entry together. Update the matching pins, Dependabot list, `scripts/os-package-floating-gate.test.ts`, browser CI and consumer changelog in the same PR. Prove the checker still fails for a missing or unparseable covered Dockerfile and rejects out-of-inventory packages. Every legacy checkout that still builds dedicated Chromium retains all four entries and its smoke test.
+2. For the reviewed Mini cutover, remove the dedicated Chromium Dockerfile and its checker entry together. Update the matching pins, Dependabot list, `scripts/os-package-floating-gate.test.ts`, browser CI and consumer changelog in the same PR. In the consumer gate tests, require rejection of a missing or unparseable covered Dockerfile, a valid pinned `FROM` with only a commented-out install, and an out-of-inventory package. Every legacy checkout that still builds dedicated Chromium retains all four entries and its smoke test.
 3. For other package or base changes, update this Host inventory first. Update the consumer checker, Dockerfile install comment, pins, tests and consumer changelog together in one reviewed PR. Each deployed package must appear in both the installed authority and the consumer's recorded set.

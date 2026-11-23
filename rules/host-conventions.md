@@ -8,7 +8,12 @@ Deployment mechanics for the NanoClaw host agent (Claude Code on Mac). Other hos
 
 ## Always deploy with deploy.sh
 
-Deploy only with `./scripts/deploy.sh` from the verified deployment checkout. Never substitute direct Compose commands.
+Deploy with `./scripts/deploy.sh` from the verified deployment checkout. Direct Compose is limited to the following rollback commands inside the verified Mini VM. Follow the corresponding section of the checked-out NanoClaw `docs/OPERATIONS.md` for the project, directory, Compose file and recovery checks.
+
+- **Failed deploy.** If deploy.sh reports that it could not restore the previous images, use its recorded `previous_image`, `previous_agent` and `previous_compose`. Follow the runbook's SQLite recovery guard, then recreate only `nanoclaw` with that image pair and release's Compose file (saved file or recorded Git blob). Run the deploy readiness check against the previous pair.
+- **Cutover.** Keep the writer holds and follow the runbook's reviewed SHA and directory identity checks. Once deploy has run, obtain the owner's authorization before restoring the directory. Only after the original directory is back in place, use the saved Compose file to recreate `nanoclaw visible-browser`. If that start is pending or failed, resolve any error and retry only that Compose command. Verify isolation, readiness and resumed jobs before lifting holds.
+
+Both commands use `up -d --force-recreate --no-build --pull never --no-deps` with exactly the services named above. Neither authorizes a direct Compose deploy.
 
 ## Registry is the delivery artifact
 
@@ -20,7 +25,7 @@ All scripts in `scripts/` source the consumer's checked-out `scripts/common.sh` 
 
 - Publish and install the versioned Host contract before adopting the Mini interface in `jbaruch/nanoclaw`. An existing checkout still authorized for the legacy deployment uses its own `NAS_HOST`, `NAS_PROJECT_DIR` and `nas()` until its reviewed cutover.
 - On the adopted rack Mini, `DEPLOY_HOST` and `DEPLOY_PROJECT_DIR` identify the fixed Lima VM and its project checkout. Use the single `deploy_host()` helper from `scripts/common.sh`. It runs the command in the verified VM or enters that VM from the Mini. Reject a mismatched target without trying another host.
-- After cutover, deployment, staging, probes and container operations for this consumer target only the Mini runtime. Preserve NAS-backed storage paths. They grant no authority to deploy, restart or fall back to the NAS. Apply the Mini interface to another consumer only after verifying its own checkout and deployment authority.
+- After cutover, deployment, staging, probes and container operations for the NanoClaw runtime target only the Mini. Preserve NAS-backed storage and separately authorized NAS storage or archive sidecars. They grant no authority to deploy, restart or fall back to a NAS orchestrator. Apply the Mini interface to another consumer only after verifying its own checkout and deployment authority.
 
 - Narrow exception for `jbaruch/nanoclaw` `scripts/check-env-credentials.py`.
 - Applies only to this standalone credential-input validator

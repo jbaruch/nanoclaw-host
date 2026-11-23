@@ -2,9 +2,11 @@
 
 Operational contract for Docker Compose projects on UGOS Pro (NASync) where the compose file is source-of-truth in the repo and UGOS Pro's Projects UI is the operator's Start/Stop surface.
 
+Verify the consumer revision and its NAS deployment authority before registration or Start. For the Mini-era NanoClaw orchestrator, stop before creating symlinks, inserting a row or starting an existing project on the NAS. Keep the NAS rollback material stopped. Existing storage paths and separately authorized storage or archive sidecars retain their NAS procedures.
+
 ## Topology
 
-- Compose file lives in the repo under `container/<project>/docker-compose.yaml`; the orchestrator's compose lives at the repo root
+- A sidecar's Compose file lives under `container/<project>/docker-compose.yaml`. The repo-root orchestrator topology applies only to an explicitly authorized legacy NAS deployment.
 - Directory symlink at `/volume1/docker/<project>/` resolves to the in-repo dir — UGOS Pro discovers compose files via this path
 - `.env` symlink at `<repo>/container/<project>/.env` → `../../.env`
 - Linux resolves the relative target against the symlink's own parent — the chain `/volume1/docker/<project>/.env` → `<repo>/container/<project>/.env` → `~/nanoclaw/.env` resolves through both layers

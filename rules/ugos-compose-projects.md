@@ -12,4 +12,5 @@ alwaysApply: true
 
 ## Boundary
 
+- Use UGOS only for explicitly authorized NAS projects, including legacy consumers and storage or archive sidecars. Never register or start the Mini-era NanoClaw orchestrator there.
 - Use repo-owned Compose files and deploy.sh. The UGOS UI is Start/Stop only; never use its Edit/Create flow or paste literal environment values.

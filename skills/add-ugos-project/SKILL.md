@@ -1,22 +1,24 @@
 ---
 name: add-ugos-project
-description: Register a new Docker Compose project on UGOS Pro (NASync) when the compose file lives in the nanoclaw repo. Plumbs the `/volume1/docker/PROJECT_NAME` directory symlink, the in-repo `.env` symlink, and the UGOS Pro SQLite registration row so the project appears in the Projects UI without UGOS rewriting the tracked compose file. Use when adding a new sidecar that needs UGOS Pro UI Start/Stop visibility, when wiring a repo-tracked compose project onto the NASync for the first time, when migrating an existing service to the symlinked-compose topology, or when asked to "register a UGOS project" / "add a sidecar to UGOS Pro".
+description: Register a repo-owned Compose project for UGOS Pro Start/Stop when the consumer is explicitly authorized to run it on the NAS. Covers legacy deployments and authorized NAS storage or archive sidecars. Excludes the Mini-era NanoClaw orchestrator.
 ---
 
 # Add UGOS Project
 
 Process steps in order. Do not skip ahead.
 
-Registers a Docker Compose project on UGOS Pro (NASync) where the compose file is source-of-truth in the nanoclaw repo. The contract is in `rules/ugos-compose-projects.md`; this skill walks the operator through the one-time plumbing.
+Before registering a project, read the [UGOS Compose contract](../host-contracts/references/ugos-compose-projects.md).
 
 Out of scope: editing an existing UGOS Pro project's env via UI (forbidden — see `rules/ugos-compose-projects.md`), and scaffolding the compose file itself (write the YAML in the repo first, land it through PR review, then run this skill).
 
-## Step 1 — Confirm project name and in-repo dir
+## Step 1 — Verify the deployment target and project
+
+Check the consumer's reviewed revision and authorized runtime before creating symlinks or a registration row. If the project is the Mini-era NanoClaw orchestrator, stop here, even if an old checkout or UGOS row exists. Never register it or click **Start** on the NAS. Proceed only for an explicitly authorized NAS project, including a legacy consumer or a storage or archive sidecar. A NAS storage path alone grants no registration authority.
 
 Confirm with the operator:
 
 - `<project-name>` — lowercase-kebab basename UGOS Pro will display and Docker will use as the compose project name (e.g. `nanoclaw-litellm`)
-- `<in-repo-dir>` — path relative to `~/nanoclaw` on the NAS holding `docker-compose.yaml` (e.g. `container/litellm`, or `.` for the orchestrator whose compose lives at the repo root)
+- `<in-repo-dir>` — path relative to the NAS checkout holding `docker-compose.yaml`. Use `.` for the root orchestrator only on an explicitly authorized legacy deployment.
 
 The compose file MUST already be merged on `main` in `jbaruch/nanoclaw` before proceeding — UGOS Pro's INSERT in Step 3 reads the file's current bytes and stores them in the registration row.
 
