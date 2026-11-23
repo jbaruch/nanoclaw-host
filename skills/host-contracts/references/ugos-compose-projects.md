@@ -2,7 +2,7 @@
 
 Operational contract for Docker Compose projects on UGOS Pro (NASync) where the compose file is source-of-truth in the repo and UGOS Pro's Projects UI is the operator's Start/Stop surface.
 
-Before invoking the registration helper or using Start, verify the reviewed consumer revision and explicit NAS runtime authority for that project as in [Step 1 of the registration skill](../../add-ugos-project/SKILL.md#step-1--verify-the-deployment-target-and-project). For the Mini-era NanoClaw orchestrator, stop before creating symlinks, inserting a row or starting an existing project on the NAS. Keep the NAS rollback material stopped. Existing storage paths and separately authorized storage or archive sidecars retain their NAS procedures.
+Before creating a symlink, registering a project or using Start, verify that the checkout matches the approved consumer and exact reviewed revision and that the project has explicit NAS runtime authority. Then confirm the project name and directory in [Step 1 of the registration skill](../../add-ugos-project/SKILL.md#step-1--confirm-project-name-and-in-repo-dir). Keep the Mini-era NanoClaw orchestrator and its NAS rollback copy stopped on the NAS, even if a project row already exists. NAS storage paths confer no runtime authority. Separately authorized storage or archive sidecars retain their NAS procedures.
 
 ## Topology
 
@@ -17,10 +17,9 @@ Before invoking the registration helper or using Start, verify the reviewed cons
 
 - UGOS Pro renders the Projects UI from `/volume1/@appstore/com.ugreen.docker/db/docker_info_log.db`, table `compose`
 - The DB is `root:root 644` — INSERT requires sudo, runs interactively from a TTY (`ssh -t nas`)
-- The staging user snapshots the operator-confirmed project's Compose after the `.env` identity check. Both staging and the authenticated INSERT helper verify its SHA-256 and byte count against the tracked blob at the exact path and reviewed consumer commit. The helper reads the snapshot descriptor opened by the staging user.
 - The row's `path` column points at the symlinked compose file (e.g. `/volume1/docker/<project>/docker-compose.yaml`); UGOS UI Start/Stop drives docker compose against that path
 - Registering via UGOS Pro's "Create Project" UI flow instead of a direct INSERT rewrites the compose file at the symlinked path and leaks env values into the tracked repo file — forbidden
-- See `Skill(skill: "add-ugos-project")` for the walkthrough and `skills/add-ugos-project/scripts/insert-ugos-project.py` for the INSERT statement
+- See `Skill(skill: "add-ugos-project")` for the walkthrough and `skills/add-ugos-project/scripts/register-ugos-project.sh` for the INSERT-statement contract
 
 ## UI is Start/Stop only
 

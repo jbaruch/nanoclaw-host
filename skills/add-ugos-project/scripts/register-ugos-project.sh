@@ -4,22 +4,14 @@
 # nanoclaw repo on the NAS.
 #
 # Contract (see also rules/ugos-compose-projects.md):
-#   Before invoking this helper, follow Step 1 of the add-ugos-project skill.
-#   Verify the reviewed consumer revision and explicit NAS runtime authority
-#   for this project. For the Mini-era NanoClaw orchestrator, stop before
-#   running this helper, registering a row or using Start on an existing row.
-#   A checkout or storage path alone grants no authority. Separately
-#   authorized NAS storage and archive sidecars use their own Compose dirs.
 #   Inputs:
 #     $1  <project-name>   lowercase-kebab basename UGOS Pro displays
 #                          (also the Docker compose project name).
 #                          Becomes /volume1/docker/<project-name>.
 #     $2  <in-repo-dir>    relative path under ~/nanoclaw on the NAS
-#                          holding docker-compose.yaml. Use `.` only for
-#                          the explicitly authorized legacy NAS orchestrator.
+#                          holding docker-compose.yaml. Use `.` for the
+#                          orchestrator (compose at the repo root).
 #                          Must not be absolute and must not contain `..`.
-#     $3  <reviewed-commit> full commit ID in the local consumer repository
-#                          from which this script is invoked.
 #   Environment overrides:
 #     SSH            ssh-compatible binary (default: ssh) — tests override
 #                    with a stub so the suite runs without a NAS.
@@ -36,13 +28,10 @@
 #     stderr — progress messages and the operator-facing sudo command.
 #     exit   — 0 on success; non-zero with diagnostic on stderr on
 #              any failure (symlink mismatch, missing compose file,
-#              .env chain failing the regular-file, readability or identity
-#              check, etc.).
+#              unreadable .env chain, etc.).
 #   Idempotency:
-#     Re-running with identical inputs reuses matching symlinks and stages
-#     the reviewed insert-ugos-project.py in a fresh private directory.
-#     The printed sudo command verifies and executes the same bytes.
-#     Mismatched symlink targets
+#     Re-running with identical inputs reports the existing symlinks
+#     and re-prints the INSERT command. Mismatched symlink targets
 #     abort with a diagnostic; the operator removes the stale link
 #     and re-runs.
 
@@ -63,10 +52,9 @@ log() {
   echo "register-ugos-project: $*" >&2
 }
 
-[[ $# -eq 3 ]] || die "usage: $0 <project-name> <in-repo-dir> <reviewed-commit> (from the consumer checkout, after skill Step 1)"
+[[ $# -eq 2 ]] || die "usage: $0 <project-name> <in-repo-dir>"
 PROJECT_NAME="$1"
 IN_REPO_DIR="$2"
-REVIEWED_COMMIT="$3"
 
 [[ "$PROJECT_NAME" =~ ^[a-z][a-z0-9-]*$ ]] \
   || die "project name must be lowercase kebab-case (got '$PROJECT_NAME')"
@@ -79,21 +67,6 @@ if [[ "$IN_REPO_DIR" != "." ]]; then
   [[ "$IN_REPO_DIR" =~ ^[A-Za-z0-9._/-]+$ ]] \
     || die "in-repo dir may only contain [A-Za-z0-9._/-] (got '$IN_REPO_DIR')"
 fi
-
-[[ "$REVIEWED_COMMIT" =~ ^[0-9a-f]{40}$ ]] || die "expected the full reviewed consumer commit ID"
-export GIT_NO_REPLACE_OBJECTS=1
-[[ $(git cat-file -t "$REVIEWED_COMMIT") == commit ]] || die "reviewed consumer commit not found"
-COMPOSE_REL="$COMPOSE_BASENAME"
-if [[ "$IN_REPO_DIR" != "." ]]; then
-  COMPOSE_REL="$IN_REPO_DIR/$COMPOSE_BASENAME"
-fi
-entry=$(git ls-tree --full-tree "$REVIEWED_COMMIT" -- "$COMPOSE_REL")
-read -r mode type blob tracked_path <<< "$entry"
-[[ "$tracked_path" == "$COMPOSE_REL" && "$type" == blob && ( "$mode" == 100644 || "$mode" == 100755 ) ]] \
-  || die "expected a tracked regular file at $REVIEWED_COMMIT:$COMPOSE_REL"
-COMPOSE_SIZE=$(git cat-file -s "$blob")
-digest=$(git cat-file blob "$blob" | shasum -a 256)
-COMPOSE_SHA256=${digest%% *}
 
 log "resolving repo path on $NAS_HOST"
 NAS_REPO_ABS=$("$SSH" "$NAS_HOST" bash -s -- "$NAS_REPO_DIR" <<'REMOTE'
@@ -118,7 +91,7 @@ log "verifying compose file at $COMPOSE_ABS"
 "$SSH" "$NAS_HOST" bash -s -- "$COMPOSE_ABS" <<'REMOTE' \
   || die "compose file not found at $COMPOSE_ABS on $NAS_HOST"
 set -euo pipefail
-test -f "$1"
+test -f -- "$1"
 REMOTE
 
 log "ensuring dir symlink $DIR_LINK -> $IN_REPO_ABS"
@@ -165,29 +138,90 @@ REMOTE_ENV
 fi
 
 log "verifying .env resolves through the symlink chain"
-"$SSH" "$NAS_HOST" bash -s -- "$DIR_LINK/.env" "$NAS_REPO_ABS/.env" <<'REMOTE' \
-  || die "$DIR_LINK/.env must resolve to the readable regular repo .env file (check the symlink chain)"
+"$SSH" "$NAS_HOST" bash -s -- "$DIR_LINK/.env" <<'REMOTE' \
+  || die "$DIR_LINK/.env does not resolve to a readable file (check the symlink chain)"
 set -euo pipefail
-test -f "$1" && test -r "$1" && test "$1" -ef "$2"
+test -r -- "$1"
 REMOTE
 
-INSERT_SOURCE="$(dirname "$0")/insert-ugos-project.py"
-log "staging the INSERT helper and verifying $REVIEWED_COMMIT:$COMPOSE_REL on $NAS_HOST"
-STAGE=$("$SSH" "$NAS_HOST" "set -- '$COMPOSE_AT_LINK' '$COMPOSE_SIZE' '$COMPOSE_SHA256';" 'set -eu
-umask 077
-stage=$(mktemp -d /tmp/register-ugos.XXXXXXXXXX)
-snapshot="$stage/compose.yaml"
-if cat > "$stage/insert.py" && head -c "$(($2 + 1))" -- "$1" > "$snapshot" &&
-   [ "$(wc -c < "$snapshot")" -eq "$2" ] &&
-   actual=$(sha256sum < "$snapshot") && [ "${actual%% *}" = "$3" ]; then
-  echo "$stage"
-else
-  echo "could not stage Compose matching the reviewed blob" >&2
-  rm -f -- "$stage/insert.py" "$snapshot"
-  rmdir -- "$stage"
-  exit 1
-fi' < "$INSERT_SOURCE")
-[[ "$STAGE" =~ ^/tmp/register-ugos\.[A-Za-z0-9]{10}$ ]] || die "unexpected helper stage path"
+log "capturing baseline compose-file byte count"
+COMPOSE_SIZE=$("$SSH" "$NAS_HOST" bash -s -- "$COMPOSE_ABS" <<'REMOTE'
+set -euo pipefail
+stat -c '%s' -- "$1"
+REMOTE
+)
+[[ "$COMPOSE_SIZE" =~ ^[0-9]+$ ]] \
+  || die "expected integer byte count, got '$COMPOSE_SIZE'"
+
+PY_TMP="/tmp/register-ugos-${PROJECT_NAME}.py"
+log "writing INSERT helper to $NAS_HOST:$PY_TMP"
+"$SSH" "$NAS_HOST" bash -s -- "$PY_TMP" <<'REMOTE_WRITE'
+set -euo pipefail
+TARGET="$1"
+cat > "$TARGET" <<'PY_SCRIPT'
+"""Insert a row into UGOS Pro's docker_info_log.db `compose` table.
+
+Run via `sudo python3 /tmp/register-ugos-<name>.py <project> <compose_path>`.
+Reads the compose file as bytes, decodes UTF-8, and stores both the
+decoded text in the `content` column and the byte count in the
+diagnostic output so the operator can match it against the byte count
+the orchestrator captures pre-restart.
+"""
+import os
+import sqlite3
+import sys
+
+UGOS_DB = "/volume1/@appstore/com.ugreen.docker/db/docker_info_log.db"
+
+if len(sys.argv) != 3:
+    sys.exit(f"usage: {sys.argv[0]} <project-name> <compose-path>")
+
+project_name = sys.argv[1]
+compose_path = sys.argv[2]
+
+if not os.path.isfile(compose_path):
+    sys.exit(f"compose file not found at {compose_path}")
+
+with open(compose_path, "rb") as fh:
+    content_bytes = fh.read()
+content = content_bytes.decode("utf-8")
+
+conn = sqlite3.connect(UGOS_DB)
+try:
+    cur = conn.execute(
+        "SELECT 1 FROM compose WHERE name = ?", (project_name,),
+    )
+    if cur.fetchone() is not None:
+        sys.exit(
+            f"row already present for project '{project_name}' "
+            "— refusing duplicate INSERT"
+        )
+    conn.execute(
+        "INSERT INTO compose "
+        "(created_at, updated_at, name, state, path, content, app_id, container_num) "
+        "VALUES (datetime('now'), datetime('now'), ?, 1, ?, ?, '', 0)",
+        (project_name, compose_path, content),
+    )
+    conn.commit()
+finally:
+    conn.close()
+
+print(
+    f"inserted row: name={project_name}, path={compose_path}, "
+    f"content_bytes={len(content_bytes)}"
+)
+PY_SCRIPT
+REMOTE_WRITE
+
+INSERT_CMD="ssh -t $NAS_HOST \"sudo python3 '$PY_TMP' '$PROJECT_NAME' '$COMPOSE_AT_LINK'\""
+
+{
+  echo
+  echo "=== Run this on the NAS to register the project in UGOS Pro ==="
+  echo "$INSERT_CMD"
+  echo "=================================================================="
+  echo
+} >&2
 
 PROJECT_NAME="$PROJECT_NAME" \
 IN_REPO_DIR="$IN_REPO_DIR" \
@@ -197,52 +231,12 @@ ENV_SYMLINK_STATE="$ENV_SYMLINK_STATE" \
 COMPOSE_ABS="$COMPOSE_ABS" \
 COMPOSE_AT_LINK="$COMPOSE_AT_LINK" \
 COMPOSE_SIZE="$COMPOSE_SIZE" \
-COMPOSE_SHA256="$COMPOSE_SHA256" \
 UGOS_DB="$UGOS_DB" \
-python3 - "$NAS_HOST" "$STAGE" "$INSERT_SOURCE" <<'PY'
-import hashlib
+PY_TMP="$PY_TMP" \
+INSERT_CMD="$INSERT_CMD" \
+python3 <<'PY'
 import json
 import os
-from pathlib import Path
-import shlex
-import sys
-
-host, stage, source = sys.argv[1:]
-helper = stage + "/insert.py"
-snapshot = stage + "/compose.yaml"
-reviewed = Path(source).read_bytes()
-# sudo supplies the invoking uid. Open within the pinned directory and run
-# the verified bytes from memory so execution never reopens the staged path.
-verify = """import hashlib, os, stat, sys
-stage, digest, size, project, compose, compose_size, compose_digest = sys.argv[1:]
-owner = int(os.environ["SUDO_UID"])
-directory = os.open(stage, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-info = os.fstat(directory)
-if info.st_uid != owner or stat.S_IMODE(info.st_mode) != 0o700:
-    sys.exit("unexpected stage owner or permissions")
-fd = os.open("insert.py", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
-os.close(directory)
-info = os.fstat(fd)
-if not stat.S_ISREG(info.st_mode) or info.st_uid != owner or stat.S_IMODE(info.st_mode) != 0o600:
-    sys.exit("expected a private regular helper owned by the invoking user")
-with os.fdopen(fd, "rb") as staged:
-    payload = staged.read(int(size) + 1)
-if hashlib.sha256(payload).hexdigest() != digest:
-    sys.exit("registration helper digest mismatch")
-sys.argv = ["insert.py", project, compose, compose_size, compose_digest]
-exec(compile(payload, "insert.py", "exec"), {"__name__": "__main__"})
-"""
-remote = shlex.join([
-    "sudo", "python3", "-I", "-c", verify, stage,
-    hashlib.sha256(reviewed).hexdigest(), str(len(reviewed)),
-    os.environ["PROJECT_NAME"], os.environ["COMPOSE_AT_LINK"],
-    os.environ["COMPOSE_SIZE"], os.environ["COMPOSE_SHA256"],
-]) + " < " + shlex.quote(snapshot)
-# Cleanup runs as the staging user after a successful INSERT.
-remote += " && " + shlex.join(["rm", "--", helper, snapshot]) + " && " + shlex.join(["rmdir", "--", stage])
-command = shlex.join(["ssh", "-t", "--", host, remote])
-print("Run this command from the operator's terminal:", file=sys.stderr)
-print(command, file=sys.stderr)
 
 print(json.dumps({
     "project": os.environ["PROJECT_NAME"],
@@ -254,8 +248,8 @@ print(json.dumps({
     "compose_path_via_symlink": os.environ["COMPOSE_AT_LINK"],
     "compose_size_baseline": int(os.environ["COMPOSE_SIZE"]),
     "ugos_db": os.environ["UGOS_DB"],
-    "ugos_insert_helper": helper,
-    "ugos_insert_command": command,
+    "ugos_insert_helper": os.environ["PY_TMP"],
+    "ugos_insert_command": os.environ["INSERT_CMD"],
     "next_step": "Run the printed sudo command, then Start the project from UGOS Pro UI",
 }, indent=2))
 PY

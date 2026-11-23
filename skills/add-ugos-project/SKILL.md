@@ -1,41 +1,38 @@
 ---
 name: add-ugos-project
-description: Register a repo-owned Compose project for UGOS Pro Start/Stop when the consumer is explicitly authorized to run it on the NAS. Covers legacy deployments and authorized NAS storage or archive sidecars. Excludes the Mini-era NanoClaw orchestrator.
+description: Register a new Docker Compose project on UGOS Pro (NASync) when the compose file lives in the nanoclaw repo. Plumbs the `/volume1/docker/PROJECT_NAME` directory symlink, the in-repo `.env` symlink, and the UGOS Pro SQLite registration row so the project appears in the Projects UI without UGOS rewriting the tracked compose file. Use when adding a new sidecar that needs UGOS Pro UI Start/Stop visibility, when wiring a repo-tracked compose project onto the NASync for the first time, when migrating an existing service to the symlinked-compose topology, or when asked to "register a UGOS project" / "add a sidecar to UGOS Pro".
 ---
 
 # Add UGOS Project
 
 Process steps in order. Do not skip ahead.
 
-Before registering a project, read the [UGOS Compose contract](../host-contracts/references/ugos-compose-projects.md).
+Registers a Docker Compose project on UGOS Pro (NASync) where the compose file is source-of-truth in the nanoclaw repo. The contract is in `rules/ugos-compose-projects.md`; this skill walks the operator through the one-time plumbing.
 
 Out of scope: editing an existing UGOS Pro project's env via UI (forbidden — see `rules/ugos-compose-projects.md`), and scaffolding the compose file itself (write the YAML in the repo first, land it through PR review, then run this skill).
 
-## Step 1 — Verify the deployment target and project
-
-Check the consumer's reviewed revision and authorized runtime before creating symlinks or a registration row. If the project is the Mini-era NanoClaw orchestrator, stop here, even if an old checkout or UGOS row exists. Never register it or click **Start** on the NAS. Proceed only for an explicitly authorized NAS project, including a legacy consumer or a storage or archive sidecar. A NAS storage path alone grants no registration authority.
+## Step 1 — Confirm project name and in-repo dir
 
 Confirm with the operator:
 
 - `<project-name>` — lowercase-kebab basename UGOS Pro will display and Docker will use as the compose project name (e.g. `nanoclaw-litellm`)
-- `<in-repo-dir>` — exact directory relative to the consumer repository root holding `docker-compose.yaml`. Use `.` for the root orchestrator only on an explicitly authorized legacy deployment.
-- `<reviewed-commit>` — full 40-character consumer commit ID approved for this project and path.
+- `<in-repo-dir>` — path relative to `~/nanoclaw` on the NAS holding `docker-compose.yaml` (e.g. `container/litellm`, or `.` for the orchestrator whose compose lives at the repo root)
 
-Confirm that this revision has merged on `main` in `jbaruch/nanoclaw` and tracks the project's Compose as a regular file. Its Git blob supplies the expected SHA-256 and byte count.
+The compose file MUST already be merged on `main` in `jbaruch/nanoclaw` before proceeding — UGOS Pro's INSERT in Step 3 reads the file's current bytes and stores them in the registration row.
 
 Proceed immediately to Step 2.
 
 ## Step 2 — Plumb the symlinks
 
-From the local consumer checkout, set `reviewed_host` to the absolute path of the reviewed Host package root. Set `project_name`, `in_repo_dir` and `reviewed_commit` to the project name, exact relative directory and full commit ID confirmed in Step 1. Run the packaged script with its adjacent `insert-ugos-project.py`. Direct callers must complete the same preflight.
+Run from a local clone of `jbaruch/nanoclaw-host`:
 
 ```bash
-bash "$reviewed_host/skills/add-ugos-project/scripts/register-ugos-project.sh" "$project_name" "$in_repo_dir" "$reviewed_commit"
+skills/add-ugos-project/scripts/register-ugos-project.sh <project-name> <in-repo-dir>
 ```
 
 See `skills/add-ugos-project/scripts/register-ugos-project.sh` — argument contract, idempotency behaviour, and stdout JSON shape are in the top-of-file docstring.
 
-The script creates `/volume1/docker/<project-name>` and, for a sidecar, the relative `<in-repo-dir>/.env` symlink. It checks that the project's `.env` resolves to the same readable regular file as the repo's `.env`. The unprivileged SSH account then stages the helper and reads the project's Compose once into a private snapshot. Only after the snapshot matches the tracked blob's length and SHA-256 does the script print the operator command on stderr and in the JSON field `ugos_insert_command` on stdout.
+The script creates `/volume1/docker/<project-name>` (directory symlink) and `<in-repo-dir>/.env` (relative `.env` symlink; skipped when the in-repo dir is the repo root). It then emits the sudo INSERT command on stderr and a JSON summary on stdout.
 
 If the script exits non-zero, halt and surface stderr — do not run Step 3.
 
@@ -43,20 +40,15 @@ Proceed immediately to Step 3.
 
 ## Step 3 — INSERT the UGOS Pro DB row
 
-Copy the complete printed `ssh -t` command, including its quoted lines and input redirection, into the operator's terminal. The remote shell opens the snapshot as the staging user. Authorize sudo at the interactive prompt. The command checks that the staging directory (0700) and regular helper (0600) belong to the invoking NAS user, verifies the reviewed helper digest and executes those bytes from memory. The helper checks the owner, regular-file type and mode (0600) of its input descriptor. It reads up to the reviewed length plus one byte and verifies length and SHA-256 before opening SQLite. The stopped row stores those same bytes decoded as UTF-8 and the original `/volume1/docker/<project-name>/docker-compose.yaml` path. A successful INSERT removes the stage as the NAS user.
-
-On a verification error, stop before Start. Repeat Step 2 for a fresh command. To clean up an abandoned run as the staging user, set `helper` to that run's exact `ugos_insert_helper` value and run:
-
-```bash
-stage=$(dirname -- "$helper")
-rm -f -- "$helper" "$stage/compose.yaml" && rmdir -- "$stage"
-```
+The script printed an `ssh -t` command in its stderr block ending in `sudo python3 /tmp/register-ugos-<project>.py …`. Copy and run it from the operator's terminal — `sudo` prompts interactively, which is why the script cannot run it itself.
 
 The helper aborts if a row already exists for the same project name; remove the stale row via `sudo sqlite3 /volume1/@appstore/com.ugreen.docker/db/docker_info_log.db "DELETE FROM compose WHERE name = '<project-name>';"` and re-run only if the operator confirms the prior registration is dead.
 
+Proceed immediately to Step 4.
+
 ## Step 4 — Start the project from UGOS Pro UI
 
-Registration ends with `state = 1` (stopped). To start the project, the operator opens UGOS Pro → Docker → Projects and clicks **Start**.
+Open UGOS Pro → Docker → Projects. The new project appears with `state = 1` (stopped-but-registered). Click **Start**.
 
 The container comes up against the in-repo compose file with `${VAR}` placeholders interpolated from `~/nanoclaw/.env` through the `.env` symlink chain. If the container exits with an env-related error, a missing non-secret variable belongs in `~/nanoclaw/.env`; a missing credential belongs in the OneCLI vault, never `.env` (`rules/host-conventions.md` Credentials live in the vault). Never paste literals into UGOS Pro's project env UI to "fix" either (see `rules/ugos-compose-projects.md`).
 
