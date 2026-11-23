@@ -2,7 +2,7 @@
 
 Operational contract for Docker Compose projects on UGOS Pro (NASync) where the compose file is source-of-truth in the repo and UGOS Pro's Projects UI is the operator's Start/Stop surface.
 
-Verify the consumer revision and its NAS deployment authority before registration or Start. For the Mini-era NanoClaw orchestrator, stop before creating symlinks, inserting a row or starting an existing project on the NAS. Keep the NAS rollback material stopped. Existing storage paths and separately authorized storage or archive sidecars retain their NAS procedures.
+Before invoking the registration helper or using Start, verify the reviewed consumer revision and explicit NAS runtime authority for that project as in [Step 1 of the registration skill](../../add-ugos-project/SKILL.md#step-1--verify-the-deployment-target-and-project). For the Mini-era NanoClaw orchestrator, stop before creating symlinks, inserting a row or starting an existing project on the NAS. Keep the NAS rollback material stopped. Existing storage paths and separately authorized storage or archive sidecars retain their NAS procedures.
 
 ## Topology
 

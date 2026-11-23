@@ -4,13 +4,19 @@
 # nanoclaw repo on the NAS.
 #
 # Contract (see also rules/ugos-compose-projects.md):
+#   Before invoking this helper, follow Step 1 of the add-ugos-project skill.
+#   Verify the reviewed consumer revision and explicit NAS runtime authority
+#   for this project. For the Mini-era NanoClaw orchestrator, stop before
+#   running this helper, registering a row or using Start on an existing row.
+#   A checkout or storage path alone grants no authority. Separately
+#   authorized NAS storage and archive sidecars use their own Compose dirs.
 #   Inputs:
 #     $1  <project-name>   lowercase-kebab basename UGOS Pro displays
 #                          (also the Docker compose project name).
 #                          Becomes /volume1/docker/<project-name>.
 #     $2  <in-repo-dir>    relative path under ~/nanoclaw on the NAS
-#                          holding docker-compose.yaml. Use `.` for the
-#                          orchestrator (compose at the repo root).
+#                          holding docker-compose.yaml. Use `.` only for
+#                          the explicitly authorized legacy NAS orchestrator.
 #                          Must not be absolute and must not contain `..`.
 #   Environment overrides:
 #     SSH            ssh-compatible binary (default: ssh) — tests override
@@ -52,7 +58,7 @@ log() {
   echo "register-ugos-project: $*" >&2
 }
 
-[[ $# -eq 2 ]] || die "usage: $0 <project-name> <in-repo-dir>"
+[[ $# -eq 2 ]] || die "usage: $0 <project-name> <in-repo-dir> (verify revision and NAS authority per skill Step 1 first; '.' is for the explicitly authorized legacy NAS orchestrator only)"
 PROJECT_NAME="$1"
 IN_REPO_DIR="$2"
 

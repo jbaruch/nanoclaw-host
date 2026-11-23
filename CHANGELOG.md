@@ -4,7 +4,7 @@
 
 Publish and install this Host authority before the reviewed NanoClaw cutover. The Mini uses one deployment helper and retains three covered image inventories. Its private Chrome profile stays local and outside every backup and Git repository. Consumer CI must exercise the agent validator and the digest-pinned relay’s discovery rewrite and WebSocket round-trip. Legacy checkouts retain their existing helper, fourth inventory and browser smoke gate until cutover.
 
-The Mini orchestrator stays out of UGOS registration and Start. Authorized NAS archive and storage projects keep their procedures. Direct Compose recovery is limited to the two VM rollback commands in the consumer runbook. Consumer CI must reject comment-only package installs and validate the shipped nginx config before any isolated loopback substitution.
+The Mini orchestrator stays out of UGOS registration and Start. Repo-root registration requires explicit legacy NAS deployment authority. Authorized NAS archive and storage projects keep their procedures. The Mini runbook retains read-only Compose preflight, relay-only recreation at cutover or after relay image or config changes, and two guarded VM rollbacks. Normal orchestrator deployment requires `deploy.sh`. Consumer CI must reject comment-only package installs and validate the shipped nginx config before any isolated loopback substitution.
 
 ## 0.6.25 — 2026-11-22
 

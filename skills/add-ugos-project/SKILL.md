@@ -26,7 +26,7 @@ Proceed immediately to Step 2.
 
 ## Step 2 — Plumb the symlinks
 
-Run from a local clone of `jbaruch/nanoclaw-host`:
+After Step 1, run from a local clone of `jbaruch/nanoclaw-host`. Direct callers must complete the same preflight before invoking the helper.
 
 ```bash
 skills/add-ugos-project/scripts/register-ugos-project.sh <project-name> <in-repo-dir>
