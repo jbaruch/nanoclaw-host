@@ -17,6 +17,7 @@ Before invoking the registration helper or using Start, verify the reviewed cons
 
 - UGOS Pro renders the Projects UI from `/volume1/@appstore/com.ugreen.docker/db/docker_info_log.db`, table `compose`
 - The DB is `root:root 644` — INSERT requires sudo, runs interactively from a TTY (`ssh -t nas`)
+- The staging user snapshots the operator-confirmed project's Compose after the `.env` identity check. Both staging and the authenticated INSERT helper verify its SHA-256 and byte count against the tracked blob at the exact path and reviewed consumer commit. The helper reads the snapshot descriptor opened by the staging user.
 - The row's `path` column points at the symlinked compose file (e.g. `/volume1/docker/<project>/docker-compose.yaml`); UGOS UI Start/Stop drives docker compose against that path
 - Registering via UGOS Pro's "Create Project" UI flow instead of a direct INSERT rewrites the compose file at the symlinked path and leaks env values into the tracked repo file — forbidden
 - See `Skill(skill: "add-ugos-project")` for the walkthrough and `skills/add-ugos-project/scripts/insert-ugos-project.py` for the INSERT statement

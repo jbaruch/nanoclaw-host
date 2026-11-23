@@ -6,6 +6,8 @@ Publish and install this Host authority before the reviewed NanoClaw cutover. Th
 
 The Mini orchestrator stays out of UGOS registration and Start. Repo-root registration requires explicit legacy NAS deployment authority. Authorized NAS archive and storage projects keep their procedures. The Mini runbook retains read-only Compose preflight, relay-only recreation at cutover or after relay image or config changes, and two guarded VM rollbacks. Normal orchestrator deployment requires `deploy.sh`. Consumer CI must reject comment-only package installs and validate the shipped nginx config before any isolated loopback substitution.
 
+Legacy UGOS registration now takes the reviewed consumer commit and verifies the project's Compose against its tracked blob. The operator command inserts the verified snapshot into a stopped row. Start remains a separate UI action.
+
 ## 0.6.25 — 2026-11-22
 
 ### Define the rack Mini browser handoff

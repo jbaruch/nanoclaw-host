@@ -18,6 +18,8 @@
 #                          holding docker-compose.yaml. Use `.` only for
 #                          the explicitly authorized legacy NAS orchestrator.
 #                          Must not be absolute and must not contain `..`.
+#     $3  <reviewed-commit> full commit ID in the local consumer repository
+#                          from which this script is invoked.
 #   Environment overrides:
 #     SSH            ssh-compatible binary (default: ssh) — tests override
 #                    with a stub so the suite runs without a NAS.
@@ -61,9 +63,10 @@ log() {
   echo "register-ugos-project: $*" >&2
 }
 
-[[ $# -eq 2 ]] || die "usage: $0 <project-name> <in-repo-dir> (verify revision and NAS authority per skill Step 1 first; '.' is for the explicitly authorized legacy NAS orchestrator only)"
+[[ $# -eq 3 ]] || die "usage: $0 <project-name> <in-repo-dir> <reviewed-commit> (from the consumer checkout, after skill Step 1)"
 PROJECT_NAME="$1"
 IN_REPO_DIR="$2"
+REVIEWED_COMMIT="$3"
 
 [[ "$PROJECT_NAME" =~ ^[a-z][a-z0-9-]*$ ]] \
   || die "project name must be lowercase kebab-case (got '$PROJECT_NAME')"
@@ -76,6 +79,21 @@ if [[ "$IN_REPO_DIR" != "." ]]; then
   [[ "$IN_REPO_DIR" =~ ^[A-Za-z0-9._/-]+$ ]] \
     || die "in-repo dir may only contain [A-Za-z0-9._/-] (got '$IN_REPO_DIR')"
 fi
+
+[[ "$REVIEWED_COMMIT" =~ ^[0-9a-f]{40}$ ]] || die "expected the full reviewed consumer commit ID"
+export GIT_NO_REPLACE_OBJECTS=1
+[[ $(git cat-file -t "$REVIEWED_COMMIT") == commit ]] || die "reviewed consumer commit not found"
+COMPOSE_REL="$COMPOSE_BASENAME"
+if [[ "$IN_REPO_DIR" != "." ]]; then
+  COMPOSE_REL="$IN_REPO_DIR/$COMPOSE_BASENAME"
+fi
+entry=$(git ls-tree --full-tree "$REVIEWED_COMMIT" -- "$COMPOSE_REL")
+read -r mode type blob tracked_path <<< "$entry"
+[[ "$tracked_path" == "$COMPOSE_REL" && "$type" == blob && ( "$mode" == 100644 || "$mode" == 100755 ) ]] \
+  || die "expected a tracked regular file at $REVIEWED_COMMIT:$COMPOSE_REL"
+COMPOSE_SIZE=$(git cat-file -s "$blob")
+digest=$(git cat-file blob "$blob" | shasum -a 256)
+COMPOSE_SHA256=${digest%% *}
 
 log "resolving repo path on $NAS_HOST"
 NAS_REPO_ABS=$("$SSH" "$NAS_HOST" bash -s -- "$NAS_REPO_DIR" <<'REMOTE'
@@ -153,24 +171,19 @@ set -euo pipefail
 test -f "$1" && test -r "$1" && test "$1" -ef "$2"
 REMOTE
 
-log "capturing baseline compose-file byte count"
-COMPOSE_SIZE=$("$SSH" "$NAS_HOST" bash -s -- "$COMPOSE_ABS" <<'REMOTE'
-set -euo pipefail
-stat -c '%s' -- "$1"
-REMOTE
-)
-[[ "$COMPOSE_SIZE" =~ ^[0-9]+$ ]] \
-  || die "expected integer byte count, got '$COMPOSE_SIZE'"
-
 INSERT_SOURCE="$(dirname "$0")/insert-ugos-project.py"
-log "staging the reviewed INSERT helper on $NAS_HOST"
-STAGE=$("$SSH" "$NAS_HOST" 'set -eu
+log "staging the INSERT helper and verifying $REVIEWED_COMMIT:$COMPOSE_REL on $NAS_HOST"
+STAGE=$("$SSH" "$NAS_HOST" "set -- '$COMPOSE_AT_LINK' '$COMPOSE_SIZE' '$COMPOSE_SHA256';" 'set -eu
 umask 077
 stage=$(mktemp -d /tmp/register-ugos.XXXXXXXXXX)
-if cat > "$stage/insert.py"; then
+snapshot="$stage/compose.yaml"
+if cat > "$stage/insert.py" && head -c "$(($2 + 1))" -- "$1" > "$snapshot" &&
+   [ "$(wc -c < "$snapshot")" -eq "$2" ] &&
+   actual=$(sha256sum < "$snapshot") && [ "${actual%% *}" = "$3" ]; then
   echo "$stage"
 else
-  rm -f -- "$stage/insert.py"
+  echo "could not stage Compose matching the reviewed blob" >&2
+  rm -f -- "$stage/insert.py" "$snapshot"
   rmdir -- "$stage"
   exit 1
 fi' < "$INSERT_SOURCE")
@@ -184,6 +197,7 @@ ENV_SYMLINK_STATE="$ENV_SYMLINK_STATE" \
 COMPOSE_ABS="$COMPOSE_ABS" \
 COMPOSE_AT_LINK="$COMPOSE_AT_LINK" \
 COMPOSE_SIZE="$COMPOSE_SIZE" \
+COMPOSE_SHA256="$COMPOSE_SHA256" \
 UGOS_DB="$UGOS_DB" \
 python3 - "$NAS_HOST" "$STAGE" "$INSERT_SOURCE" <<'PY'
 import hashlib
@@ -195,11 +209,12 @@ import sys
 
 host, stage, source = sys.argv[1:]
 helper = stage + "/insert.py"
+snapshot = stage + "/compose.yaml"
 reviewed = Path(source).read_bytes()
 # sudo supplies the invoking uid. Open within the pinned directory and run
 # the verified bytes from memory so execution never reopens the staged path.
 verify = """import hashlib, os, stat, sys
-stage, digest, size, project, compose = sys.argv[1:]
+stage, digest, size, project, compose, compose_size, compose_digest = sys.argv[1:]
 owner = int(os.environ["SUDO_UID"])
 directory = os.open(stage, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
 info = os.fstat(directory)
@@ -214,16 +229,17 @@ with os.fdopen(fd, "rb") as staged:
     payload = staged.read(int(size) + 1)
 if hashlib.sha256(payload).hexdigest() != digest:
     sys.exit("registration helper digest mismatch")
-sys.argv = ["insert.py", project, compose]
+sys.argv = ["insert.py", project, compose, compose_size, compose_digest]
 exec(compile(payload, "insert.py", "exec"), {"__name__": "__main__"})
 """
 remote = shlex.join([
     "sudo", "python3", "-I", "-c", verify, stage,
     hashlib.sha256(reviewed).hexdigest(), str(len(reviewed)),
     os.environ["PROJECT_NAME"], os.environ["COMPOSE_AT_LINK"],
-])
+    os.environ["COMPOSE_SIZE"], os.environ["COMPOSE_SHA256"],
+]) + " < " + shlex.quote(snapshot)
 # Cleanup runs as the staging user after a successful INSERT.
-remote += " && " + shlex.join(["rm", "--", helper]) + " && " + shlex.join(["rmdir", "--", stage])
+remote += " && " + shlex.join(["rm", "--", helper, snapshot]) + " && " + shlex.join(["rmdir", "--", stage])
 command = shlex.join(["ssh", "-t", "--", host, remote])
 print("Run this command from the operator's terminal:", file=sys.stderr)
 print(command, file=sys.stderr)

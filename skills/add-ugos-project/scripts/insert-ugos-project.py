@@ -1,28 +1,29 @@
 """Insert a row into UGOS Pro's docker_info_log.db `compose` table.
 
 Run with the verified operator command printed by register-ugos-project.sh.
-Reads the compose file as bytes, decodes UTF-8, and stores both the
-decoded text in the `content` column and the byte count in the
-diagnostic output so the operator can match it against the byte count
-the orchestrator captures pre-restart.
+The staging user opens the snapshot on stdin. The registered Compose path
+is row metadata. Only the verified bytes from stdin supply its content.
 """
+import hashlib
 import os
 import sqlite3
+import stat
 import sys
 
 UGOS_DB = "/volume1/@appstore/com.ugreen.docker/db/docker_info_log.db"
 
-if len(sys.argv) != 3:
-    sys.exit(f"usage: {sys.argv[0]} <project-name> <compose-path>")
-
-project_name = sys.argv[1]
-compose_path = sys.argv[2]
-
-if not os.path.isfile(compose_path):
-    sys.exit(f"compose file not found at {compose_path}")
-
-with open(compose_path, "rb") as fh:
-    content_bytes = fh.read()
+project_name, compose_path, size, digest = sys.argv[1:]
+info = os.fstat(0)
+if (
+    info.st_uid != int(os.environ["SUDO_UID"])
+    or not stat.S_ISREG(info.st_mode)
+    or stat.S_IMODE(info.st_mode) != 0o600
+):
+    sys.exit("expected a private regular Compose snapshot owned by the invoking user")
+expected_size = int(size)
+content_bytes = os.read(0, expected_size + 1)
+if len(content_bytes) != expected_size or hashlib.sha256(content_bytes).hexdigest() != digest:
+    sys.exit("Compose snapshot differs from the reviewed blob")
 content = content_bytes.decode("utf-8")
 
 conn = sqlite3.connect(UGOS_DB)
