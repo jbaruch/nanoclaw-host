@@ -3,10 +3,8 @@
 #
 # Run: bash skills/add-ugos-project/tests/test-register-ugos-project.sh
 #
-# Each test runs the script with the `SSH=` env override pointing at a
-# fake ssh stub that records calls and returns canned responses. No NAS
-# access required. Tests assert outcomes (exit code + JSON shape +
-# stderr diagnostics) rather than implementation steps.
+# Fake SSH runs the helper's file checks and symlink operations in a
+# temporary tree. The stat response and helper upload are stubbed.
 
 set -euo pipefail
 
@@ -29,110 +27,68 @@ pass_test() {
 }
 
 run_script() {
-  local _ssh="${1:-}"
-  shift
   local stdout_path="$WORK/stdout"
   local stderr_path="$WORK/stderr"
   local rc=0
-  if [ -n "$_ssh" ]; then
-    SSH="$_ssh" "$SCRIPT" "$@" >"$stdout_path" 2>"$stderr_path" || rc=$?
-  else
-    "$SCRIPT" "$@" >"$stdout_path" 2>"$stderr_path" || rc=$?
-  fi
+  SSH="$WORK/ssh-stub" "$SCRIPT" "$@" >"$stdout_path" 2>"$stderr_path" || rc=$?
   STDOUT=$(cat "$stdout_path")
   STDERR=$(cat "$stderr_path")
   RC=$rc
 }
 
-make_ssh_stub_happy() {
-  # Returns a path to a fake ssh that responds correctly to every command
-  # the script issues during a happy-path run.
-  local stub="$WORK/ssh-happy"
-  cat > "$stub" <<'STUB'
-#!/usr/bin/env bash
-# Fake ssh stub. Args: <host> <command-tokens...>
-# Reads stdin when the script uses `bash -s --`.
-host="$1"
-shift
-stdin=$(cat)
-case "$stdin" in
-  *"readlink -f"*)
-    echo "/home/jbaruch/nanoclaw"
-    ;;
-  *"test -f -- "*)
-    : # success
-    ;;
-  *"ln -s --"*)
-    : # success (no existing symlink)
-    ;;
-  *"test -r -- "*)
-    : # success
-    ;;
-  *"stat -c '%s'"*)
-    echo "4386"
-    ;;
-  *'cat > "$TARGET"'*)
-    : # success — discard the helper script body
-    ;;
-  *)
-    echo "stub: unrecognised stdin" >&2
-    exit 99
-    ;;
-esac
-STUB
-  chmod +x "$stub"
-  echo "$stub"
-}
+remote="$WORK/remote files"
+mkdir -p "$remote/repo/container/litellm" "$remote/repo/container/foo" "$remote/volume1/docker"
+touch "$remote/repo/docker-compose.yaml" "$remote/repo/.env" \
+  "$remote/repo/container/litellm/docker-compose.yaml" "$remote/repo/container/foo/docker-compose.yaml"
 
-make_ssh_stub_mismatch() {
-  # Stub that reports an existing dir-symlink with the wrong target.
-  local stub="$WORK/ssh-mismatch"
-  cat > "$stub" <<'STUB'
+cat > "$WORK/ssh-stub" <<'STUB'
 #!/usr/bin/env bash
-shift
+set -eu
+remote="$(dirname "$0")/remote files"
+shift # host; remaining arguments are bash -s -- path [target]
 stdin=$(cat)
 case "$stdin" in
-  *"readlink -f"*) echo "/home/jbaruch/nanoclaw" ;;
-  *"test -f -- "*) : ;;
-  *"ln -s --"*)
-    echo "existing symlink at /volume1/docker/foo points at '/wrong/path', expected '/home/jbaruch/nanoclaw/container/foo'" >&2
-    exit 1
+  *"readlink -f"*) echo "/repo" ;;
+  *"test -"*|*"ln -s --"*)
+    shift 3 # bash -s --
+    paths=()
+    for path in "$@"; do paths+=("$remote$path"); done
+    bash -s -- "${paths[@]}" <<< "$stdin"
     ;;
-  *) exit 0 ;;
+  *"stat -c '%s'"*) echo "4386" ;;
+  *'cat > "$TARGET"'*) : ;; # discard the helper upload
+  *) echo "stub: unrecognised stdin" >&2; exit 99 ;;
 esac
 STUB
-  chmod +x "$stub"
-  echo "$stub"
-}
+chmod +x "$WORK/ssh-stub"
 
 # === arg-validation tests (no ssh needed) ============================
 
 echo "[1] arg validation"
 
-run_script "" ""
+run_script
 [ "$RC" -ne 0 ] && pass_test "rejects no args" || fail_test "no args should fail"
 
-run_script "" foo
+run_script foo
 [ "$RC" -ne 0 ] && pass_test "rejects single arg" || fail_test "single arg should fail"
 
-run_script "" BadName container/foo
+run_script BadName container/foo
 [ "$RC" -ne 0 ] && pass_test "rejects uppercase project name" || fail_test "uppercase should fail"
 
-run_script "" valid-name /absolute/path
+run_script valid-name /absolute/path
 [ "$RC" -ne 0 ] && pass_test "rejects absolute in-repo dir" || fail_test "absolute should fail"
 
-run_script "" valid-name ../escape
+run_script valid-name ../escape
 [ "$RC" -ne 0 ] && pass_test "rejects in-repo dir containing '..'" || fail_test "'..' should fail"
 
-run_script "" valid-name 'a;rm -rf /'
+run_script valid-name 'a;rm -rf /'
 [ "$RC" -ne 0 ] && pass_test "rejects in-repo dir with shell metacharacters" || fail_test "metachars should fail"
 
 # === happy-path JSON contract test ===================================
 
 echo "[2] happy path JSON contract"
 
-SSH_HAPPY=$(make_ssh_stub_happy)
-run_script "$SSH_HAPPY" nanoclaw-litellm container/litellm
+run_script nanoclaw-litellm container/litellm
 
 if [ "$RC" -ne 0 ]; then
   fail_test "happy path exit code (rc=$RC)"
@@ -165,7 +121,7 @@ fi
 
 echo "[3] repo-root project skips .env symlink"
 
-run_script "$SSH_HAPPY" nanoclaw .
+run_script nanoclaw .
 if [ "$RC" -ne 0 ]; then
   fail_test "repo-root path exit code (rc=$RC)"
 elif ! echo "$STDOUT" | python3 -c '
@@ -184,16 +140,19 @@ fi
 
 echo "[4] symlink target mismatch aborts"
 
-SSH_MISMATCH=$(make_ssh_stub_mismatch)
-run_script "$SSH_MISMATCH" foo container/foo
-[ "$RC" -ne 0 ] && pass_test "symlink mismatch surfaces non-zero exit" \
-  || fail_test "symlink mismatch should fail (rc=$RC)"
+ln -s wrong-target "$remote/volume1/docker/foo"
+run_script foo container/foo
+if [[ "$RC" == 1 && "$STDERR" == *"points at 'wrong-target'"* ]]; then
+  pass_test "symlink target mismatch aborts registration"
+else
+  fail_test "expected symlink mismatch diagnostic (rc=$RC)"
+fi
 
 # === ugos_insert_command stays as valid JSON ==========================
 
 echo "[5] ugos_insert_command escapes correctly in JSON"
 
-run_script "$SSH_HAPPY" nanoclaw-litellm container/litellm
+run_script nanoclaw-litellm container/litellm
 if ! echo "$STDOUT" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
@@ -205,6 +164,29 @@ assert "nanoclaw-litellm" in cmd, cmd
   echo "    stdout: $STDOUT"
 else
   pass_test "ugos_insert_command escapes correctly inside JSON"
+fi
+
+echo "[6] missing Compose file and directory at Compose path"
+compose="$remote/repo/container/foo/docker-compose.yaml"
+rm "$compose"
+for kind in missing directory; do
+  if [[ "$kind" == directory ]]; then mkdir "$compose"; fi
+  run_script archive container/foo
+  if [[ "$RC" == 1 && "$STDERR" == *"compose file not found"* && ! -L "$remote/volume1/docker/archive" ]]; then
+    pass_test "rejects $kind Compose file before creating project link"
+  else
+    fail_test "expected $kind Compose file to abort before project link (rc=$RC)"
+  fi
+done
+
+echo "[7] missing .env through the project link"
+rm "$remote/repo/.env"
+run_script archive container/litellm
+if [[ "$RC" == 1 && -L "$remote/volume1/docker/archive" &&
+      "$STDERR" == *"does not resolve to a readable file"* && "$STDERR" != *"capturing baseline"* && -z "$STDOUT" ]]; then
+  pass_test "missing .env stops registration after linking and before the byte count"
+else
+  fail_test "expected missing .env to abort before registration (rc=$RC)"
 fi
 
 # === summary =========================================================

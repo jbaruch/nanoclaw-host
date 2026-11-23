@@ -97,7 +97,7 @@ log "verifying compose file at $COMPOSE_ABS"
 "$SSH" "$NAS_HOST" bash -s -- "$COMPOSE_ABS" <<'REMOTE' \
   || die "compose file not found at $COMPOSE_ABS on $NAS_HOST"
 set -euo pipefail
-test -f -- "$1"
+test -f "$1"
 REMOTE
 
 log "ensuring dir symlink $DIR_LINK -> $IN_REPO_ABS"
@@ -147,7 +147,7 @@ log "verifying .env resolves through the symlink chain"
 "$SSH" "$NAS_HOST" bash -s -- "$DIR_LINK/.env" <<'REMOTE' \
   || die "$DIR_LINK/.env does not resolve to a readable file (check the symlink chain)"
 set -euo pipefail
-test -r -- "$1"
+test -r "$1"
 REMOTE
 
 log "capturing baseline compose-file byte count"
