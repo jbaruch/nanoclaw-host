@@ -8,10 +8,10 @@ Do not run `docker compose build --no-cache --pull` followed by `up -d --build` 
 
 ## How to refresh
 
-When an npm-from-GitHub dep in `Dockerfile.orchestrator` ships a new version, deploy with the `--no-cache` flag:
+When an npm-from-GitHub dep in `Dockerfile.orchestrator` ships a new version, run in the deployment checkout verified under [Host Agent Conventions](../../../rules/host-conventions.md).
 
 ```bash
-ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh --no-cache"
+./scripts/deploy.sh --no-cache
 ```
 
 The flag (1) propagates `--no-cache --pull` through `container/build.sh` for the agent-runner image, and (2) splits the orchestrator step into separate `docker compose build --no-cache --pull nanoclaw` and `docker compose up -d --force-recreate --no-build nanoclaw` calls — no second `--build` invocation that BuildKit can cache-confuse. Mutually exclusive with `--tiles-only`.
@@ -22,11 +22,10 @@ The default `./scripts/deploy.sh` (no flags) is correct for every other deploy: 
 
 ## Verify after refresh
 
-Confirm the new dep version is installed in the running orchestrator before declaring the refresh complete. Substitute `DEP_NAME` with the package name:
+From that same runtime, check the package in the running orchestrator. For example:
 
 ```bash
-DEP_NAME=reclaim-tripit-timezones-sync
-ssh nas "docker exec nanoclaw npm list -g --depth=0 2>&1 | grep \"$DEP_NAME\""
+docker exec nanoclaw npm list -g --depth=0 reclaim-tripit-timezones-sync
 ```
 
 If the version is unchanged from before the deploy, the cache wasn't actually busted — investigate before moving on.

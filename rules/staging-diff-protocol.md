@@ -14,11 +14,9 @@ Before making ANY judgment about staging content:
 4. **Merge** improvements into the plugin version when staging is better in some aspects and plugin is better in others
 5. **Only then** decide: promote as-is, merge and promote, or request changes
 
-## The diff command
+## Read the deployed copy
 
-```bash
-ssh -n "$NAS_HOST" "cat <staging-path>" | diff - <local-plugin-path>
-```
+Read the staged file through the checked-out consumer's command helper under [Host Agent Conventions](host-conventions.md). Confirm the read succeeded before comparing its contents with the local plugin file.
 
 ## What "stale" means
 

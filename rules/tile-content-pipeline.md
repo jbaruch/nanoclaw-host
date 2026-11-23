@@ -6,13 +6,13 @@ alwaysApply: true
 
 Plugin content updates flow through the staging → promote pipeline so GHA handles review, lint, and publish.
 
-## Live-NAS edits are forbidden
+## Direct edits from the runtime are forbidden
 
-Never push content directly to a plugin repo for a "quick fix" from the NAS or from the running orchestrator's filesystem. Direct pushes bypass review and risk version conflicts with smart-publish.
+Never push content directly to a plugin repo for a "quick fix" from the NAS, the deployment host or the running orchestrator's filesystem. Direct pushes bypass review and risk version conflicts with smart-publish.
 
 ## The staging path
 
-1. Push the content to NAS staging: `staging/{tileName}/rules/{name}.md` or `staging/{tileName}/skills/{name}/SKILL.md`
+1. Push the content to deployment staging: `staging/{tileName}/rules/{name}.md` or `staging/{tileName}/skills/{name}/SKILL.md`
 2. Promote with `TILE_NAME={tileName} ./scripts/promote-from-host.sh`
 
 ## Feature-branch PRs are OK

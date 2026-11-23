@@ -23,9 +23,9 @@ reference retains the complete binding procedure and all exception conditions.
 Load another reference only when its own trigger applies. Missing or unreadable
 content stops the affected action until the plugin is repaired.
 
-For browser persistence, `rules/browser-profile-storage.md` requires
-`skills/host-contracts/references/browser-profile-storage.md` before using
-the authenticated browser profile.
+For browser persistence, native agent validation or relay CI, read the full
+[browser profile contract](references/browser-profile-storage.md) required by
+[Browser Profile Storage](../../rules/browser-profile-storage.md).
 
 For private viewer enrollment or access, read the full reference required by
 `rules/browser-tailnet-viewer.md`:

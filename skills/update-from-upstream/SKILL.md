@@ -1,6 +1,6 @@
 ---
 name: update-from-upstream
-description: Pull updates from qwibitai/nanoclaw directly into private NanoClaw through a reviewed PR, then deploy to NAS. Use when upstream has new features, when the user asks to update NanoClaw, or when /update-nanoclaw is invoked.
+description: Pull updates from qwibitai/nanoclaw directly into private NanoClaw through a reviewed PR, then deploy from the verified runtime checkout. Use when upstream has new features, when the user asks to update NanoClaw, or when /update-nanoclaw is invoked.
 ---
 
 # Update from Upstream
@@ -33,20 +33,12 @@ Invoke `Skill(skill: "ship-code")` for the update branch in `jbaruch/nanoclaw`. 
 
 Proceed immediately to Step 4 only after the private PR is merged. If shipping is blocked, report the blocker and finish here without deploying.
 
-## Step 4 — Deploy to NAS
+## Step 4 — Deploy the merged update
 
-Run from the NAS checkout:
-
-```bash
-ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh"
-```
-
-For plugin-only changes, use `./scripts/deploy.sh --tiles-only` instead; the flag keeps its historical spelling.
-
-Verify the deployment:
+Run in the deployment checkout verified under [Host Agent Conventions](../../rules/host-conventions.md).
 
 ```bash
-ssh nas "cd ~/nanoclaw && ./scripts/deploy.sh --health-check"
+./scripts/deploy.sh
 ```
 
-Report any deployment or health-check failure. Finish here.
+Use `--tiles-only` for a plugin refresh that needs no source pull or image rebuild. Check the deployment result before reporting success. On Mini a full deploy must pass the script's readiness checks, exit zero and emit `{"schema_version":1,"deployed":true}`. Finish here.

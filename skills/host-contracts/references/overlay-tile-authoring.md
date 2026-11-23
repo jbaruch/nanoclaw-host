@@ -36,7 +36,7 @@ Per-chat overlay tiles layer on the trust-tier baseline via `containerConfig.add
 
 ## Live-runtime verification before shipped
 
-- Post-deploy probe runs on the NAS: `SELECT * FROM scheduled_tasks WHERE id LIKE 'cadence-registry::%::tessl__<skill-name>'` returns at least one row per cadence-declared skill
+- Post-deploy probe runs against the deployed database: `SELECT * FROM scheduled_tasks WHERE id LIKE 'cadence-registry::%::tessl__<skill-name>'` returns at least one row per cadence-declared skill
 - Live handshake against every external MCP or API surface in the skill's data plane
 - Mocked unit tests do NOT substitute for live handshake
 - Both gates clear before posting "shipped"

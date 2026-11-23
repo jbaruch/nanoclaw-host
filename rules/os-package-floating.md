@@ -12,4 +12,5 @@ alwaysApply: true
 
 ## Boundary
 
-- Only the named images and approved package inventories qualify. Publish/install authority first; retain pinned bases, rebuilds and the CI inventory check.
+- Only the named images and package inventories qualify. Keep pinned bases, deploy rebuilds and the fail-closed CI checker.
+- Keep all four Dockerfiles covered until the reviewed NanoClaw Mini cutover. Only that change may retire the dedicated Chromium Dockerfile after this versioned authority is published and installed.
