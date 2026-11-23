@@ -4,7 +4,7 @@
 # Run: bash skills/add-ugos-project/tests/test-register-ugos-project.sh
 #
 # Fake SSH runs the helper's file checks and symlink operations in a
-# temporary tree. The stat response and helper upload are stubbed.
+# temporary tree, including the private upload. Only the stat response is canned.
 
 set -euo pipefail
 
@@ -30,6 +30,7 @@ run_script() {
   local stdout_path="$WORK/stdout"
   local stderr_path="$WORK/stderr"
   local rc=0
+  : > "$WORK/calls"
   SSH="$WORK/ssh-stub" "$SCRIPT" "$@" >"$stdout_path" 2>"$stderr_path" || rc=$?
   STDOUT=$(cat "$stdout_path")
   STDERR=$(cat "$stderr_path")
@@ -37,7 +38,7 @@ run_script() {
 }
 
 remote="$WORK/remote files"
-mkdir -p "$remote/repo/container/litellm" "$remote/repo/container/foo" "$remote/volume1/docker"
+mkdir -p "$remote/repo/container/litellm" "$remote/repo/container/foo" "$remote/volume1/docker" "$remote/tmp"
 touch "$remote/repo/docker-compose.yaml" "$remote/repo/.env" \
   "$remote/repo/container/litellm/docker-compose.yaml" "$remote/repo/container/foo/docker-compose.yaml"
 
@@ -45,7 +46,13 @@ cat > "$WORK/ssh-stub" <<'STUB'
 #!/usr/bin/env bash
 set -eu
 remote="$(dirname "$0")/remote files"
-shift # host; remaining arguments are bash -s -- path [target]
+shift # host
+if [[ "$1" == *"mktemp -d /tmp/"* ]]; then
+  echo upload >> "$(dirname "$0")/calls"
+  cd "$remote"
+  bash -c "${1//\/tmp\//tmp/}" | sed 's|^tmp/|/tmp/|'
+  exit "${PIPESTATUS[0]}"
+fi
 stdin=$(cat)
 case "$stdin" in
   *"readlink -f"*) echo "/repo" ;;
@@ -55,8 +62,7 @@ case "$stdin" in
     for path in "$@"; do paths+=("$remote$path"); done
     bash -s -- "${paths[@]}" <<< "$stdin"
     ;;
-  *"stat -c '%s'"*) echo "4386" ;;
-  *'cat > "$TARGET"'*) : ;; # discard the helper upload
+  *"stat -c '%s'"*) echo stat >> "$(dirname "$0")/calls"; echo "4386" ;;
   *) echo "stub: unrecognised stdin" >&2; exit 99 ;;
 esac
 STUB
@@ -114,6 +120,7 @@ assert d["env_symlink"] == "created"
   fail_test "happy path JSON contract"
   echo "    stdout: $STDOUT"
 else
+  cp "$WORK/stdout" "$WORK/sidecar.json"
   pass_test "happy path emits valid JSON with all required keys"
 fi
 
@@ -148,22 +155,12 @@ else
   fail_test "expected symlink mismatch diagnostic (rc=$RC)"
 fi
 
-# === ugos_insert_command stays as valid JSON ==========================
-
-echo "[5] ugos_insert_command escapes correctly in JSON"
-
+echo "[5] private upload and verified operator handoff"
 run_script nanoclaw-litellm container/litellm
-if ! echo "$STDOUT" | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-cmd = d["ugos_insert_command"]
-assert "sudo python3" in cmd, cmd
-assert "nanoclaw-litellm" in cmd, cmd
-'; then
-  fail_test "ugos_insert_command JSON-escape integrity"
-  echo "    stdout: $STDOUT"
+if python3 -I "$SCRIPT_DIR/check-handoff.py" "$WORK" "$SCRIPT_DIR/../scripts/insert-ugos-project.py"; then
+  pass_test "verified helper registers the fixture and refuses invalid stages"
 else
-  pass_test "ugos_insert_command escapes correctly inside JSON"
+  fail_test "operator handoff verification"
 fi
 
 echo "[6] missing Compose file and directory at Compose path"
@@ -179,15 +176,45 @@ for kind in missing directory; do
   fi
 done
 
-echo "[7] missing .env through the project link"
-rm "$remote/repo/.env"
+echo "[7] resolved .env type, identity and readability"
+check_env_rejection() {
+  if [[ "$RC" == 1 && "$STDERR" == *"readable regular repo .env"* &&
+        ! -s "$WORK/calls" && -z "$STDOUT" ]]; then
+    pass_test "$1 stops before stat and upload"
+  else
+    fail_test "expected $1 to abort before stat and upload (rc=$RC)"
+  fi
+}
+
+env_file="$remote/repo/.env"
+rm "$env_file"
 run_script archive container/litellm
-if [[ "$RC" == 1 && -L "$remote/volume1/docker/archive" &&
-      "$STDERR" == *"does not resolve to a readable file"* && "$STDERR" != *"capturing baseline"* && -z "$STDOUT" ]]; then
-  pass_test "missing .env stops registration after linking and before the byte count"
-else
-  fail_test "expected missing .env to abort before registration (rc=$RC)"
+check_env_rejection "missing .env"
+mkdir "$env_file"
+run_script archive container/litellm
+check_env_rejection "directory at .env"
+rmdir "$env_file"
+
+approved="$remote/approved env"
+touch "$approved"
+ln -s "$approved" "$env_file"
+if [[ $(id -u) != 0 ]]; then
+  chmod 000 "$approved"
+  run_script archive container/litellm
+  check_env_rejection "unreadable .env"
+  chmod 600 "$approved"
 fi
+run_script archive container/litellm
+if [[ "$RC" == 0 && -L "$remote/volume1/docker/archive" && -L "$remote/repo/container/litellm/.env" ]]; then
+  pass_test "retry accepts the approved regular file through both existing links"
+else
+  fail_test "expected restored .env chain to succeed"
+fi
+
+mkdir -p "$remote/repo/container/foo/deeper"
+touch "$remote/repo/container/foo/deeper/docker-compose.yaml" "$remote/repo/container/.env"
+run_script deep container/foo/deeper
+check_env_rejection "regular .env distinct from the repo .env"
 
 # === summary =========================================================
 

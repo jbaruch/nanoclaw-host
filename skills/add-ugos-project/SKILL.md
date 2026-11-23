@@ -26,7 +26,7 @@ Proceed immediately to Step 2.
 
 ## Step 2 — Plumb the symlinks
 
-After Step 1, run from a local clone of `jbaruch/nanoclaw-host`. Direct callers must complete the same preflight before invoking the helper.
+After Step 1, run from the reviewed Host checkout containing the registration script and its adjacent `insert-ugos-project.py`. Direct callers must complete the same preflight before invoking the helper.
 
 ```bash
 skills/add-ugos-project/scripts/register-ugos-project.sh <project-name> <in-repo-dir>
@@ -34,7 +34,7 @@ skills/add-ugos-project/scripts/register-ugos-project.sh <project-name> <in-repo
 
 See `skills/add-ugos-project/scripts/register-ugos-project.sh` — argument contract, idempotency behaviour, and stdout JSON shape are in the top-of-file docstring.
 
-The script creates `/volume1/docker/<project-name>` (directory symlink) and `<in-repo-dir>/.env` (relative `.env` symlink; skipped when the in-repo dir is the repo root). It then emits the sudo INSERT command on stderr and a JSON summary on stdout.
+The script creates `/volume1/docker/<project-name>` (directory symlink) and `<in-repo-dir>/.env` (relative `.env` symlink; skipped when the in-repo dir is the repo root). Before measuring Compose or staging the helper, it checks that the project's `.env` resolves to the same readable regular file as the repo's `.env`. The SSH account uploads the INSERT helper into a fresh private directory for this run. The script prints the operator command on stderr and in the JSON field `ugos_insert_command` on stdout.
 
 If the script exits non-zero, halt and surface stderr — do not run Step 3.
 
@@ -42,7 +42,9 @@ Proceed immediately to Step 3.
 
 ## Step 3 — INSERT the UGOS Pro DB row
 
-The script printed an `ssh -t` command in its stderr block ending in `sudo python3 /tmp/register-ugos-<project>.py …`. Copy and run it from the operator's terminal — `sudo` prompts interactively, which is why the script cannot run it itself.
+Copy the complete printed `ssh -t` command, including its quoted lines, into the operator's terminal. Authorize it at the interactive sudo prompt. The command checks that the staging directory (0700) and regular helper file (0600) belong to the invoking NAS user. It compares the staged bytes with the SHA-256 digest from the reviewed local helper and executes those same bytes from memory. A successful INSERT removes the stage as the NAS user.
+
+On a verification error, stop before Start. Use Step 2 from the reviewed checkout to generate a fresh command. For an abandoned run, the staging user can remove the exact `ugos_insert_helper` file and its empty parent directory.
 
 The helper aborts if a row already exists for the same project name; remove the stale row via `sudo sqlite3 /volume1/@appstore/com.ugreen.docker/db/docker_info_log.db "DELETE FROM compose WHERE name = '<project-name>';"` and re-run only if the operator confirms the prior registration is dead.
 

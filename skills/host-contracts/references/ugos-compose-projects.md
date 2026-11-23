@@ -19,7 +19,7 @@ Before invoking the registration helper or using Start, verify the reviewed cons
 - The DB is `root:root 644` — INSERT requires sudo, runs interactively from a TTY (`ssh -t nas`)
 - The row's `path` column points at the symlinked compose file (e.g. `/volume1/docker/<project>/docker-compose.yaml`); UGOS UI Start/Stop drives docker compose against that path
 - Registering via UGOS Pro's "Create Project" UI flow instead of a direct INSERT rewrites the compose file at the symlinked path and leaks env values into the tracked repo file — forbidden
-- See `Skill(skill: "add-ugos-project")` for the walkthrough and `skills/add-ugos-project/scripts/register-ugos-project.sh` for the INSERT-statement contract
+- See `Skill(skill: "add-ugos-project")` for the walkthrough and `skills/add-ugos-project/scripts/insert-ugos-project.py` for the INSERT statement
 
 ## UI is Start/Stop only
 
