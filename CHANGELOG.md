@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.28 — 2026-11-24
+
+- docs(host): Publish the usage log reader contract (#146)
+
 ## 0.6.27 — 2026-11-23
 
 ### Declare nightly backup outcome reads
