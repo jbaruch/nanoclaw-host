@@ -80,3 +80,15 @@ All scripts in `scripts/` source the consumer's checked-out `scripts/common.sh` 
 - Narrow exception for native identity/ACME state of the private Tailscale noVNC viewer.
 - Preconditions are binding: read `rules/browser-tailnet-viewer.md` before relying on it.
 - Every other credential lives in the vault
+
+## Backup snapshot scanning
+
+- Narrow exception for coding-policy `rules/no-secrets.md` Pre-commit Scanning.
+- Applies only to `jbaruch/nanoclaw` `github_backup` snapshot commits
+- Owner approved this one-off exception on 2026-11-23
+- Preconditions (all required):
+  1. Snapshots push only to `jbaruch/nanoclaw-backup`
+  2. `jbaruch/nanoclaw-backup` is private, owner-only and used for nothing but this backup
+  3. The backup code refuses every other push URL
+  4. Snapshot contents never reach logs or any other repository
+- Every other repository and commit retains no-secrets' Pre-commit Scanning

@@ -1,5 +1,9 @@
 # Changelog
 
+### Exempt backup snapshots from secret scanning
+
+`jbaruch/nanoclaw` `github_backup` snapshot commits may skip coding-policy no-secrets' pre-commit scanning (owner approval 2026-11-23, jbaruch/nanoclaw#1489). Snapshots push only to the private, owner-only `jbaruch/nanoclaw-backup` repository, which serves nothing else. The backup refuses any other push URL. Snapshot contents never reach logs or other repositories. Every other repository and commit keeps the scan.
+
 ## 0.6.27 — 2026-11-23
 
 ### Declare nightly backup outcome reads
