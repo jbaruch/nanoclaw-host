@@ -51,6 +51,7 @@
     "rules/social-chat-table-reader.md",
     "rules/scheduled-task-gate.md",
     "rules/meeting-chat-context.md",
-    "rules/sessionize-rendered-capture.md"
+    "rules/sessionize-rendered-capture.md",
+    "rules/browser-precheck-evidence.md"
   ]
 }
