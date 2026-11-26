@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.29 — 2026-11-26
+
+- fix(browser): request only page targets for Sessionize capture (#147)
+
 ## 0.6.28 — 2026-11-24
 
 - docs(host): Publish the usage log reader contract (#146)
