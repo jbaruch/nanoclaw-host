@@ -1,9 +1,11 @@
 ---
 alwaysApply: false
-applyTo: "When implementing or operating a reader of NanoClaw browser-precheck-evidence events"
+applyTo: "** — when implementing or operating a reader of NanoClaw browser-precheck-evidence events"
 ---
 
 # Browser Precheck Evidence
+
+## Producer and retention
 
 NanoClaw owns the per-spawn container logs under
 `containers/<group>/<session>/<spawn>.log` in the host log root.
@@ -11,6 +13,8 @@ The [producer contract](https://github.com/jbaruch/nanoclaw/blob/0696a1bca184a0b
 names the schema of record, writer and retention implementation.
 Main emits the event on stderr. The orchestrator persists it best-effort.
 NanoClaw prunes whole files after seven days by modification time.
+
+## Reader contract
 
 The Mini Watcher Chrome recovery report reads bounded excerpts without
 changing them. Read only `[agent-runner] browser-precheck-evidence` events,
@@ -23,6 +27,8 @@ validates shape only. Optional `source` is `linkedin`, `notion`,
 Unversioned marked records are unsupported legacy version 0. Unknown
 versions or malformed marked records make correlation unavailable. Unmarked
 lines are ignored.
+
+## Interpretation
 
 An absent event does not prove that a precheck did not run. A match does not
 prove coverage and never authorizes restart, replay or website actions.
