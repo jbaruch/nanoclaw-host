@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.30 — 2026-11-26
+
+- docs(browser): publish the host evidence reader authority (#148)
+
 ## 0.6.29 — 2026-11-26
 
 - fix(browser): request only page targets for Sessionize capture (#147)
