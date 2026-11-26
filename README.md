@@ -23,6 +23,7 @@ tessl install jbaruch/nanoclaw-host
 | [scheduled-task-gate](rules/scheduled-task-gate.md) | Explicit model and precheck for every scheduled task, including cadence skills and one-shots; missing either blocks policy review and insertion. |
 | [agent-file-permissions](rules/agent-file-permissions.md) | Agent identity, private modes, descriptor-safe privileged repairs, atomic replacement, recovery archives and verification as the agent. |
 | [whatsapp-channel-control](rules/whatsapp-channel-control.md) | Fixed-account owner-only channel relinking, private codes, saved-registration confirmation and the bounded live-phone testing authority. |
+| [browser-precheck-evidence](rules/browser-precheck-evidence.md) | Versioned, bounded, read-only correlation of NanoClaw browser prechecks with Chrome recovery. |
 | [browser-profile-storage](rules/browser-profile-storage.md) | Main-only private CDP, local Chrome profile excluded from all backups and Git, native Screen Sharing handoff, and the browser CI gate for each architecture. |
 | [browser-tailnet-viewer](rules/browser-tailnet-viewer.md) | First-party private noVNC node enrollment, dedicated native state, owner-device TCP443-only policy and finite real-device validation. |
 | [boyscout-host](rules/boyscout-host.md) | Host agent owns the full stack (source, plugin repos, scripts, deploy, NAS, containers) — fix any problem you find, except owner's-domain content (SOUL.md, personal skills, group memory). |
