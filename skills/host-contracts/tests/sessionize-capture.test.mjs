@@ -308,6 +308,9 @@ test("exact no-argument validator, fixed bridge, isolated read and own-session c
       "Target.detachFromTarget",
     ],
   );
+  assert.deepEqual(f.calls[0].params, {
+    filter: [{ type: "page" }, { exclude: true }],
+  });
   assert.deepEqual(f.calls.at(-1)?.params, { sessionId: "synthetic-session" });
   assert.equal(f.closed(), 1);
 });

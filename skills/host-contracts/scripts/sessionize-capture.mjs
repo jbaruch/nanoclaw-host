@@ -445,7 +445,9 @@ export async function capture() {
   const client = await connect(await discovery());
   let session;
   try {
-    const inventory = await client.call("Target.getTargets");
+    const inventory = await client.call("Target.getTargets", {
+      filter: [{ type: "page" }, { exclude: true }],
+    });
     if (!Array.isArray(inventory.targetInfos)) throw new CaptureHold();
     const matches = inventory.targetInfos.filter(
       /** @param {Record<string, any>} t */ (t) =>
