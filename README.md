@@ -17,7 +17,7 @@ tessl install jbaruch/nanoclaw-host
 | [sessionize-rendered-capture](rules/sessionize-rendered-capture.md) | Fixed no-argument, read-only My Events capture through the validated existing private browser; installed-provider lookup and bounded output contract. |
 | [meeting-chat-context](rules/meeting-chat-context.md) | Actual-main registered-chat evidence, current native member identity, complete bounded context and installed-provider rollout. |
 | [agent-container-filter](rules/agent-container-filter.md) | Line-oriented contract for the root repository's agent-container filter and deploy consumers, including infrastructure exclusions and regression coverage. |
-| [task-run-log-reader](rules/task-run-log-reader.md) | Read-only contract for the admin heartbeat's `task_run_logs` reader: owner, required columns, no initialize/migrate, missing DB is an actionable issue |
+| [task-run-log-reader](rules/task-run-log-reader.md) | Read-only `task_run_logs` contract for Admin heartbeat recovery and Calendar reminder repair |
 | [usage-log-reader](rules/usage-log-reader.md) | Runtime usage log owner, read-only consumers, and 90-day expiration |
 | [social-chat-table-reader](rules/social-chat-table-reader.md) | Read-only contract for the admin social skill's `messages` and `registered_groups` reads: owner, required columns, Main and owner checks, no initialize/migrate, missing data is actionable unavailable, never approval |
 | [scheduled-task-gate](rules/scheduled-task-gate.md) | Explicit model and precheck for every scheduled task, including cadence skills and one-shots; missing either blocks policy review and insertion. |
