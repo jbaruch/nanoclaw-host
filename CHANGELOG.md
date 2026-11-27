@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.31 — 2026-11-27
+
+- docs(calendar): define read-only reminder history evidence (#149)
+
 ## 0.6.30 — 2026-11-26
 
 - docs(browser): publish the host evidence reader authority (#148)
