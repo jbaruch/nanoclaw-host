@@ -1,6 +1,6 @@
 ---
 alwaysApply: false
-applyTo: "src/db-task-occurrences.ts, src/task-scheduler.ts, src/state-migrations/**, skills/heartbeat/scripts/heartbeat-precheck.py, skills/system-audit/scripts/system-audit.py — when writing, migrating or reading the task_occurrences run ledger"
+applyTo: "src/db-task-occurrences.ts, src/task-scheduler.ts, src/state-migrations/**, skills/heartbeat/scripts/heartbeat-precheck.py, skills/system-audit/scripts/system-audit.py, skills/check-calendar/scripts/check-calendar-precheck.py — when writing, migrating or reading the task_occurrences run ledger"
 ---
 
 # Run Ledger Contract
