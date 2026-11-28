@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.32 — 2026-11-28
+
+- docs(plugins): define retained staging verification handoff (#150)
+
 ## 0.6.31 — 2026-11-27
 
 - docs(calendar): define read-only reminder history evidence (#149)
