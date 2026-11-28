@@ -22,8 +22,13 @@ If a task is genuinely too large for the current context, say so explicitly with
 
 ## Installed-copy verification during plugin promotion
 
-For an in-progress promotion on the worker-safe NanoClaw refresh path, only the installed-copy check may remain pending, and only when the host refresh is confirmed but no fresh worker is available. A `Queued` reply is not refresh confirmation. Keep staging untouched and report **installed-copy verification pending**, not complete.
+Narrow exception for verifying installed files during an active promotion.
 
-The current release owner stays accountable and actively follows the check. In the existing release workflow, durably record who is verifying, the exact promotion PR and published plugin version, the staging paths and expected content digest covering all promoted files, the refresh evidence, and the target chat and worker slot. If no authorized verifier can continue observation, tell the release owner the check is blocked and leave staging untouched.
+Applies when worker-safe refresh is confirmed and no fresh worker is available. `Queued` is not refresh confirmation.
 
-Before cleaning up any staging copy, record evidence that the worker in the target chat and slot actually spawned after the confirmed refresh and that its installed files and the retained staging copy both match the recorded content. An elapsed delay, an idle or `not-spawned` status alone, or a one-off scheduled task in Maintenance is not spawn proof. Never use `nuke` or otherwise force a worker to close for verification. If the evidence is missing or the content differs, keep staging and report what is unverified.
+1. Report installed-copy verification pending. Keep staging intact.
+2. The current release owner actively follows the check. Record the verifier, exact promotion PR and published version, staging paths and expected digest for all promoted files, refresh evidence, and target chat and worker slot in the current release workflow.
+3. Verify the worker actually spawned in the target chat and slot after the confirmed refresh. A delay, idle status, or a one-off Maintenance task is not spawn proof. Do not force a worker to close.
+4. Compare both installed and staged files against the recorded content before cleanup. If evidence is missing, files differ, or no authorized verifier can continue, report the specific blocker and keep staging.
+
+In every other case, complete the work under the rule above.

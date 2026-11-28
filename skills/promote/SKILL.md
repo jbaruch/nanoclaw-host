@@ -79,17 +79,21 @@ Plugin repos run `publish.yml` on push to `main`. The release skill checks PR-ti
 
 Proceed immediately to Step 5 once `release` reports the release confirmed.
 
-## Step 5 — Clean up staging copies
+## Step 5 — Confirm installation
 
-Run `/verify-tiles`. The command keeps its historical name; there is no `/verify-plugins`.
+For the host plugin, run `tessl update` locally and check the installed version. For container plugins, follow the supported host refresh or canonical deploy path. Confirm the exact version before proceeding. A queued refresh does not confirm installation.
 
-Proceed immediately to Step 6.
+Proceed to Step 6 after installation is confirmed.
 
-## Step 6 — Pick up the published version
+## Step 6 — Verify installed files
 
-For the `nanoclaw-host` plugin, run `tessl update` locally to pull the new version. For container plugins, the next `./scripts/deploy.sh` picks them up.
+Compare the installed files and staging with the published result. On the worker-safe refresh path, verify the target chat and slot spawned a new worker after refresh. If no fresh worker is available, record the release and verification handoff required by `rules/no-deferral.md`. The release owner continues observation. Keep staging and report the installed-copy check pending.
 
-Finish here.
+Proceed to Step 7 only for files with matching content and the required installation or spawn evidence. Otherwise report the mismatch or blocker and keep staging.
+
+## Step 7 — Clean up staging copies
+
+Remove only the verified staging copies. Leave the installed files untouched. Finish here.
 
 ## Non-negotiables
 
