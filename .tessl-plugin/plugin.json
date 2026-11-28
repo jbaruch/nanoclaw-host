@@ -1,6 +1,6 @@
 {
   "name": "jbaruch/nanoclaw-host",
-  "version": "0.6.31",
+  "version": "0.6.32",
   "description": "Host rules and skills for NanoClaw deployment, image package inventories, private browser access, plugin promotion, staging and upstream updates.",
   "private": false,
   "skills": [
