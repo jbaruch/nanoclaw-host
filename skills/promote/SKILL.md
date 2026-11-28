@@ -85,15 +85,17 @@ For the host plugin, run `tessl update` locally and check the installed version.
 
 Proceed to Step 6 after installation is confirmed.
 
-## Step 6 — Verify installed files
+## Step 6 — Verify the installation context
 
-Compare the installed files and staging with the published result. On the worker-safe refresh path, verify the target chat and slot spawned a new worker after refresh. If no fresh worker is available, record the release and verification handoff required by `rules/no-deferral.md`. The release owner continues observation. Keep staging and report the installed-copy check pending.
+On the worker-safe refresh path, verify the target chat and slot spawned a new worker after refresh. If no fresh worker is available, record the handoff required by `rules/no-deferral.md`. The release owner continues observation. Keep staging and report the installed-copy check pending.
 
-Proceed to Step 7 only for files with matching content and the required installation or spawn evidence. Otherwise report the mismatch or blocker and keep staging.
+Proceed to Step 7 only after the installation context is verified.
 
-## Step 7 — Clean up staging copies
+## Step 7 — Run verified staging cleanup
 
-Remove only the verified staging copies. Leave the installed files untouched. Finish here.
+Invoke `Skill(skill: "verify-tiles")` on the verified worker, using the version that requires a complete staged and installed skill match before deletion. If that version is unavailable, keep staging and report cleanup blocked. Never use a manual delete as a fallback.
+
+Rule drafts are outside that skill's cleanup contract. Keep them unless the authorized release verifier has a supported cleanup operation that checks the recorded evidence. Report the exact drafts retained. Finish here.
 
 ## Non-negotiables
 
